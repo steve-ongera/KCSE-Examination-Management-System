@@ -1,0 +1,233 @@
+{% extends 'auth_base/base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10 d-flex flex-column align-items-center justify-content-center">
+
+      <!-- KNEC Branding Section -->
+      <div class="text-center py-4">
+        <h3 class="text-dark mb-2">Kenya National Examination Council</h3>
+        <small class="text-muted d-block mb-2">Quality Assessment for Education</small>
+        <img src="{% static 'assets/img/logo2.png' %}" alt="KNEC Logo" style="max-width: 80px; max-height: 80px;">
+      </div>
+
+      <!-- Registration Card -->
+      <div class="card mb-4 border-secondary shadow-sm">
+        <div class="card-header bg-secondary text-white">
+          <h5 class="card-title text-center mb-0">User Registration Portal</h5>
+        </div>
+
+        <div class="card-body">
+          {% if messages %}
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {% for message in messages %}
+              <strong>{{ message }}</strong>
+            {% endfor %}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          {% endif %}
+
+          <!-- Tab Navigation -->
+          <ul class="nav nav-tabs nav-tabs-bordered mb-3" id="registrationTabs">
+            <li class="nav-item">
+              <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#school-admin-tab">School Administrator</button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" data-bs-toggle="tab" data-bs-target="#student-tab">Student</button>
+            </li>
+          </ul>
+
+          <!-- Tab Content -->
+          <div class="tab-content pt-2">
+           <!-- School Admin Form -->
+            <div class="tab-pane fade show active" id="school-admin-tab">
+                <form method="post" class="row g-3 needs-validation" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="user_type" value="school_admin">
+                
+                    <h6 class="text-secondary">School Administrator Registration</h6>
+                
+                    <div class="col-md-6">
+                        <label for="knec_code" class="form-label">KNEC Code</label>
+                        <input type="text" class="form-control" id="knec_code" name="knec_code" required>
+                        <div class="invalid-feedback">Please provide a valid KNEC code.</div>
+                    </div>
+                
+                    <div class="col-md-6">
+                        <label for="registration_number" class="form-label">Registration Number</label>
+                        <input type="text" class="form-control" id="registration_number" name="registration_number" required>
+                        <div class="invalid-feedback">Please provide a valid registration number.</div>
+                    </div>
+                
+                    <div class="col-md-6">
+                        <label for="school_name" class="form-label">School Name</label>
+                        <input type="text" class="form-control" id="school_name" name="school_name" required>
+                        <div class="invalid-feedback">Please provide the school name.</div>
+                    </div>
+                
+                    <div class="col-md-6">
+                        <label for="special_code" class="form-label">Special Code</label>
+                        <input type="text" class="form-control" id="special_code" name="special_code" required>
+                        <div class="invalid-feedback">Please provide the special code.</div>
+                    </div>
+                
+                    <div class="col-md-6">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                        <div class="invalid-feedback">Please choose a username.</div>
+                    </div>
+                
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                        <div class="invalid-feedback">Please provide a valid email.</div>
+                    </div>
+                
+                    <div class="col-md-6">
+                        <label for="password1" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password1" name="password1" required>
+                        <div class="invalid-feedback">Please provide a password.</div>
+                    </div>
+                
+                    <div class="col-md-6">
+                        <label for="password2" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="password2" name="password2" required>
+                        <div class="invalid-feedback">Please confirm your password.</div>
+                    </div>
+                
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                            <label class="form-check-label" for="terms">I agree to the terms and conditions</label>
+                            <div class="invalid-feedback">You must agree before submitting.</div>
+                        </div>
+                    </div>
+                
+                    <div class="col-12">
+                        <button class="btn btn-secondary w-100" type="submit">Register as Administrator</button>
+                    </div>
+                
+                    <!-- Display error messages if any -->
+                    {% if form.errors %}
+                    <div class="col-12 mt-3">
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li>{{ field.label }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+
+
+            <!-- Student Form -->
+            <div class="tab-pane fade" id="student-tab">
+              <form method="post" class="row g-3 needs-validation" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="user_type" value="student">
+
+                <h6 class="text-secondary">Student Registration</h6>
+
+                <div class="col-md-6">
+                  <label for="first_name" class="form-label">First Name</label>
+                  <input type="text" class="form-control" id="first_name" name="first_name" required>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="last_name" class="form-label">Last Name</label>
+                  <input type="text" class="form-control" id="last_name" name="last_name" required>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="index_number" class="form-label">Index Number</label>
+                  <input type="text" class="form-control" id="index_number" name="index_number" required>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="birth_certificate" class="form-label">Birth Certificate Number</label>
+                  <input type="text" class="form-control" id="birth_certificate" name="birth_certificate_number">
+                </div>
+
+                <div class="col-md-6">
+                  <label for="student_username" class="form-label">Username</label>
+                  <input type="text" class="form-control" id="student_username" name="username" required>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="student_email" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="student_email" name="email">
+                </div>
+
+                <div class="col-md-6">
+                  <label for="student_password1" class="form-label">Password</label>
+                  <input type="password" class="form-control" id="student_password1" name="password1" required>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="student_password2" class="form-label">Confirm Password</label>
+                  <input type="password" class="form-control" id="student_password2" name="password2" required>
+                </div>
+
+                <div class="col-12">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="student_terms" required>
+                    <label class="form-check-label" for="student_terms">I agree to the terms and conditions</label>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <button class="btn btn-secondary w-100" type="submit">Register as Student</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="text-center mt-3">
+            <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="credits text-muted text-center">
+        &copy; {% now "Y" %} Kenya National Examination Council. All Rights Reserved.<br>
+        Developed by <a href="https://innovationhubsoftwares.com/" class="text-decoration-none text-secondary fw-semibold">InnovationHub Softwares</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .nav-tabs .nav-link {
+    color: #495057;
+    font-weight: 500;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #6c757d;
+    border-color: #6c757d;
+    background-color: rgba(108, 117, 125, 0.05);
+  }
+
+  .form-control:focus {
+    border-color: #6c757d;
+    box-shadow: 0 0 0 0.25rem rgba(108, 117, 125, 0.25);
+  }
+
+  .card-header.bg-secondary {
+    background-color: #6c757d !important;
+  }
+</style>
+
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends 'auth_base/base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8 d-flex flex-column align-items-center justify-content-center">
+
+      <!-- KNEC Branding -->
+      <div class="text-center py-4">
+        <h3 class="text-dark mt-2 mb-1">Kenya National Examination Council</h3>
+        <p class="text-muted mb-2">Quality Assessment for Education</p>
+        <img src="{% static 'assets/img/logo2.png' %}" alt="KNEC Logo" style="max-width: 80px; max-height: 80px;">
+      </div>
+
+
+      <!-- Login Card -->
+      <div class="card shadow-sm border-secondary mb-4 w-100">
+        <div class="card-header bg-secondary text-white text-center">
+          <h5 class="mb-0">Login to Your Account</h5>
+        </div>
+        <div class="card-body">
+
+          {% if messages %}
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {% for message in messages %}
+              <strong>{{ message }}</strong>
+            {% endfor %}
+            <button type="button" class="close" data-bs-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          {% endif %}
+
+          <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="username" class="form-label">Username</label>
+              <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="remember" name="remember">
+              <label class="form-check-label" for="remember">Remember Me</label>
+            </div>
+
+            <button type="submit" class="btn btn-secondary w-100">Login</button>
+          </form>
+
+          <div class="text-center mt-3">
+            <p>Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
+            <p><a href="#">Forgot password?</a></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="credits text-muted text-center">
+        &copy; {% now "Y" %} Kenya National Examination Council. All Rights Reserved.<br>
+        Developed by <a href="https://innovationhubsoftwares.com/" class="text-decoration-none text-secondary fw-semibold">InnovationHub Softwares</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+  .form-control:focus {
+    border-color: #6c757d;
+    box-shadow: 0 0 0 0.25rem rgba(108, 117, 125, 0.25);
+  }
+
+  .card-header.bg-secondary {
+    background-color: #6c757d !important;
+  }
+</style>
+
+{% endblock %}

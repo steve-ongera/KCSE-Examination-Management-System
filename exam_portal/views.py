@@ -234,8 +234,7 @@ def register(request):
 @login_required
 def student_dashboard(request):
     return render(request, 'dashboards/student_dashboard.html')
-
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.db.models import Count
 from .models import Student, ExamRegistration, SchoolAdminProfile
 
@@ -252,9 +251,23 @@ def school_admin_dashboard(request):
     
     # Get statistics
     total_students = Student.objects.filter(school=school).count()
+    
+    # All exam registrations for current year
     exam_registrations = ExamRegistration.objects.filter(
         student__school=school,
         exam_year__is_current=True
+    ).count()
+    
+    # Since there's no exam_type field, we need to determine KCSE/KCPE a different way
+    # Let's assume students in certain classes (Forms) are for KCSE and others for KCPE
+    # For example, students in Classes 1-8 are for KCPE, and Forms 1-4 are for KCSE
+    
+    # For KCSE registrations, assuming students in Forms 1-4 (could be stored as 'Form 1', 'Form 2', etc.)
+    # Get all registered students who are in Forms
+    kcse_registrations = ExamRegistration.objects.filter(
+        student__school=school,
+        exam_year__is_current=True,
+        student__current_class__startswith='Form'  # Adjust based on your actual data model
     ).count()
     
     # Get distinct class counts
@@ -277,6 +290,7 @@ def school_admin_dashboard(request):
     ][:5]  # Just sample data - replace with your actual activity log query
     
     context = {
+        'kcse_registrations': kcse_registrations,
         'total_students': total_students,
         'exam_registrations': exam_registrations,
         'active_classes': active_classes,

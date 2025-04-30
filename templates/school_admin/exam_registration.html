@@ -1,40 +1,224 @@
-{% extends 'base/base.html' %}
+{% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}Exam Registration by Index{% endblock %}
-
 {% block content %}
-<form method="POST">
-    {% csrf_token %}
 
-    {% if not student %}
-        <label for="index_number">Enter Index Number:</label>
-        <input type="text" name="index_number" required>
-        <button type="submit">Search</button>
+<div class="message-container" id="system-messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
 
-    {% else %}
-        <h3>Registering {{ student.first_name }} {{ student.last_name }} ({{ student.index_number }})</h3>
-        <input type="hidden" name="index_number" value="{{ student.index_number }}">
+<div class="pagetitle">
+    <h1><i class="bi bi-journal-bookmark me-2"></i>Exam Registration</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item">Examinations</li>
+            <li class="breadcrumb-item active">Student Registration</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
 
-        <h4>Core Subjects (automatically registered):</h4>
-        <ul>
-            {% for subject in core_subjects %}
-                <li>{{ subject.name }}</li>
-            {% endfor %}
-        </ul>
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light text-dark">
+                    <h5 class="card-title mb-0"><i class="bi bi-person-vcard me-2"></i>Register Student for Exams</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
 
-        <h4>Select 4 Optional Subjects:</h4>
-        {% for subject in optional_subjects %}
-            <label>
-                <input type="checkbox" name="optional_subjects" value="{{ subject.id }}">
-                {{ subject.name }}
-            </label><br>
-        {% endfor %}
+                        {% if not student %}
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="index_number" class="form-label">Enter Student Index Number</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" name="index_number" required placeholder="e.g. S123456">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-search me-2"></i>Search Student
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-        <button type="submit" name="register_subjects">Register Subjects</button>
-    {% endif %}
-</form>
+                        {% else %}
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h4 class="text-secondary">
+                                    <i class="bi bi-person-circle me-2"></i>
+                                    {{ student.first_name }} {{ student.last_name }} 
+                                    <small class="text-muted">({{ student.index_number }})</small>
+                                </h4>
+                                <input type="hidden" name="index_number" value="{{ student.index_number }}">
+                            </div>
+                        </div>
 
+                        {% if is_registered %}
+                        <div class="alert alert-secondary">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-check-circle-fill me-3 fs-4"></i>
+                                <div>
+                                    <h5 class="alert-heading">Already Registered</h5>
+                                    <p class="mb-0">This student is already registered for {{ current_year.year }} exam year.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" disabled>
+                            <i class="bi bi-lock-fill me-2"></i> Registration Complete
+                        </button>
 
+                        {% else %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-bookmark-check me-2"></i>
+                                            Core Subjects (Compulsory)
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            {% for subject in core_subjects %}
+                                            <div class="col-6">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                    <span>{{ subject.name }}</span>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-list-check me-2"></i>
+                                            Optional Subjects (Select 4)
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            {% for subject in optional_subjects %}
+                                            <div class="col-md-6 col-lg-4 mb-2">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           name="optional_subjects" value="{{ subject.id }}" 
+                                                           id="subject_{{ subject.id }}">
+                                                    <label class="form-check-label small" for="subject_{{ subject.id }}">
+                                                        {{ subject.name }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" name="register_subjects" class="btn btn-primary">
+                                <i class="bi bi-save-fill me-2"></i> Complete Registration
+                            </button>
+                            <a href="{% url 'register-student-exam' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i> Back to Search
+                            </a>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                    </form>
+                </div>
+                <div class="card-footer bg-light text-muted small">
+                    <i class="bi bi-info-circle me-2"></i>
+                    {% if current_year %}
+                        Current Exam Year: {{ current_year.year }}
+                    {% else %}
+                        No active exam year configured
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .card {
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+    .form-check-input:checked {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+    .subject-columns {
+        column-count: 3;
+        column-gap: 2rem;
+    }
+    @media (max-width: 992px) {
+        .subject-columns {
+            column-count: 2;
+        }
+    }
+    @media (max-width: 768px) {
+        .subject-columns {
+            column-count: 1;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Limit optional subject selection to 4
+        const checkboxes = document.querySelectorAll('input[name="optional_subjects"]');
+        const max = 4;
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const checked = document.querySelectorAll('input[name="optional_subjects"]:checked').length;
+                if (checked > max) {
+                    this.checked = false;
+                    alert(`You can only select ${max} optional subjects.`);
+                }
+            });
+        });
+
+        // Form validation
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (!form.querySelector('input[name="index_number"]') && !form.querySelector('input[name="register_subjects"]')) {
+                    return;
+                }
+                
+                if (form.querySelector('input[name="register_subjects"]')) {
+                    const checked = document.querySelectorAll('input[name="optional_subjects"]:checked').length;
+                    if (checked !== 4) {
+                        e.preventDefault();
+                        alert('Please select exactly 4 optional subjects.');
+                    }
+                }
+            });
+        }
+    });
+</script>
 
 {% endblock %}

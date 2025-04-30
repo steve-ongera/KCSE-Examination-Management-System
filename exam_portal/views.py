@@ -423,10 +423,6 @@ def knec_dashboard(request):
     
     return render(request, 'dashboards/knec_dashboard.html', context)
 
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Student, Subject, ExamYear, ExamRegistration, SubjectRegistration
-from django.contrib import messages
-from django.db import transaction
 
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Student, Subject, ExamYear, ExamRegistration, SubjectRegistration
@@ -437,8 +433,8 @@ def register_student_exam(request):
     student = None
     optional_categories = ['SCIENCE', 'HUMANITIES', 'TECHNICAL', 'LANGUAGES']
     optional_subjects = Subject.objects.filter(category__in=optional_categories, is_active=True)
-
     core_subjects = Subject.objects.filter(category='CORE')
+    current_year = ExamYear.objects.filter(is_current=True).first()
 
     if request.method == 'POST':
         index_number = request.POST.get('index_number')
@@ -449,21 +445,27 @@ def register_student_exam(request):
         elif 'register_subjects' in request.POST:
             selected_subject_ids = request.POST.getlist('optional_subjects')
             
-            if len(selected_subject_ids) != 4:
+            if not current_year:
+                messages.error(request, "No current exam year found.")
+            elif len(selected_subject_ids) != 4:
                 messages.error(request, "You must select exactly 4 optional subjects.")
             else:
                 try:
                     with transaction.atomic():
-                        current_year = ExamYear.objects.get(is_current=True)
+                        # Check if student is already registered for current year
+                        if ExamRegistration.objects.filter(student=student, exam_year=current_year).exists():
+                            messages.error(request, "This student is already registered for this exam year.")
+                            return redirect('register-student-exam')
 
-                        exam_reg, created = ExamRegistration.objects.get_or_create(
+                        # Create new exam registration
+                        exam_reg = ExamRegistration.objects.create(
                             student=student,
                             exam_year=current_year
                         )
 
                         # Register core subjects
                         for subject in core_subjects:
-                            SubjectRegistration.objects.get_or_create(
+                            SubjectRegistration.objects.create(
                                 registration=exam_reg,
                                 subject=subject,
                                 is_compulsory=True
@@ -472,19 +474,30 @@ def register_student_exam(request):
                         # Register selected optional subjects
                         for subject_id in selected_subject_ids:
                             subject = Subject.objects.get(id=subject_id)
-                            SubjectRegistration.objects.get_or_create(
+                            SubjectRegistration.objects.create(
                                 registration=exam_reg,
                                 subject=subject,
                                 is_compulsory=False
                             )
 
-                        messages.success(request, "Student registered successfully.")
+                        messages.success(request, "Student registered successfully!")
                         return redirect('register-student-exam')
 
-                except ExamYear.DoesNotExist:
-                    messages.error(request, "No current exam year found.")
+                except Exception as e:
+                    messages.error(request, f"An error occurred: {str(e)}")
+
+    # Check if student is already registered (for template context)
+    is_registered = False
+    if student and current_year:
+        is_registered = ExamRegistration.objects.filter(
+            student=student, 
+            exam_year=current_year
+        ).exists()
+
     return render(request, 'school_admin/exam_registration.html', {
         'student': student,
         'core_subjects': core_subjects,
         'optional_subjects': optional_subjects,
+        'is_registered': is_registered,
+        'current_year': current_year,
     })

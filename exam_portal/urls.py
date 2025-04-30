@@ -9,10 +9,19 @@ urlpatterns = [
     path('forgot-password/', views.forgot_password, name='forgot_password'),
     path('reset-password/<uidb64>/<token>/', views.reset_password, name='reset_password'),
     # ... previous URLs ...
-    path('student/', views.student_dashboard, name='student_dashboard'),
+    path('student_dashboard/', views.student_dashboard, name='student_dashboard'),
     path('school-admin/', views.school_admin_dashboard, name='school_admin_dashboard'),
     path('knec/', views.knec_dashboard, name='knec_dashboard'),
     path('register-student-exam/', views.register_student_exam, name='register-student-exam'),
+
+
+    #admin/ student crud opertaions 
+    path('student/', views.student_list, name='student_list'),
+    path('student/add/', views.student_create, name='student_create'),
+    path('student/<int:pk>/', views.student_detail, name='student_detail'),
+    path('student/<int:pk>/edit/', views.student_update, name='student_update'),
+    path('student/<int:pk>/delete/', views.student_delete, name='student_delete'),
+    path('student/search/', views.student_search, name='student_search'),
 
 
 ]

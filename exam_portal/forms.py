@@ -102,3 +102,35 @@ class SubjectChoiceForm(forms.Form):
         if len(data) != 4:
             raise forms.ValidationError("Please select exactly 4 optional subjects.")
         return data
+    
+
+
+from django import forms
+from .models import Student
+from django.core.validators import RegexValidator
+
+class StudentForm(forms.ModelForm):
+    phone_number = forms.CharField(
+        required=False,
+        validators=[RegexValidator(r'^\+?1?\d{9,15}$', 'Enter a valid phone number.')]
+    )
+    
+    class Meta:
+        model = Student
+        fields = '__all__'
+        widgets = {
+            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+            'admission_date': forms.DateInput(attrs={'type': 'date'}),
+            'disability_description': forms.Textarea(attrs={'rows': 3}),
+            'residential_address': forms.Textarea(attrs={'rows': 3}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add Bootstrap classes to form fields
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control'})
+        
+        # Special handling for boolean field
+        self.fields['is_boarder'].widget.attrs.update({'class': 'form-check-input'})
+        self.fields['is_active'].widget.attrs.update({'class': 'form-check-input'})

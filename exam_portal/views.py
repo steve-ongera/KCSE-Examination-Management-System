@@ -501,3 +501,113 @@ def register_student_exam(request):
         'is_registered': is_registered,
         'current_year': current_year,
     })
+
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Student
+from .forms import StudentForm
+from django.contrib import messages
+from django.core.paginator import Paginator
+from django.db.models import Q
+
+def student_list(request):
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    
+    # Base queryset
+    students = Student.objects.all().order_by('-created_at')
+    
+    # Apply search filter if query exists
+    if search_query:
+        students = students.filter(
+            Q(index_number__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(admision_number__icontains=search_query))
+    
+    # Pagination
+    paginator = Paginator(students, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'search_query': search_query,
+    }
+    return render(request, 'students/admin/student_list.html', context)
+
+def student_create(request):
+    if request.method == 'POST':
+        form = StudentForm(request.POST, request.FILES)
+        if form.is_valid():
+            student = form.save()
+            messages.success(request, f"Student {student.index_number} created successfully!")
+            return redirect('student_detail', pk=student.pk)
+    else:
+        form = StudentForm()
+    
+    context = {
+        'form': form,
+        'title': 'Add New Student',
+    }
+    return render(request, 'students/admin/student_form.html', context)
+
+def student_detail(request, pk):
+    student = get_object_or_404(Student, pk=pk)
+    context = {
+        'student': student,
+    }
+    return render(request, 'students/admin/student_detail.html', context)
+
+def student_update(request, pk):
+    student = get_object_or_404(Student, pk=pk)
+    
+    if request.method == 'POST':
+        form = StudentForm(request.POST, request.FILES, instance=student)
+        if form.is_valid():
+            updated_student = form.save()
+            messages.success(request, f"Student {updated_student.index_number} updated successfully!")
+            return redirect('student_detail', pk=updated_student.pk)
+    else:
+        form = StudentForm(instance=student)
+    
+    context = {
+        'form': form,
+        'title': f'Edit {student.index_number}',
+        'student': student,
+    }
+    return render(request, 'students/admin/student_form.html', context)
+
+def student_delete(request, pk):
+    student = get_object_or_404(Student, pk=pk)
+    
+    if request.method == 'POST':
+        index_number = student.index_number
+        student.delete()
+        messages.success(request, f"Student {index_number} deleted successfully!")
+        return redirect('student_list')
+    
+    context = {
+        'student': student,
+    }
+    return render(request, 'students/admin/student_confirm_delete.html', context)
+
+def student_search(request):
+    search_term = request.GET.get('q', '')
+    
+    if search_term:
+        students = Student.objects.filter(
+            Q(index_number__icontains=search_term) |
+            Q(first_name__icontains=search_term) |
+            Q(last_name__icontains=search_term) |
+            Q(admision_number__icontains=search_term)
+        ).order_by('-created_at')[:10]
+    else:
+        students = Student.objects.none()
+    
+    context = {
+        'students': students,
+        'search_term': search_term,
+    }
+    return render(request, 'students/admin/student_search_results.html', context)

@@ -1,0 +1,246 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="pagetitle">
+    <h1><i class="bi bi-person-plus me-2"></i>{{ title }}</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'student_list' %}">Students</a></li>
+            <li class="breadcrumb-item active">{{ title }}</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light text-dark">
+                    <h5 class="card-title mb-0"><i class="bi bi-person-lines-fill me-2"></i>Student Details</h5>
+                </div>
+                
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row g-3">
+                            <!-- Personal Information -->
+                            <div class="col-md-12">
+                                <h6 class="border-bottom pb-2 mb-3">Personal Information</h6>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label">Passport Photo</label>
+                                    <div class="d-flex align-items-center">
+                                        {% if form.instance.passport_photo %}
+                                            <img src="{{ form.instance.passport_photo.url }}" 
+                                                 class="img-thumbnail me-3" 
+                                                 style="width: 100px; height: 100px; object-fit: cover;">
+                                        {% endif %}
+                                        {{ form.passport_photo }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-8">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        {{ form.first_name.label_tag }}
+                                        {{ form.first_name }}
+                                        {% if form.first_name.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.first_name.errors|join:", " }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        {{ form.middle_name.label_tag }}
+                                        {{ form.middle_name }}
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        {{ form.last_name.label_tag }}
+                                        {{ form.last_name }}
+                                        {% if form.last_name.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.last_name.errors|join:", " }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        {{ form.birth_date.label_tag }}
+                                        {{ form.birth_date }}
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        {{ form.gender.label_tag }}
+                                        {{ form.gender }}
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        {{ form.nationality.label_tag }}
+                                        {{ form.nationality }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- School Information -->
+                            <div class="col-md-12 mt-4">
+                                <h6 class="border-bottom pb-2 mb-3">School Information</h6>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                {{ form.index_number.label_tag }}
+                                {{ form.index_number }}
+                                {% if form.index_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.index_number.errors|join:", " }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4">
+                                {{ form.admision_number.label_tag }}
+                                {{ form.admision_number }}
+                            </div>
+                            
+                            <div class="col-md-4">
+                                {{ form.admission_date.label_tag }}
+                                {{ form.admission_date }}
+                            </div>
+                            
+                            <div class="col-md-4">
+                                {{ form.current_class.label_tag }}
+                                {{ form.current_class }}
+                            </div>
+                            
+                            <div class="col-md-4">
+                                {{ form.school.label_tag }}
+                                {{ form.school }}
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-check mt-4 pt-2">
+                                    {{ form.is_boarder }}
+                                    <label class="form-check-label" for="{{ form.is_boarder.id_for_label }}">
+                                        Boarding Student
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            {% if form.is_boarder.value %}
+                            <div class="col-md-4">
+                                {{ form.house.label_tag }}
+                                {{ form.house }}
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Contact Information -->
+                            <div class="col-md-12 mt-4">
+                                <h6 class="border-bottom pb-2 mb-3">Contact Information</h6>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                {{ form.email.label_tag }}
+                                {{ form.email }}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                {{ form.phone_number.label_tag }}
+                                {{ form.phone_number }}
+                                {% if form.phone_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.phone_number.errors|join:", " }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                {{ form.residential_address.label_tag }}
+                                {{ form.residential_address }}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                {{ form.postal_address.label_tag }}
+                                {{ form.postal_address }}
+                            </div>
+                            
+                            <!-- Previous Education -->
+                            <div class="col-md-12 mt-4">
+                                <h6 class="border-bottom pb-2 mb-3">Previous Education</h6>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                {{ form.previous_school.label_tag }}
+                                {{ form.previous_school }}
+                            </div>
+                            
+                            <div class="col-md-3">
+                                {{ form.kcpe_year.label_tag }}
+                                {{ form.kcpe_year }}
+                            </div>
+                            
+                            <div class="col-md-3">
+                                {{ form.kcpe_index.label_tag }}
+                                {{ form.kcpe_index }}
+                            </div>
+                            
+                            <div class="col-md-3">
+                                {{ form.kcpe_marks.label_tag }}
+                                {{ form.kcpe_marks }}
+                            </div>
+                            
+                            <!-- Status -->
+                            <div class="col-md-12 mt-4">
+                                <h6 class="border-bottom pb-2 mb-3">Status</h6>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        Active Student
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-5">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-2"></i>Save Student
+                            </button>
+                            <a href="{% url 'student_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-label {
+        font-weight: 500;
+    }
+    .invalid-feedback {
+        display: block;
+        color: #dc3545;
+        font-size: 0.875em;
+    }
+    .is-invalid {
+        border-color: #dc3545;
+    }
+</style>
+
+{% endblock %}

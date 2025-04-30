@@ -1,0 +1,158 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="pagetitle">
+    <h1><i class="bi bi-person-lines-fill me-2"></i>Student Details</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'student_list' %}">Students</a></li>
+            <li class="breadcrumb-item active">{{ student.index_number }}</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light text-dark">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-person-badge me-2"></i>
+                            {{ student.first_name }} {{ student.last_name }}
+                            <small class="text-muted">({{ student.index_number }})</small>
+                        </h5>
+                        <div>
+                            <a href="{% url 'student_update' student.pk %}" class="btn btn-sm btn-outline-secondary me-2">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <a href="{% url 'student_list' %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Student Photo -->
+                        <div class="col-md-3 text-center">
+                            {% if student.passport_photo %}
+                                <img src="{{ student.passport_photo.url }}" 
+                                     class="img-thumbnail mb-3" 
+                                     style="width: 200px; height: 200px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center" 
+                                     style="width: 200px; height: 200px; border: 1px dashed #ccc;">
+                                    <span class="text-muted">No photo</span>
+                                </div>
+                            {% endif %}
+                            
+                            <h5 class="mb-1">{{ student.first_name }} {{ student.last_name }}</h5>
+                            <p class="text-muted mb-2">{{ student.index_number }}</p>
+                            
+                            <span class="badge bg-{% if student.is_active %}success{% else %}secondary{% endif %}">
+                                {% if student.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                        
+                        <!-- Student Details -->
+                        <div class="col-md-9">
+                            <div class="row">
+                                <!-- Personal Information -->
+                                <div class="col-md-6">
+                                    <div class="card mb-3">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0"><i class="bi bi-person me-2"></i>Personal Information</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p><strong>Date of Birth:</strong> {{ student.birth_date|date:"d/m/Y" }}</p>
+                                            <p><strong>Gender:</strong> {{ student.get_gender_display }}</p>
+                                            <p><strong>Nationality:</strong> {{ student.nationality }}</p>
+                                            <p><strong>County of Origin:</strong> {{ student.county_of_origin }}</p>
+                                            <p><strong>Sub County:</strong> {{ student.sub_county }}</p>
+                                            {% if student.disability %}
+                                                <p><strong>Disability:</strong> {{ student.disability }}</p>
+                                                <p><strong>Description:</strong> {{ student.disability_description|default:"-" }}</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- School Information -->
+                                <div class="col-md-6">
+                                    <div class="card mb-3">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0"><i class="bi bi-building me-2"></i>School Information</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p><strong>School:</strong> {{ student.school }}</p>
+                                            <p><strong>Admission Number:</strong> {{ student.admision_number|default:"-" }}</p>
+                                            <p><strong>Admission Date:</strong> {{ student.admission_date|date:"d/m/Y" }}</p>
+                                            <p><strong>Current Class:</strong> {{ student.current_class }}</p>
+                                            <p><strong>Status:</strong> 
+                                                {% if student.is_boarder %}
+                                                    Boarder ({{ student.house|default:"No house assigned" }})
+                                                {% else %}
+                                                    Day Scholar
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Contact Information -->
+                                <div class="col-md-6">
+                                    <div class="card mb-3">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0"><i class="bi bi-telephone me-2"></i>Contact Information</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p><strong>Email:</strong> {{ student.email|default:"-" }}</p>
+                                            <p><strong>Phone:</strong> {{ student.phone_number|default:"-" }}</p>
+                                            <p><strong>Residential Address:</strong> {{ student.residential_address|default:"-" }}</p>
+                                            <p><strong>Postal Address:</strong> {{ student.postal_address|default:"-" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Previous Education -->
+                                <div class="col-md-6">
+                                    <div class="card mb-3">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0"><i class="bi bi-book me-2"></i>Previous Education</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p><strong>Previous School:</strong> {{ student.previous_school|default:"-" }}</p>
+                                            <p><strong>KCPE Year:</strong> {{ student.kcpe_year|default:"-" }}</p>
+                                            <p><strong>KCPE Index:</strong> {{ student.kcpe_index|default:"-" }}</p>
+                                            <p><strong>KCPE Marks:</strong> {{ student.kcpe_marks|default:"-" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-light text-muted small">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <i class="bi bi-calendar me-2"></i>
+                            Created: {{ student.created_at|date:"d/m/Y H:i" }}
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <i class="bi bi-arrow-repeat me-2"></i>
+                            Last Updated: {{ student.updated_at|date:"d/m/Y H:i" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

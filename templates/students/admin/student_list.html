@@ -1,0 +1,173 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="message-container" id="system-messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="pagetitle">
+    <h1><i class="bi bi-people me-2"></i>Student Management</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item">Students</li>
+            <li class="breadcrumb-item active">All Students</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light text-dark">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0"><i class="bi bi-table me-2"></i>Student Records</h5>
+                        <a href="{% url 'student_create' %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-circle me-2"></i>Add New
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Search Form -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <form method="get" class="search-form">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="search" 
+                                           placeholder="Search by name, index or admission number..." 
+                                           value="{{ search_query }}">
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Students Table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th><i class="bi bi-person me-1"></i> Name</th>
+                                    <th><i class="bi bi-123 me-1"></i> Index No.</th>
+                                    <th><i class="bi bi-building me-1"></i> Class</th>
+                                    <th><i class="bi bi-telephone me-1"></i> Phone</th>
+                                    <th><i class="bi bi-calendar me-1"></i> Admission Date</th>
+                                    <th class="text-center"><i class="bi bi-gear me-1"></i> Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in page_obj %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <a href="{% url 'student_detail' student.pk %}" class="text-primary">
+                                            <strong>{{ student.first_name }} {{ student.last_name }}</strong>
+                                        </a>
+                                    </td>
+                                    <td>{{ student.index_number }}</td>
+                                    <td>{{ student.current_class }}</td>
+                                    <td>{{ student.phone_number|default:"-" }}</td>
+                                    <td>{{ student.admission_date|date:"d/m/Y" }}</td>
+                                    <td class="text-center">
+                                        <div class="d-flex gap-2 justify-content-center">
+                                            <a href="{% url 'student_detail' student.pk %}" class="btn btn-sm btn-outline-primary" title="View">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{% url 'student_update' student.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'student_delete' student.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No students found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1" aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer bg-light text-muted small">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} records
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .search-form .input-group {
+        max-width: 400px;
+    }
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+    .action-buttons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+
+{% endblock %}

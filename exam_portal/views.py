@@ -235,9 +235,56 @@ def register(request):
 def student_dashboard(request):
     return render(request, 'dashboards/student_dashboard.html')
 
-@login_required
+from django.shortcuts import render
+from django.db.models import Count
+from .models import Student, ExamRegistration, SchoolAdminProfile
+
 def school_admin_dashboard(request):
-    return render(request, 'dashboards/school_admin_dashboard.html')
+    if not request.user.is_authenticated or request.user.user_type != 2:
+        return redirect('login')
+    
+    try:
+        # Get the SchoolAdminProfile using the special_code which matches the username
+        admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
+        school = admin_profile.school
+    except SchoolAdminProfile.DoesNotExist:
+        return redirect('login')
+    
+    # Get statistics
+    total_students = Student.objects.filter(school=school).count()
+    exam_registrations = ExamRegistration.objects.filter(
+        student__school=school,
+        exam_year__is_current=True
+    ).count()
+    
+    # Get distinct class counts
+    active_classes = Student.objects.filter(
+        school=school
+    ).values('current_class').distinct().count()
+    
+    # Recent activities (you would implement this based on your activity log model)
+    recent_activities = [
+        {
+            'title': 'New student registered',
+            'description': 'John Doe was added to Form 2',
+            'timestamp': '2023-06-15 10:30:00'
+        },
+        {
+            'title': 'Exam registration',
+            'description': '15 students registered for KCSE 2023',
+            'timestamp': '2023-06-14 14:45:00'
+        }
+    ][:5]  # Just sample data - replace with your actual activity log query
+    
+    context = {
+        'total_students': total_students,
+        'exam_registrations': exam_registrations,
+        'active_classes': active_classes,
+        'recent_activities': recent_activities,
+        'school': school
+    }
+    
+    return render(request, 'dashboards/school_admin_dashboard.html', context)
 
 
 

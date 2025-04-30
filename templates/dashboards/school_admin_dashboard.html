@@ -1,0 +1,329 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    :root {
+        --knec-primary: #5a6268;  /* Dark gray - KNEC primary color */
+        --knec-secondary: #e9ecef;  /* Light gray - KNEC secondary color */
+        --knec-accent: #6c757d;    /* Medium gray for accents */
+    }
+    
+    body {
+        background-color: #f8f9fa;
+    }
+    
+    .card-stat {
+        border-left: 4px solid;
+        border-radius: 8px;
+        transition: transform 0.3s ease;
+        background-color: white;
+        border-color: var(--knec-primary);
+    }
+    
+    .card-stat:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(90, 98, 104, 0.1);
+    }
+    
+    .students-card {
+        border-left-color: var(--knec-primary);
+    }
+    
+    .exams-card {
+        border-left-color: #868e96;
+    }
+    
+    .attendance-card {
+        border-left-color: #adb5bd;
+    }
+    
+    .quick-action-btn {
+        transition: all 0.3s ease;
+        border: 1px solid var(--knec-primary);
+        color: var(--knec-primary);
+    }
+    
+    .quick-action-btn:hover {
+        background-color: var(--knec-primary) !important;
+        color: white !important;
+    }
+    
+    .icon-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--knec-primary);
+    }
+    
+    .card-header {
+        background-color: white;
+        border-bottom: 1px solid var(--knec-secondary);
+    }
+    
+    .dashboard-header {
+        background-color: white;
+        border-bottom: 1px solid var(--knec-secondary);
+    }
+    
+    .dropdown-menu {
+        border: 1px solid var(--knec-secondary);
+    }
+    
+    .activity-item {
+        border-left: 3px solid var(--knec-primary);
+        padding-left: 15px;
+        margin-bottom: 10px;
+    }
+    
+    .bg-knec-light {
+        background-color: var(--knec-secondary);
+    }
+    
+    .text-knec {
+        color: var(--knec-primary);
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Main content -->
+        <main class="col-md-12 ms-sm-auto col-lg-12 px-md-4">
+            <div class="dashboard-header d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
+                <h1 class="h2 text-knec">
+                    <img src="{% static 'assets/img/logo2.png' %}" alt="KNEC Logo" height="40" class="me-2">
+                    School Administrator Dashboard
+                </h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>{{ user.get_full_name }}
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-4">
+                    <div class="card card-stat students-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h5 class="card-title text-muted">Total Students</h5>
+                                    <h2 class="card-text text-knec">{{ total_students }}</h2>
+                                </div>
+                                <div class="icon-circle">
+                                    <i class="bi bi-people text-white"></i>
+                                </div>
+                            </div>
+                            <a href="#" class="text-knec">View all students <i class="bi bi-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card card-stat exams-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h5 class="card-title text-muted">Exam Registrations</h5>
+                                    <h2 class="card-text">{{ exam_registrations }}</h2>
+                                </div>
+                                <div class="icon-circle" style="background-color: #868e96;">
+                                    <i class="bi bi-journal-text text-white"></i>
+                                </div>
+                            </div>
+                            <a href="#" class="text-muted">Manage registrations <i class="bi bi-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card card-stat attendance-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h5 class="card-title text-muted">Active Classes</h5>
+                                    <h2 class="card-text">{{ active_classes }}</h2>
+                                </div>
+                                <div class="icon-circle" style="background-color: #adb5bd;">
+                                    <i class="bi bi-house-door text-white"></i>
+                                </div>
+                            </div>
+                            <a href="#" class="text-muted">View classes <i class="bi bi-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="text-knec"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="#" class="btn quick-action-btn w-100">
+                                <i class="bi bi-person-plus me-2"></i>Register Student
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="#" class="btn quick-action-btn w-100">
+                                <i class="bi bi-file-earmark-text me-2"></i>Generate Report
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="#" class="btn quick-action-btn w-100">
+                                <i class="bi bi-upload me-2"></i>Bulk Upload
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="#" class="btn quick-action-btn w-100">
+                                <i class="bi bi-envelope me-2"></i>Send Notice
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity and Calendar -->
+            <div class="row">
+                <div class="col-lg-8 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="text-knec"><i class="bi bi-clock-history me-2"></i>Recent Activity</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                {% for activity in recent_activities %}
+                                <div class="activity-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ activity.title }}</h6>
+                                        <small class="text-muted">{{ activity.time_ago }}</small>
+                                    </div>
+                                    <p class="mb-1 text-muted">{{ activity.description }}</p>
+                                    {% if activity.action %}
+                                    <small><a href="{{ activity.action_url }}" class="text-knec">{{ activity.action }}</a></small>
+                                    {% endif %}
+                                </div>
+                                {% empty %}
+                                <div class="text-center py-3 text-muted">
+                                    No recent activities
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="text-knec"><i class="bi bi-calendar-event me-2"></i>Upcoming Events</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="mini-calendar"></div>
+                            <div class="mt-3">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-knec-light">
+                                        <span>KNEC Exams Registration Deadline</span>
+                                        <span class="badge bg-secondary">May 15</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Term 1 Exams</span>
+                                        <span class="badge bg-secondary">Jun 1-5</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-knec-light">
+                                        <span>Parents Meeting</span>
+                                        <span class="badge bg-secondary">Jun 10</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- System Alerts -->
+            <div class="card mt-4 border-knec">
+                <div class="card-header bg-knec-light">
+                    <h5 class="text-knec"><i class="bi bi-exclamation-triangle me-2"></i>System Alerts</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill me-3"></i>
+                        <div>
+                            <strong>KNEC Portal Update:</strong> The KNEC portal will undergo maintenance on May 20th from 8 PM to 10 PM.
+                        </div>
+                    </div>
+                    <div class="alert alert-info d-flex align-items-center">
+                        <i class="bi bi-info-circle-fill me-3"></i>
+                        <div>
+                            <strong>New Feature:</strong> Bulk student registration now available. Download the template file to get started.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    // Highlight active sidebar item
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentUrl = window.location.pathname;
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentUrl) {
+                link.classList.add('active');
+                link.style.backgroundColor = '#5a6268';
+                link.style.color = 'white';
+            }
+        });
+        
+        // Initialize mini calendar (this would need a proper calendar library in production)
+        const today = new Date();
+        const miniCal = document.getElementById('mini-calendar');
+        if (miniCal) {
+            miniCal.innerHTML = `
+                <div class="text-center mb-2">
+                    <strong>${today.toLocaleString('default', { month: 'long' })} ${today.getFullYear()}</strong>
+                </div>
+                <div class="calendar-grid">
+                    ${generateCalendarDays(today)}
+                </div>
+            `;
+        }
+    });
+    
+    function generateCalendarDays(date) {
+        // This is a simplified version - would need proper implementation
+        const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+        let html = '<div class="row g-1 text-center">';
+        
+        // Day headers
+        days.forEach(day => {
+            html += `<div class="col"><small class="text-muted">${day}</small></div>`;
+        });
+        html += '</div><div class="row g-1">';
+        
+        // Days (simplified)
+        for (let i = 1; i <= 28; i++) {
+            const activeClass = i === date.getDate() ? 'bg-knec-primary text-white' : '';
+            html += `<div class="col p-1"><span class="d-block p-1 ${activeClass}">${i}</span></div>`;
+        }
+        
+        html += '</div>';
+        return html;
+    }
+</script>
+{% endblock %}

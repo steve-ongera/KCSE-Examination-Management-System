@@ -44,7 +44,7 @@
     {% if request.user.user_type == '1' %}
        {% include "base/navbars/admin_navbar.html" %}
     {% elif request.user.user_type == '2' %}
-        {% include "base/navbars/staff_navbar.html" %}
+        {% include "base/navbars/school_admin_navbar.html" %}
     {% else %}
         {% include "base/navbars/knec_navbar.html" %}
     {% endif %}
@@ -53,7 +53,7 @@
     {% if request.user.user_type == '1' %}
       {% include "base/sidebars/admin_sidebar.html" %}
     {% elif request.user.user_type == '2' %}
-      {% include "base/sidebars/staff_sidebar.html" %}
+      {% include "base/sidebars/school_admin_sidebar.html" %}
     {% else %}
       {% include "base/sidebars/knec_sidebar.html" %}
     {% endif %}

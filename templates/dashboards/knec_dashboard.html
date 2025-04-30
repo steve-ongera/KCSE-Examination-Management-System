@@ -1,0 +1,260 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block content %}
+<style>
+  .knec-card {
+    background-color: #f8f9fa;
+    border-left: 4px solid #2c3e50;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+  .knec-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+  .knec-primary {
+    border-left-color: #2c3e50;
+  }
+  .knec-secondary {
+    border-left-color: #7f8c8d;
+  }
+  .knec-success {
+    border-left-color: #27ae60;
+  }
+  .knec-info {
+    border-left-color: #2980b9;
+  }
+  .card-icon {
+    font-size: 2rem;
+    color: #7f8c8d;
+  }
+</style>
+
+<div class="pagetitle">
+    <h1>KNEC Admin Dashboard</h1>
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item active">Dashboard</li>
+      </ol>
+    </nav>
+</div>
+
+<section class="section dashboard">
+    <div class="row">
+      <!-- Left side columns -->
+      <div class="col-lg-8">
+        <div class="row">
+          <!-- Students Card -->
+          <div class="col-xxl-4 col-md-6">
+            <div class="card knec-card knec-primary">
+              <div class="card-body">
+                <h5 class="card-title">TOTAL STUDENTS</h5>
+                <div class="d-flex align-items-center">
+                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="bi bi-people"></i>
+                  </div>
+                  <div class="ps-3">
+                    <h6>{{ total_students }}</h6>
+                    <span class="text-muted small">All registered students</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Exam Registrations Card -->
+          <div class="col-xxl-4 col-md-6">
+            <div class="card knec-card knec-success">
+              <div class="card-body">
+                <h5 class="card-title">EXAM REGISTRATIONS</h5>
+                <div class="d-flex align-items-center">
+                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="bi bi-pencil-square"></i>
+                  </div>
+                  <div class="ps-3">
+                    <h6>{{ registered_students }}</h6>
+                    <span class="text-muted small">For {{ current_exam_year }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Schools Card -->
+          <div class="col-xxl-4 col-md-6">
+            <div class="card knec-card knec-info">
+              <div class="card-body">
+                <h5 class="card-title">REGISTERED SCHOOLS</h5>
+                <div class="d-flex align-items-center">
+                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="bi bi-building"></i>
+                  </div>
+                  <div class="ps-3">
+                    <h6>{{ total_schools }}</h6>
+                    <span class="text-muted small">All KNEC-registered schools</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Exam Registration Trends -->
+          <div class="col-12">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Exam Registration Trends</h5>
+                <div class="chart-container" style="height: 300px;">
+                  <canvas id="registrationTrendChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subject Distribution -->
+          <div class="col-12">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Top Subjects ({{ current_exam_year }})</h5>
+                <div class="chart-container" style="height: 300px;">
+                  <canvas id="subjectDistributionChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right side columns -->
+      <div class="col-lg-4">
+        <!-- School Registration Trends -->
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">School Registration Trends</h5>
+            <div class="chart-container" style="height: 300px;">
+              <canvas id="schoolTrendChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Latest Students -->
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Recently Added Students</h5>
+            <div class="activity">
+              {% for student in latest_students %}
+              <div class="activity-item d-flex">
+                <div class="activite-label">{{ student.created_at|date:"M d" }}</div>
+                <div class="activity-content">
+                  {{ student.first_name }} {{ student.last_name }}
+                  <small class="text-muted">({{ student.school.name }})</small>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Latest Schools -->
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Recently Registered Schools</h5>
+            <div class="activity">
+              {% for school in latest_schools %}
+              <div class="activity-item d-flex">
+                <div class="activite-label">{{ school.created_at|date:"M d" }}</div>
+                <div class="activity-content">
+                  {{ school.name }}
+                  <small class="text-muted">({{ school.knec_code }})</small>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</section>
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Registration Trends Chart
+document.addEventListener("DOMContentLoaded", () => {
+    const ctx = document.getElementById('registrationTrendChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: JSON.parse('{{ registration_years|safe }}'),
+            datasets: [{
+                label: 'Exam Registrations',
+                data: JSON.parse('{{ registration_counts|safe }}'),
+                borderColor: '#2c3e50',
+                backgroundColor: 'rgba(44, 62, 80, 0.1)',
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // School Trends Chart
+    const schoolCtx = document.getElementById('schoolTrendChart').getContext('2d');
+    new Chart(schoolCtx, {
+        type: 'bar',
+        data: {
+            labels: JSON.parse('{{ school_years|safe }}'),
+            datasets: [{
+                label: 'Schools Registered',
+                data: JSON.parse('{{ school_counts|safe }}'),
+                backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                borderColor: 'rgba(52, 152, 219, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Subject Distribution Chart
+    const subjectCtx = document.getElementById('subjectDistributionChart').getContext('2d');
+    new Chart(subjectCtx, {
+        type: 'doughnut',
+        data: {
+            labels: JSON.parse('{{ subject_names|safe }}'),
+            datasets: [{
+                data: JSON.parse('{{ subject_counts|safe }}'),
+                backgroundColor: [
+                    '#2c3e50', '#3498db', '#e74c3c', '#2ecc71', '#f39c12',
+                    '#9b59b6', '#1abc9c', '#d35400', '#34495e', '#7f8c8d'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

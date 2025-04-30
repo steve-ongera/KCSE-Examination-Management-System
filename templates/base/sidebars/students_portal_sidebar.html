@@ -1,0 +1,183 @@
+{% load static %}
+<!-- ======= Student Portal Sidebar ======= -->
+<aside id="sidebar" class="sidebar" style="background-color: #f8f9fa; border-right: 1px solid #e0e0e0;">
+
+    <div class="student-profile-card text-center py-3" style="border-bottom: 1px solid #e0e0e0;">
+        <div class="student-avatar mx-auto mb-2">
+            <img src="{% if student.passport_photo %}{{ student.passport_photo.url }}{% else %}{% static 'assets/img/default-avatar.png' %}{% endif %}" 
+                 class="rounded-circle" 
+                 width="80" 
+                 height="80" 
+                 alt="Student Photo"
+                 style="border: 3px solid #2c3e50;">
+        </div>
+        <h6 class="mb-1" style="color: #2c3e50; font-weight: 600;">{{ student.first_name }} {{ student.last_name }}</h6>
+        <p class="text-muted small mb-2">{{ student.school.name }}</p>
+        <span class="badge bg-primary">{{ student.current_class }}</span>
+    </div>
+
+    <ul class="sidebar-nav" id="sidebar-nav" style="padding: 0 15px;">
+
+        <!-- Dashboard -->
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'student_dashboard' %}" style="color: #2c3e50; font-weight: 600;">
+                <i class="bi bi-house-door" style="color: #2c3e50;"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+
+        <!-- Academics -->
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#academics-nav" data-bs-toggle="collapse" href="#" style="color: #2c3e50; font-weight: 600;">
+                <i class="bi bi-journal-bookmark" style="color: #2c3e50;"></i>
+                <span>Academics</span>
+                <i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="academics-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav" style="background-color: #eceff1;">
+                <li>
+                    <a href="{% url 'student_timetable' %}" style="color: #455a64;">
+                        <i class="bi bi-calendar-week" style="color: #607d8b;"></i>
+                        <span>Timetable</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'student_subjects' %}" style="color: #455a64;">
+                        <i class="bi bi-book" style="color: #607d8b;"></i>
+                        <span>My Subjects</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'study_resources' %}" style="color: #455a64;">
+                        <i class="bi bi-file-earmark-text" style="color: #607d8b;"></i>
+                        <span>Study Resources</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- Examinations -->
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#exams-nav" data-bs-toggle="collapse" href="#" style="color: #2c3e50; font-weight: 600;">
+                <i class="bi bi-clipboard-check" style="color: #2c3e50;"></i>
+                <span>Examinations</span>
+                <i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="exams-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav" style="background-color: #eceff1;">
+                <li>
+                    <a href="{% url 'exam_registration' %}" style="color: #455a64;">
+                        <i class="bi bi-pencil-square" style="color: #607d8b;"></i>
+                        <span>Register for Exams</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'exam_results' %}" style="color: #455a64;">
+                        <i class="bi bi-graph-up" style="color: #607d8b;"></i>
+                        <span>My Results</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'exam_schedule' %}" style="color: #455a64;">
+                        <i class="bi bi-calendar-event" style="color: #607d8b;"></i>
+                        <span>Exam Schedule</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- Personal -->
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#personal-nav" data-bs-toggle="collapse" href="#" style="color: #2c3e50; font-weight: 600;">
+                <i class="bi bi-person" style="color: #2c3e50;"></i>
+                <span>My Profile</span>
+                <i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="personal-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav" style="background-color: #eceff1;">
+                <li>
+                    <a href="{% url 'student_profile' %}" style="color: #455a64;">
+                        <i class="bi bi-person-badge" style="color: #607d8b;"></i>
+                        <span>Personal Details</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'academic_profile' %}" style="color: #455a64;">
+                        <i class="bi bi-mortarboard" style="color: #607d8b;"></i>
+                        <span>Academic Records</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'change_password' %}" style="color: #455a64;">
+                        <i class="bi bi-shield-lock" style="color: #607d8b;"></i>
+                        <span>Account Security</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- Quick Links -->
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'school_announcements' %}" style="color: #2c3e50; font-weight: 600;">
+                <i class="bi bi-megaphone" style="color: #2c3e50;"></i>
+                <span>Announcements</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'student_finances' %}" style="color: #2c3e50; font-weight: 600;">
+                <i class="bi bi-wallet2" style="color: #2c3e50;"></i>
+                <span>Fee Statements</span>
+            </a>
+        </li>
+
+        <!-- Support -->
+        <li class="nav-heading" style="color: #78909c; font-weight: 700; margin-top: 20px;">SUPPORT</li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'student_support' %}" style="color: #455a64; font-weight: 500;">
+                <i class="bi bi-question-circle" style="color: #607d8b;"></i>
+                <span>Help Center</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'contact_admin' %}" style="color: #455a64; font-weight: 500;">
+                <i class="bi bi-envelope" style="color: #607d8b;"></i>
+                <span>Contact Admin</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout' %}" style="color: #455a64; font-weight: 500;">
+                <i class="bi bi-box-arrow-right" style="color: #607d8b;"></i>
+                <span>Logout</span>
+            </a>
+        </li>
+
+    </ul>
+
+</aside><!-- End Student Portal Sidebar -->
+
+<style>
+    .sidebar {
+        transition: all 0.3s ease;
+    }
+    .nav-item {
+        margin-bottom: 5px;
+    }
+    .nav-link {
+        border-radius: 5px;
+        padding: 10px 15px;
+        transition: all 0.2s ease;
+    }
+    .nav-link:hover {
+        background-color: rgba(44, 62, 80, 0.1);
+    }
+    .nav-link[aria-expanded="true"] {
+        background-color: #e0e0e0;
+    }
+    .nav-content li a {
+        padding: 8px 15px 8px 35px;
+    }
+    .nav-content li a:hover {
+        background-color: rgba(96, 125, 139, 0.1);
+    }
+</style>

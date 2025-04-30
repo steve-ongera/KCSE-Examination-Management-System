@@ -5,6 +5,10 @@ from django.contrib import messages
 from django.urls import reverse
 from .forms import *
 from .models import *
+from django.db.models import Count
+from django.utils import timezone
+from collections import defaultdict
+import json
 
 def custom_login(request):
     if request.method == 'POST':
@@ -135,6 +139,125 @@ def student_dashboard(request):
 def school_admin_dashboard(request):
     return render(request, 'dashboards/school_admin_dashboard.html')
 
-@login_required
+
+
+
+from django.shortcuts import render
+from django.db.models import Count, F, Func, Value, CharField
+from django.db.models.functions import ExtractYear
+from django.utils import timezone
+from .models import (
+    User, School, Student, ExamYear, 
+    ExamRegistration, SubjectRegistration
+)
+from collections import defaultdict
+import json
+
+class ExtractYear(Func):
+    function = 'STRFTIME'
+    template = "%(function)s('%%Y', %(expressions)s)"
+    output_field = CharField()
+
 def knec_dashboard(request):
-    return render(request, 'dashboards/knec_dashboard.html')
+    # Ensure only KNEC officials can access this view
+    if not request.user.is_authenticated or request.user.user_type != 3:
+        return redirect('login')  # Or appropriate permission denied view
+
+    # Get current exam year
+    current_exam_year = ExamYear.objects.filter(is_current=True).first()
+    
+    # Basic counts
+    total_students = Student.objects.count()
+    total_schools = School.objects.count()
+    
+    # Students registered for current exam year
+    if current_exam_year:
+        registered_students = ExamRegistration.objects.filter(
+            exam_year=current_exam_year
+        ).count()
+    else:
+        registered_students = 0
+    
+    # Get exam registration trends by year
+    registration_trends = ExamRegistration.objects.annotate(
+        year=F('exam_year__year')
+    ).values('year').annotate(
+        count=Count('id')
+    ).order_by('year')
+    
+    # Prepare data for charts
+    years = []
+    counts = []
+    
+    for trend in registration_trends:
+        years.append(str(trend['year']))
+        counts.append(trend['count'])
+    
+    # If no data, provide defaults
+    if not years:
+        years = ['2022', '2023', '2024']
+        counts = [0, 0, 0]
+    
+    # Get school registration trends - database agnostic approach
+    school_trends = School.objects.annotate(
+        year=ExtractYear('created_at')
+    ).values('year').annotate(
+        count=Count('id')
+    ).order_by('year')
+    
+    school_years = []
+    school_counts = []
+    
+    for trend in school_trends:
+        school_years.append(str(trend['year']))
+        school_counts.append(trend['count'])
+    
+    # Get subject registration distribution for current year
+    if current_exam_year:
+        subject_distribution = SubjectRegistration.objects.filter(
+            registration__exam_year=current_exam_year
+        ).values(
+            'subject__name'
+        ).annotate(
+            count=Count('id')
+        ).order_by('-count')[:10]  # Top 10 subjects
+    else:
+        subject_distribution = []
+    
+    subject_names = []
+    subject_counts = []
+    
+    for subject in subject_distribution:
+        subject_names.append(subject['subject__name'])
+        subject_counts.append(subject['count'])
+    
+    # Get latest registered students
+    latest_students = Student.objects.select_related('school').order_by('-created_at')[:5]
+    
+    # Get latest schools
+    latest_schools = School.objects.order_by('-created_at')[:5]
+    
+    context = {
+        # Basic counts
+        'total_students': total_students,
+        'registered_students': registered_students,
+        'total_schools': total_schools,
+        'current_exam_year': current_exam_year.year if current_exam_year else "N/A",
+        
+        # Chart data
+        'registration_years': json.dumps(years),
+        'registration_counts': json.dumps(counts),
+        'school_years': json.dumps(school_years),
+        'school_counts': json.dumps(school_counts),
+        'subject_names': json.dumps(subject_names),
+        'subject_counts': json.dumps(subject_counts),
+        
+        # Latest records
+        'latest_students': latest_students,
+        'latest_schools': latest_schools,
+        
+        # For template
+        'page_title': 'KNEC Admin Dashboard',
+    }
+    
+    return render(request, 'dashboards/knec_dashboard.html', context)

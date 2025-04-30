@@ -6,7 +6,7 @@
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>MatokeoPlus</title>
+  <title>Kenya national examination council </title>
   <meta content="" name="description">
   <meta content="" name="keywords">
 
@@ -41,9 +41,22 @@
 
 </head>
   <body>
-    {% include "base/navbar.html" %}
+    {% if request.user.user_type == '1' %}
+       {% include "base/navbars/admin_navbar.html" %}
+    {% elif request.user.user_type == '2' %}
+        {% include "base/navbars/staff_navbar.html" %}
+    {% else %}
+        {% include "base/navbars/knec_navbar.html" %}
+    {% endif %}
 
-    {% include "base/sidebar.html" %}
+
+    {% if request.user.user_type == '1' %}
+      {% include "base/sidebars/admin_sidebar.html" %}
+    {% elif request.user.user_type == '2' %}
+      {% include "base/sidebars/staff_sidebar.html" %}
+    {% else %}
+      {% include "base/sidebars/knec_sidebar.html" %}
+    {% endif %}
 
 
     <main id="main" class="main">

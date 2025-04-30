@@ -12,4 +12,7 @@ urlpatterns = [
     path('student/', views.student_dashboard, name='student_dashboard'),
     path('school-admin/', views.school_admin_dashboard, name='school_admin_dashboard'),
     path('knec/', views.knec_dashboard, name='knec_dashboard'),
+    path('register-student-exam/', views.register_student_exam, name='register-student-exam'),
+
+
 ]

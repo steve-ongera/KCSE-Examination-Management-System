@@ -1,0 +1,40 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Exam Registration by Index{% endblock %}
+
+{% block content %}
+<form method="POST">
+    {% csrf_token %}
+
+    {% if not student %}
+        <label for="index_number">Enter Index Number:</label>
+        <input type="text" name="index_number" required>
+        <button type="submit">Search</button>
+
+    {% else %}
+        <h3>Registering {{ student.first_name }} {{ student.last_name }} ({{ student.index_number }})</h3>
+        <input type="hidden" name="index_number" value="{{ student.index_number }}">
+
+        <h4>Core Subjects (automatically registered):</h4>
+        <ul>
+            {% for subject in core_subjects %}
+                <li>{{ subject.name }}</li>
+            {% endfor %}
+        </ul>
+
+        <h4>Select 4 Optional Subjects:</h4>
+        {% for subject in optional_subjects %}
+            <label>
+                <input type="checkbox" name="optional_subjects" value="{{ subject.id }}">
+                {{ subject.name }}
+            </label><br>
+        {% endfor %}
+
+        <button type="submit" name="register_subjects">Register Subjects</button>
+    {% endif %}
+</form>
+
+
+
+{% endblock %}

@@ -41,21 +41,24 @@
 
 </head>
   <body>
-    {% if request.user.user_type == '1' %}
-       {% include "base/navbars/admin_navbar.html" %}
-    {% elif request.user.user_type == '2' %}
+    {% if request.user.user_type == 1 %}
+    {% include "base/navbars/admin_navbar.html" %}
+    {% elif request.user.user_type == 2 %}
         {% include "base/navbars/school_admin_navbar.html" %}
-    {% else %}
+    {% elif request.user.user_type == 3 %}
         {% include "base/navbars/knec_navbar.html" %}
+    {% else %}
+        {% include "base/navbars/default_navbar.html" %}
     {% endif %}
 
-
-    {% if request.user.user_type == '1' %}
-      {% include "base/sidebars/admin_sidebar.html" %}
-    {% elif request.user.user_type == '2' %}
-      {% include "base/sidebars/school_admin_sidebar.html" %}
+    {% if request.user.user_type == 1 %}
+        {% include "base/sidebars/admin_sidebar.html" %}
+    {% elif request.user.user_type == 2 %}
+        {% include "base/sidebars/school_admin_sidebar.html" %}
+    {% elif request.user.user_type == 3 %}
+        {% include "base/sidebars/knec_sidebar.html" %}
     {% else %}
-      {% include "base/sidebars/knec_sidebar.html" %}
+        {% include "base/sidebars/default_sidebar.html" %}
     {% endif %}
 
 

@@ -1,5 +1,5 @@
 from django import forms
-from .models import User, School, Student
+from .models import *
 
 class SchoolAdminRegistrationForm(forms.ModelForm):
     knec_code = forms.CharField(max_length=20)
@@ -88,3 +88,17 @@ class StudentRegistrationForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+
+class SubjectChoiceForm(forms.Form):
+    optional_subjects = forms.ModelMultipleChoiceField(
+        queryset=Subject.objects.exclude(category='CORE'),
+        widget=forms.CheckboxSelectMultiple,
+        required=True
+    )
+
+    def clean_optional_subjects(self):
+        data = self.cleaned_data['optional_subjects']
+        if len(data) != 4:
+            raise forms.ValidationError("Please select exactly 4 optional subjects.")
+        return data

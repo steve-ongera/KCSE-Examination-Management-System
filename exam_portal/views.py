@@ -106,14 +106,14 @@ def register(request):
                 user.save()
                 
                 # Create student profile
-                student = Student.objects.create(
-                    user=user,
-                    first_name=form.cleaned_data['first_name'],
-                    last_name=form.cleaned_data['last_name'],
-                    birth_certificate_number=form.cleaned_data['birth_certificate_number'],
-                    index_number=form.cleaned_data['index_number'],
-                    # You'll need to set school and other required fields
-                )
+                # student = Student.objects.create(
+                #     user=user,
+                #     first_name=form.cleaned_data['first_name'],
+                #     last_name=form.cleaned_data['last_name'],
+                #     birth_certificate_number=form.cleaned_data['birth_certificate_number'],
+                #     index_number=form.cleaned_data['index_number'],
+                #     # You'll need to set school and other required fields
+                # )
                 
                 messages.success(request, 'Student account created successfully!')
                 return redirect('login')

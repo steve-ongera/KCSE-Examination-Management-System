@@ -1,0 +1,178 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-light-primary py-3">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h4 class="mb-0">
+                        <i class="fas fa-trophy mr-2"></i>
+                        KCSE {{ current_year.year }} Performance Ranking
+                    </h4>
+                </div>
+                <div class="col-md-6">
+                    <form method="get" class="float-md-right">
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control" 
+                                   placeholder="Search students..." value="{{ search_query }}">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            {% if error %}
+                <div class="alert alert-warning">{{ error }}</div>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th width="5%">Rank</th>
+                                <th width="15%">Index No.</th>
+                                <th width="25%">Student Name</th>
+                                <th width="20%">School</th>
+                                <th width="10%" class="text-center">Total Marks</th>
+                                <th width="10%" class="text-center">Total Points</th>
+                                <th width="10%" class="text-center">Mean Points</th>
+                                <th width="10%" class="text-center">Mean Grade</th>
+                                <th width="5%">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in ranked_students %}
+                            <tr>
+                                <td class="text-center">
+                                    <span class="badge 
+                                        {% if student.rank == 1 %}bg-gold
+                                        {% elif student.rank <= 3 %}bg-silver
+                                        {% elif student.rank <= 10 %}bg-bronze
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ student.rank }}
+                                    </span>
+                                </td>
+                                <td>{{ student.data.student.index_number }}</td>
+                                <td>
+                                    {{ student.data.student.first_name }} 
+                                    {{ student.data.student.last_name }}
+                                </td>
+                                <td>{{ student.data.student.school.name }}</td>
+                                <td class="text-center">{{ student.total_marks }}</td>
+                                <td class="text-center">{{ student.total_points }}</td>
+                                <td class="text-center">{{ student.mean_points|floatformat:2 }}</td>
+                                <td class="text-center">
+                                    <span class="badge 
+                                        {% if student.mean_grade == 'A' %}bg-success
+                                        {% elif student.mean_grade == 'A-' %}bg-success bg-opacity-75
+                                        {% elif student.mean_grade == 'B+' %}bg-info bg-opacity-90
+                                        {% elif student.mean_grade == 'B' %}bg-info
+                                        {% elif student.mean_grade == 'B-' %}bg-info bg-opacity-75
+                                        {% elif student.mean_grade == 'C+' %}bg-primary bg-opacity-90
+                                        {% elif student.mean_grade == 'C' %}bg-primary
+                                        {% elif student.mean_grade == 'C-' %}bg-primary bg-opacity-75
+                                        {% elif student.mean_grade == 'D+' %}bg-warning bg-opacity-90
+                                        {% elif student.mean_grade == 'D' %}bg-warning
+                                        {% elif student.mean_grade == 'D-' %}bg-warning bg-opacity-75
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ student.mean_grade }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <a href="{% url 'student_performance' student.data.student.id %}" 
+                                       class="btn btn-sm btn-outline-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center py-4">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    No students found matching your criteria
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.paginator.num_pages > 1 %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center mt-4">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gold { background-color: #FFD700; color: #000; }
+    .bg-silver { background-color: #C0C0C0; color: #000; }
+    .bg-bronze { background-color: #CD7F32; color: #000; }
+    
+    .table th {
+        white-space: nowrap;
+    }
+    
+    .badge {
+        min-width: 30px;
+        font-weight: 600;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: #3f51b5;
+        border-color: #3f51b5;
+    }
+    
+    .pagination .page-link {
+        color: #3f51b5;
+    }
+</style>
+{% endblock %}

@@ -1259,3 +1259,125 @@ def student_performance_view(request, student_id):
     }
     
     return render(request, 'exams/student_performance.html', context)
+from django.db.models import Sum, Count, Q, Value
+from django.db.models.functions import Concat
+from django.db.models import Sum, Count, Q, Value
+from django.db.models.functions import Concat
+from django.core.paginator import Paginator
+
+def current_year_performance(request):
+    # Get current exam year with grading system
+    current_year = ExamYear.objects.filter(is_current=True).first()
+    if not current_year:
+        return render(request, 'exams/current_performance.html', {
+            'error': 'No current exam year configured'
+        })
+
+    # Get the grading system for this year
+    grading_system = current_year.grading_system
+    
+    # Base query - now focusing on marks (scores) instead of points
+    queryset = ExamRegistration.objects.filter(
+        exam_year=current_year
+    ).select_related(
+        'student', 'student__school'
+    ).prefetch_related(
+        'subjects__result'
+    ).annotate(
+        total_marks=Sum('subjects__result__marks'),
+        subject_count=Count('subjects'),
+        full_name=Concat('student__first_name', Value(' '), 'student__last_name')
+    ).exclude(total_marks=None)
+
+    # We won't order the queryset yet as we'll need to calculate points first
+    # and then sort the final list with our custom ordering
+
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        queryset = queryset.filter(
+            Q(student__first_name__icontains=search_query) |
+            Q(student__last_name__icontains=search_query) |
+            Q(student__index_number__icontains=search_query) |
+            Q(student__school__name__icontains=search_query)
+        )
+
+    # Process all students to add their points
+    students_with_points = []
+    for student in queryset:
+        # Calculate total points based on actual subject grades
+        total_points = 0
+        subject_count = 0
+        
+        if hasattr(student, 'subjects'):
+            for subject in student.subjects.all():
+                if hasattr(subject, 'result') and subject.result and subject.result.marks is not None:
+                    subject_count += 1
+                    for grade, criteria in grading_system.items():
+                        if criteria['min_score'] <= subject.result.marks <= criteria['max_score']:
+                            total_points += criteria['points']
+                            break
+        
+        # Calculate mean points (average points per subject)
+        mean_points = total_points / subject_count if subject_count > 0 else 0
+        
+        # Calculate mean marks (average score)
+        mean_marks = student.total_marks / student.subject_count if student.subject_count > 0 else 0
+        
+        # Calculate mean grade based on year-specific grading system
+        mean_grade = 'E'  # Default grade
+        grade_comment = ''
+        
+        if isinstance(grading_system, dict):
+            for grade, criteria in grading_system.items():
+                min_score = criteria.get('min_score', 0)
+                max_score = criteria.get('max_score', 100)
+                if min_score <= mean_marks <= max_score:
+                    mean_grade = grade
+                    grade_comment = criteria.get('comment', '')
+                    break
+        
+        students_with_points.append({
+            'data': student,
+            'total_marks': student.total_marks,
+            'total_points': total_points,
+            'mean_points': mean_points,
+            'mean_grade': mean_grade,
+            'full_name': student.full_name,
+            'subject_count': subject_count  # Add subject count for reference
+        })
+    
+    # Sort students by: 1) total_points (desc), 2) total_marks (desc), 3) full_name (asc)
+    sorted_students = sorted(
+        students_with_points,
+        key=lambda x: (-x['total_points'], -x['total_marks'], x['full_name'])
+    )
+    
+    # Assign ranks based on points and marks (students with same points and marks get the same rank)
+    ranked_students = []
+    current_rank = 0
+    prev_points = None
+    prev_marks = None
+    
+    for i, student in enumerate(sorted_students, start=1):
+        if student['total_points'] != prev_points or student['total_marks'] != prev_marks:
+            current_rank = i
+        
+        student['rank'] = current_rank
+        ranked_students.append(student)
+        
+        prev_points = student['total_points']
+        prev_marks = student['total_marks']
+    
+    # Pagination (after sorting and ranking)
+    paginator = Paginator(ranked_students, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'current_year': current_year,
+        'page_obj': page_obj,
+        'ranked_students': page_obj.object_list,  # Now page_obj contains the ranked_students
+        'search_query': search_query,
+    }
+    return render(request, 'exams/current_performance.html', context)

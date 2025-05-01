@@ -36,6 +36,7 @@ urlpatterns = [
     # New URL pattern for student performance view
     path('search-student-performance/', views.StudentPerformanceView.as_view(), name='search_student_performance'),
     path('student/<int:student_id>/performance/', views.student_performance_view, name='student_performance'),
+    path('performance/current/', views.current_year_performance, name='current_year_performance'),
 
 
 

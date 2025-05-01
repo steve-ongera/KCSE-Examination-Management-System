@@ -1,0 +1,546 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+  /* KNEC Official Theme Colors */
+  :root {
+    --knec-primary: #2c3e50;
+    --knec-secondary: #34495e;
+    --knec-accent: #3498db;
+    --knec-light: #ecf0f1;
+    --knec-dark: #2c3e50;
+    --knec-success: #27ae60;
+    --knec-warning: #f39c12;
+    --knec-danger: #e74c3c;
+    --knec-info: #2980b9;
+  }
+
+  .knec-card {
+    background-color: white;
+    border-radius: 8px;
+    border-left: 4px solid var(--knec-primary);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+  
+  .knec-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+  
+  .knec-card-header {
+    background-color: var(--knec-primary);
+    color: white;
+    padding: 12px 20px;
+    font-weight: 600;
+  }
+  
+  .knec-card-body {
+    padding: 20px;
+  }
+  
+  .knec-stat-number {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--knec-primary);
+    margin-bottom: 5px;
+  }
+  
+  .knec-stat-label {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .knec-icon {
+    font-size: 2.5rem;
+    color: var(--knec-primary);
+    opacity: 0.8;
+  }
+  
+  .knec-divider {
+    border-top: 1px solid #ecf0f1;
+    margin: 15px 0;
+  }
+  
+  .knec-badge {
+    background-color: var(--knec-accent);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  
+  .chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+  }
+  
+  .knec-activity-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f1f1;
+  }
+  
+  .knec-activity-date {
+    font-size: 0.8rem;
+    color: #95a5a6;
+    min-width: 60px;
+  }
+  
+  .knec-activity-content {
+    font-size: 0.9rem;
+  }
+  
+  .knec-activity-school {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0" style="color: var(--knec-primary);">
+          <i class="bi bi-speedometer2 me-2"></i>KNEC Examination Dashboard
+        </h1>
+        <div class="knec-badge">
+          {{ current_year.year }} Results Analysis
+        </div>
+      </div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="#">Home</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Summary Cards Row -->
+  <div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="knec-card knec-card">
+        <div class="knec-card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <p class="knec-stat-label">Total Students</p>
+              <h3 class="knec-stat-number">{{ total_students }}</h3>
+            </div>
+            <div class="knec-icon">
+              <i class="bi bi-people-fill"></i>
+            </div>
+          </div>
+          <div class="knec-divider"></div>
+          <small class="text-muted">All registered candidates</small>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="knec-card knec-card">
+        <div class="knec-card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <p class="knec-stat-label">Exam Registrations</p>
+              <h3 class="knec-stat-number">{{ registration_stats.current_total }}</h3>
+            </div>
+            <div class="knec-icon">
+              <i class="bi bi-pencil-square"></i>
+            </div>
+          </div>
+          <div class="knec-divider"></div>
+          <div class="d-flex justify-content-between">
+            <small class="text-success">
+              <i class="bi bi-gender-male"></i> {{ registration_stats.current_male }}
+            </small>
+            <small class="text-info">
+              <i class="bi bi-gender-female"></i> {{ registration_stats.current_female }}
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="knec-card knec-card">
+        <div class="knec-card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <p class="knec-stat-label">Registered Schools</p>
+              <h3 class="knec-stat-number">{{ total_schools }}</h3>
+            </div>
+            <div class="knec-icon">
+              <i class="bi bi-building"></i>
+            </div>
+          </div>
+          <div class="knec-divider"></div>
+          <small class="text-muted">{{ active_schools }} active schools</small>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="knec-card knec-card">
+        <div class="knec-card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <p class="knec-stat-label">National Average</p>
+              <h3 class="knec-stat-number">{{ avg_points|floatformat:2 }}</h3>
+            </div>
+            <div class="knec-icon">
+              <i class="bi bi-graph-up"></i>
+            </div>
+          </div>
+          <div class="knec-divider"></div>
+          <small class="text-muted">Mean grade points</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Row -->
+  <div class="row">
+    <!-- Left Column -->
+    <div class="col-lg-8 mb-4">
+      <!-- Performance Trends Card -->
+      <div class="knec-card mb-4">
+        <div class="knec-card-header">
+          <i class="bi bi-bar-chart-line me-2"></i>Performance Trend Comparison
+        </div>
+        <div class="knec-card-body">
+          <div class="chart-container">
+            <canvas id="performanceTrendChart"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Gender Performance Card -->
+      <div class="knec-card mb-4">
+        <div class="knec-card-header">
+          <i class="bi bi-gender-ambiguous me-2"></i>Gender Performance Analysis ({{ current_year.year }})
+        </div>
+        <div class="knec-card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="chart-container">
+                <canvas id="genderPerformanceChart"></canvas>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th class="text-end">Male</th>
+                    <th class="text-end">Female</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for gp in gender_performance %}
+                  <tr>
+                    <td>Avg Points</td>
+                    <td class="text-end">{{ gp.avg_points|floatformat:2 }}</td>
+                    <td class="text-end">{{ gp.avg_points|floatformat:2 }}</td>
+                  </tr>
+                  <tr>
+                    <td>Avg Marks</td>
+                    <td class="text-end">{{ gp.avg_marks|floatformat:1 }}</td>
+                    <td class="text-end">{{ gp.avg_marks|floatformat:1 }}</td>
+                  </tr>
+                  <tr>
+                    <td>Count</td>
+                    <td class="text-end">{{ gp.count }}</td>
+                    <td class="text-end">{{ gp.count }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Top Subjects Card -->
+      <div class="knec-card">
+        <div class="knec-card-header">
+          <i class="bi bi-book me-2"></i>Subject Performance Analysis
+        </div>
+        <div class="knec-card-body">
+          <ul class="nav nav-tabs" id="subjectTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="current-tab" data-bs-toggle="tab" data-bs-target="#current-subjects" type="button" role="tab">Current Year</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="gender-tab" data-bs-toggle="tab" data-bs-target="#gender-subjects" type="button" role="tab">Gender Comparison</button>
+            </li>
+          </ul>
+          <div class="tab-content pt-3" id="subjectTabsContent">
+            <div class="tab-pane fade show active" id="current-subjects" role="tabpanel">
+              <div class="chart-container">
+                <canvas id="currentSubjectsChart"></canvas>
+              </div>
+            </div>
+            <div class="tab-pane fade" id="gender-subjects" role="tabpanel">
+              <div class="chart-container">
+                <canvas id="genderSubjectsChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Right Column -->
+    <div class="col-lg-4 mb-4">
+      <!-- Top Schools Card -->
+      <div class="knec-card mb-4">
+        <div class="knec-card-header">
+          <i class="bi bi-trophy me-2"></i>Top Performing Schools
+        </div>
+        <div class="knec-card-body">
+          <h6 class="text-center mb-3">{{ current_year.year }} Performance</h6>
+          <div class="list-group">
+            {% for school in current_top_schools %}
+            <div class="list-group-item border-0 py-2">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="mb-0">{{ school.name|truncatechars:22 }}</h6>
+                  <small class="text-muted">{{ school.knec_code }}</small>
+                </div>
+                <span class="badge bg-primary rounded-pill">{{ school.avg_points|floatformat:2 }}</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="knec-divider"></div>
+          <h6 class="text-center mb-3">Historical Best</h6>
+          <div class="list-group">
+            {% for school in previous_top_schools %}
+            <div class="list-group-item border-0 py-2">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="mb-0">{{ school.name|truncatechars:22 }}</h6>
+                  <small class="text-muted">{{ school.knec_code }}</small>
+                </div>
+                <span class="badge bg-secondary rounded-pill">{{ school.avg_points|floatformat:2 }}</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Top Student Card -->
+      <div class="knec-card mb-4">
+        <div class="knec-card-header">
+          <i class="bi bi-star-fill me-2"></i>Top Performing Student
+        </div>
+        <div class="knec-card-body text-center">
+          {% if current_top_student %}
+          <div class="mb-3">
+            <div class="avatar avatar-xl bg-light rounded-circle mb-2">
+              <i class="bi bi-person-fill" style="font-size: 2rem; color: var(--knec-primary);"></i>
+            </div>
+            <h5>{{ current_top_student }}</h5>
+            <p class="text-muted">{{ current_top_student.school.name }}</p>
+          </div>
+          <div class="d-flex justify-content-around">
+            <div>
+              <h4 class="text-primary">{{ top_student_comparison.current_points|floatformat:2 }}</h4>
+              <small>Total Points</small>
+            </div>
+            <div>
+              <h4 class="text-success">{{ top_student_comparison.school_avg|floatformat:2 }}</h4>
+              <small>School Avg</small>
+            </div>
+            <div>
+              <h4 class="text-info">{{ top_student_comparison.national_avg|floatformat:2 }}</h4>
+              <small>National Avg</small>
+            </div>
+          </div>
+          {% else %}
+          <p>No top student data available</p>
+          {% endif %}
+        </div>
+      </div>
+      
+      <!-- Recent Activity Card -->
+      <div class="knec-card">
+        <div class="knec-card-header">
+          <i class="bi bi-clock-history me-2"></i>Recent Activity
+        </div>
+        <div class="knec-card-body">
+          {% for student in latest_students %}
+          <div class="knec-activity-item d-flex">
+            <div class="knec-activity-date">{{ student.created_at|date:"M d" }}</div>
+            <div class="knec-activity-content">
+              {{ student.first_name }} {{ student.last_name }}
+              <div class="knec-activity-school">{{ student.school.name|truncatechars:20 }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Performance Trend Chart
+  new Chart(document.getElementById('performanceTrendChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: [
+        {% for year in yearly_performance %}
+          "{{ year.year }}"{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ],
+      datasets: [{
+        label: 'Average Points',
+        data: [
+          {% for year in yearly_performance %}
+            {{ year.avg_points|floatformat:2 }}{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ],
+        borderColor: '#2c3e50',
+        backgroundColor: 'rgba(44, 62, 80, 0.1)',
+        tension: 0.3,
+        fill: true
+      }, {
+        label: 'Average Marks',
+        data: [
+          {% for year in yearly_performance %}
+            {{ year.avg_marks|floatformat:2 }}{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ],
+        borderColor: '#3498db',
+        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top'
+        }
+      }
+    }
+  });
+
+  // Gender Performance Chart
+  new Chart(document.getElementById('genderPerformanceChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['Points', 'Marks'],
+      datasets: [{
+        label: 'Male',
+        data: [
+          {% for gp in gender_performance %}
+            {% if gp.gender == 'M' %}{{ gp.avg_points|floatformat:2 }}{% endif %}
+          {% endfor %},
+          {% for gp in gender_performance %}
+            {% if gp.gender == 'M' %}{{ gp.avg_marks|floatformat:2 }}{% endif %}
+          {% endfor %}
+        ],
+        backgroundColor: 'rgba(52, 152, 219, 0.7)'
+      }, {
+        label: 'Female',
+        data: [
+          {% for gp in gender_performance %}
+            {% if gp.gender == 'F' %}{{ gp.avg_points|floatformat:2 }}{% endif %}
+          {% endfor %},
+          {% for gp in gender_performance %}
+            {% if gp.gender == 'F' %}{{ gp.avg_marks|floatformat:2 }}{% endif %}
+          {% endfor %}
+        ],
+        backgroundColor: 'rgba(231, 76, 60, 0.7)'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+
+  // Current Subjects Chart
+  new Chart(document.getElementById('currentSubjectsChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: [
+        {% for subject in current_subjects|slice:":10" %}
+          "{{ subject.subject_name|truncatechars:15 }}"{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ],
+      datasets: [{
+        label: 'Average Points',
+        data: [
+          {% for subject in current_subjects|slice:":10" %}
+            {{ subject.avg_points|floatformat:2 }}{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ],
+        backgroundColor: 'rgba(44, 62, 80, 0.7)'
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+
+  // Gender Subjects Chart
+  new Chart(document.getElementById('genderSubjectsChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: [
+        {% for subject in current_subjects|slice:":5" %}
+          "{{ subject.subject_name|truncatechars:15 }}"{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ],
+      datasets: [{
+        label: 'Male',
+        data: [
+          {% for subject in current_subjects|slice:":5" %}
+            {{ subject.male_avg|floatformat:2 }}{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ],
+        backgroundColor: 'rgba(52, 152, 219, 0.7)'
+      }, {
+        label: 'Female',
+        data: [
+          {% for subject in current_subjects|slice:":5" %}
+            {{ subject.female_avg|floatformat:2 }}{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ],
+        backgroundColor: 'rgba(231, 76, 60, 0.7)'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { beginAtZero: true }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

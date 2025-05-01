@@ -35,7 +35,7 @@ def generate_index_number(school):
     """Generate a unique index number for a student."""
     school_code = school.knec_code
     count = Student.objects.filter(school=school).count()
-    return f"{school_code}/{count + 1:04d}/2023"
+    return f"{school_code}/{count + 1:04d}/2020"
 
 def generate_admission_number(existing_adms):
     """Generate a unique admission number."""
@@ -54,29 +54,41 @@ class Command(BaseCommand):
         schools = School.objects.all()  # Get all schools, regardless of student count
 
         for school in schools:
-            num_students = random.randint(17, 28)  # You can adjust this range as needed
+            num_students = random.randint(14, 27)  # You can adjust this range as needed
             existing_adms = set()
 
             # Combined first and middle name lists for male and female
             names = {
                 'M': [
-                    "Brian", "Kevin", "Eric", "Dennis", "Allan", "Sammy", "James", "John", "Peter", "David",
-                    "Samuel", "Daniel", "Michael", "Joseph", "Robert", "William", "Charles", "Thomas", "George",
-                    "Moses", "Kenneth", "Paul", "Andrew", "Joshua", "Stephen", "Richard", "Collins", "Elijah", "Victor",
-                    "Edwin", "Fredrick", "Alex", "Frank", "Harrison", "Gilbert", "Nicholas", "Noah", "Caleb", "Abel"
+                    'Elias', 'Geoffrey', 'Simon', 'Mohamed', 'Chris', 'Maxwell', 'Ben', 'Justus', 'Allan', 'Evans',
+                    'Ronald','Maulid', 'Sylvester', 'Arnold', 'Brian', 'Eric', 'Clinton', 'Julius', 'Oscar', 'Patrick', 'Newton',
+                    'Trevor', 'Martin', 'Omar', 'Lemmy', 'Ibrahim', 'Faisal', 'Anthony', 'Titus', 'Brayo', 'Kelvin',
+                    'Elvis', 'Duncan', 'Felix','Abute', 'Alvin', 'Dan', 'Levi', 'Boniface', 'Cyrus', 'Mark', 'Abdallah',                  
+                    'Tom', 'Brian', 'Khalid', 'Rashid', 'Jackson', 'Japhet', 'Barack', 'Kassim', 'Ramadhan', 'Ismail'
                 ],
                 'F': [
-                    "Lucy", "Joan", "Agnes", "Emily", "Sharon", "Caroline", "Mary", "Elizabeth", "Sarah", "Catherine",
-                    "Jane", "Rachel", "Ruth", "Rebecca", "Esther", "Grace", "Faith", "Joyce", "Anne", "Margaret",
-                    "Mercy", "Linda", "Susan", "Stella", "Diana", "Irene", "Wambui", "Grace", "Amina", "Naomi",
-                    "Millicent", "Gina", "Angela", "Betty", "Hellen", "Martha", "Tracy", "Nelly", "Joanna", "Vivian"
+                    'Gladys', 'Veronica', 'Emily', 'Vivian', 'Fridah', 'Tabitha', 'Alice', 'Connie', 'Deborah', 'Judith',
+                    'Brenda', 'Janet', 'Zuleika', 'Valerie', 'Linet', 'Lucy', 'Angela', 'Dorothy', 'Beatrice', 'Patricia',
+                    'Winnie', 'Hope', 'Tina', 'Zena', 'Farida', 'Rahab', 'Judy', 'Norah', 'Peris', 'Damaris'
+                    'Rose', 'Monica', 'Florence', 'Edna', 'Carol', 'Mildred', 'Abigail', 'Celestine', 'Salome', 'Nancy',
+                    'Christine', 'Purity', 'Sharleen', 'Yvonne', 'Lilian', 'Eunice', 'Peninah', 'Leah', 'Miriam', 'Asha'
+                    
                 ]
             }
 
+
             last_names = [
-                "Mwangi", "Otieno", "Mutua", "Ochieng", "Wambui", "Kariuki", "Kamau", "Njoroge", "Mugo", "Njiru",
-                "Kibaki", "Ruto", "Karanja", "Onyango", "Chege", "Mburu", "Muthoni", "Kimani", "Mwaura", "Kagwe"
-            ]
+                    'Abdullahi', 'Mugo', 'Oluoch', 'Anyango', 'Ng’ang’a', 'Wandera', 'Cheruiyot', 'Otieno', 'Muli', 'Koskei',         
+                    'Omondi', 'Were', 'Kariuki', 'Mutua', 'Barasa', 'Okumu', 'Kimemia', 'Gakuru', 'Owino', 'Mutiso',
+                     'Ochieng', 'Mungai', 'Musimbi', 'Nduta', 'Lagat', 'Ali', 'Mwende', 'Kiptum', 'Juma', 'Naliaka',
+                    'Ruto', 'Odhiambo', 'Chege', 'Wekesa', 'Mburu', 'Njiru', 'Abuya', 'Mugambi', 'Odinga', 'Lusweti',
+                    'Musyoka', 'Gathungu', 'Karanja', 'Makau', 'Mwanzia', 'Munyua', 'Kemei', 'Wafula', 'Tobiko', 'Kipchoge',
+                    'Koech', 'Mwangangi', 'Chebet', 'Nyambane', 'Ongeri', 'Simba', 'Omondi', 'Kilonzo', 'Masai', 'Muthee',
+                    'Waiguru', 'Atieno', 'Njenga', 'Okoth', 'Mwita', 'Mwachiro', 'Yatich', 'Ngugi', 'Muli', 'Ndung’u',
+                    'Mbithi', 'Njoki', 'Gicheru', 'Tumbo', 'Cherop', 'Wanyama', 'Karimi', 'Mbogo', 'Wairimu', 'Nakitare'
+                   
+                ]
+
 
             for _ in range(num_students):
                 gender = random.choice(['M', 'F'])
@@ -112,7 +124,7 @@ class Command(BaseCommand):
                     admission_date=adm_date,
                     current_class=current_class,
                     is_boarder=bool(random.getrandbits(1)),
-                    email=f"{fname.lower()}.{lname.lower()}@example.com" if random.random() > 0.3 else None,
+                    email=f"{fname.lower()}.{lname.lower()}@gmail.com" if random.random() > 0.3 else None,
                     phone_number=f"07{random.randint(10000000, 99999999)}" if random.random() > 0.5 else None,
                     previous_school=f"{random.choice(['St.', 'Unity', 'Green'])} {random.choice(['Primary', 'Prep'])} School",
                     kcpe_year=kcpe_year,

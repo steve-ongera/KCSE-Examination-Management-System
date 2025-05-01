@@ -1446,3 +1446,146 @@ def school_ranking(request):
     }
     
     return render(request, 'exams/ranking/school_rankings.html', context)
+
+
+#analysis view
+from django.shortcuts import render
+from django.db.models import Count, Avg, Sum, Case, When, IntegerField, F, Q
+from .models import (
+    School, Student, ExamResult, SubjectRegistration, 
+    ExamYear, Subject, ExamRegistration
+)
+from django.db.models.functions import Coalesce
+
+def performance_dashboard(request):
+    # Get current and previous exam years
+    current_year = ExamYear.objects.filter(is_current=True).first()
+    previous_years = ExamYear.objects.filter(is_current=False).order_by('-year')
+    
+    if not current_year:
+        return render(request, 'dashboard/no_current_year.html')
+    
+    # Performance trend comparison
+    yearly_performance = ExamResult.objects.values(
+        'subject_registration__registration__exam_year__year'
+    ).annotate(
+        year=F('subject_registration__registration__exam_year__year'),
+        avg_points=Avg('points'),
+        avg_marks=Avg('marks')
+    ).order_by('year')
+    
+    # Gender performance comparison for current year
+    gender_performance = ExamResult.objects.filter(
+        subject_registration__registration__exam_year=current_year
+    ).values(
+        'subject_registration__registration__student__gender'
+    ).annotate(
+        gender=F('subject_registration__registration__student__gender'),
+        avg_points=Avg('points'),
+        avg_marks=Avg('marks'),
+        count=Count('id')
+    )
+    
+    # Top 5 schools current year vs previous year
+    current_top_schools = School.objects.annotate(
+        avg_points=Avg(
+            'students__registrations__subjects__result__points',
+            filter=Q(students__registrations__exam_year=current_year)
+    )).order_by('-avg_points')[:5]
+    
+    previous_top_schools = School.objects.annotate(
+        avg_points=Avg(
+            'students__registrations__subjects__result__points',
+            filter=Q(students__registrations__exam_year__is_current=False)
+        )
+    ).order_by('-avg_points')[:5]
+    
+    # Top performing student and comparison
+    current_top_student = Student.objects.annotate(
+        total_points=Coalesce(Sum(
+            'registrations__subjects__result__points',
+            filter=Q(registrations__exam_year=current_year)), 0)
+    ).order_by('-total_points').first()
+    
+    if current_top_student:
+        top_student_comparison = {
+            'current_points': current_top_student.total_points,
+            'school_avg': ExamResult.objects.filter(
+                subject_registration__registration__exam_year=current_year,
+                subject_registration__registration__student__school=current_top_student.school
+            ).aggregate(avg=Avg('points'))['avg'],
+            'national_avg': ExamResult.objects.filter(
+                subject_registration__registration__exam_year=current_year
+            ).aggregate(avg=Avg('points'))['avg']
+        }
+    else:
+        top_student_comparison = None
+    
+    # Registration statistics
+    registration_stats = {
+        'current_total': ExamRegistration.objects.filter(exam_year=current_year).count(),
+        'current_male': ExamRegistration.objects.filter(
+            exam_year=current_year,
+            student__gender='M'
+        ).count(),
+        'current_female': ExamRegistration.objects.filter(
+            exam_year=current_year,
+            student__gender='F'
+        ).count(),
+    }
+    
+    # Subject performance comparisons
+    current_subjects = SubjectRegistration.objects.filter(
+        registration__exam_year=current_year
+    ).values(
+        'subject__name'
+    ).annotate(
+        subject_name=F('subject__name'),
+        avg_points=Avg('result__points'),
+        avg_marks=Avg('result__marks'),
+        male_avg=Avg(
+            'result__points',
+            filter=Q(registration__student__gender='M')
+        ),
+        female_avg=Avg(
+            'result__points',
+            filter=Q(registration__student__gender='F')
+        )
+    ).order_by('-avg_points')
+    
+    previous_subjects = SubjectRegistration.objects.filter(
+        registration__exam_year__is_current=False
+    ).values(
+        'subject__name'
+    ).annotate(
+        subject_name=F('subject__name'),
+        avg_points=Avg('result__points')
+    ).order_by('-avg_points')
+    
+    context = {
+        'current_year': current_year,
+        'previous_years': previous_years,
+        
+        # Performance trends
+        'yearly_performance': list(yearly_performance),
+        
+        # Gender comparisons
+        'gender_performance': list(gender_performance),
+        
+        # School comparisons
+        'current_top_schools': current_top_schools,
+        'previous_top_schools': previous_top_schools,
+        
+        # Student comparisons
+        'current_top_student': current_top_student,
+        'top_student_comparison': top_student_comparison,
+        
+        # Registration stats
+        'registration_stats': registration_stats,
+        
+        # Subject comparisons
+        'current_subjects': list(current_subjects),
+        'previous_subjects': list(previous_subjects),
+    }
+    
+    return render(request, 'dashboards/performance_dashboard.html', context)

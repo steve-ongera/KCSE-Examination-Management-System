@@ -13,6 +13,7 @@ urlpatterns = [
     path('school-admin/', views.school_admin_dashboard, name='school_admin_dashboard'),
     path('knec/', views.knec_dashboard, name='knec_dashboard'),
     path('register-student-exam/', views.register_student_exam, name='register-student-exam'),
+    path('performance_dashboard/', views.performance_dashboard , name='examination_dashboard'),
 
 
     #admin/ student crud opertaions 

@@ -1,0 +1,152 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+  .info-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+  .info-card h6 {
+    color: #3498db;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+  }
+  .assignment-card {
+    border-left: 4px solid #2c3e50;
+    margin-bottom: 10px;
+  }
+  .knec-badge {
+    background-color: #3498db;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0" style="color: #2c3e50;">
+          <i class="bi bi-building me-2"></i>{{ center.name }}
+        </h1>
+        <div class="knec-badge">
+          Code: {{ center.code }}
+        </div>
+      </div>
+      <p class="text-muted mb-0">{{ center.address }}</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="info-card">
+        <h6><i class="bi bi-info-circle"></i> Center Information</h6>
+        <dl class="row">
+          <dt class="col-sm-4">Center Type:</dt>
+          <dd class="col-sm-8">
+            <span class="badge 
+              {% if center.center_type == 'MAIN' %}bg-primary
+              {% elif center.center_type == 'SUB' %}bg-secondary
+              {% else %}bg-info{% endif %}">
+              {{ center.get_center_type_display }}
+            </span>
+          </dd>
+          
+          <dt class="col-sm-4">Capacity:</dt>
+          <dd class="col-sm-8">{{ center.capacity }} candidates</dd>
+          
+          <dt class="col-sm-4">Status:</dt>
+          <dd class="col-sm-8">
+            {% if center.is_active %}
+              <span class="badge bg-success">Active</span>
+            {% else %}
+              <span class="badge bg-danger">Inactive</span>
+            {% endif %}
+          </dd>
+          
+          <dt class="col-sm-4">County:</dt>
+          <dd class="col-sm-8">{{ center.county }}</dd>
+          
+          <dt class="col-sm-4">Sub-County:</dt>
+          <dd class="col-sm-8">{{ center.sub_county }}</dd>
+          
+          <dt class="col-sm-4">GPS Coordinates:</dt>
+          <dd class="col-sm-8">{{ center.gps_coordinates|default:"Not specified" }}</dd>
+        </dl>
+      </div>
+      
+      <div class="info-card">
+        <h6><i class="bi bi-person-lines-fill"></i> Contact Information</h6>
+        <dl class="row">
+          <dt class="col-sm-4">Contact Person:</dt>
+          <dd class="col-sm-8">{{ center.contact_person }}</dd>
+          
+          <dt class="col-sm-4">Phone Number:</dt>
+          <dd class="col-sm-8">{{ center.contact_phone }}</dd>
+          
+          <dt class="col-sm-4">Email:</dt>
+          <dd class="col-sm-8">{{ center.contact_email|default:"Not specified" }}</dd>
+        </dl>
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="info-card">
+        <h6><i class="bi bi-calendar-check"></i> Upcoming Invigilation Assignments</h6>
+        {% if assignments %}
+          {% for assignment in assignments %}
+          <div class="assignment-card info-card">
+            <div class="d-flex justify-content-between">
+              <div>
+                <strong>{{ assignment.exam_session.subject.name }}</strong>
+                <div class="text-muted small">
+                  {{ assignment.exam_session.date|date:"d M Y" }} | 
+                  {{ assignment.exam_session.start_time|time:"H:i" }}-{{ assignment.exam_session.end_time|time:"H:i" }}
+                </div>
+              </div>
+              <span class="badge bg-primary">{{ assignment.role }}</span>
+            </div>
+            <div class="mt-2">
+              <small>
+                <strong>Invigilator:</strong> 
+                {{ assignment.invigilator.user.get_full_name }}
+              </small>
+              <span class="badge ms-2 {% if assignment.is_confirmed %}bg-success{% else %}bg-warning{% endif %}">
+                {% if assignment.is_confirmed %}Confirmed{% else %}Pending{% endif %}
+              </span>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center py-3">
+            <i class="bi bi-calendar-x" style="font-size: 2rem; color: #bdc3c7;"></i>
+            <p class="mt-2">No upcoming assignments</p>
+          </div>
+        {% endif %}
+      </div>
+      
+      <div class="info-card">
+        <h6><i class="bi bi-geo-alt"></i> Location Map</h6>
+        <div class="text-center py-4 bg-light rounded">
+          {% if center.gps_coordinates %}
+            <img src="https://maps.googleapis.com/maps/api/staticmap?center={{ center.gps_coordinates }}&zoom=15&size=600x300&maptype=roadmap&markers=color:red%7C{{ center.gps_coordinates }}&key=YOUR_API_KEY" 
+                 alt="Map of {{ center.name }}" class="img-fluid rounded">
+            <p class="mt-2 small text-muted">GPS: {{ center.gps_coordinates }}</p>
+          {% else %}
+            <i class="bi bi-map" style="font-size: 2rem; color: #bdc3c7;"></i>
+            <p class="mt-2">No GPS coordinates provided</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

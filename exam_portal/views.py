@@ -1903,3 +1903,81 @@ def release_schedule(request):
     }
     
     return render(request, 'exams/release_schedule.html', context)
+
+
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from .models import ExamTimetable, ExamCenter, Invigilator, InvigilationAssignment
+
+@login_required
+def exam_management_dashboard(request):
+    return render(request, 'exams/dashboard.html')
+
+@login_required
+def timetable_list(request):
+    timetables = ExamTimetable.objects.filter(is_published=True).order_by('-exam_year__year')
+    return render(request, 'exams/timetable_list.html', {'timetables': timetables})
+
+@login_required
+def timetable_detail(request, pk):
+    timetable = get_object_or_404(ExamTimetable, pk=pk)
+    return render(request, 'exams/timetable_detail.html', {'timetable': timetable})
+
+@login_required
+def center_list(request):
+    centers_list = ExamCenter.objects.filter(is_active=True).order_by('name')
+    
+    # Pagination
+    paginator = Paginator(centers_list, 20)
+    page_number = request.GET.get('page')
+    centers = paginator.get_page(page_number)
+    
+    return render(request, 'exams/center_list.html', {
+        'centers': centers,
+        'is_paginated': centers.has_other_pages(),
+        'page_obj': centers,
+    })
+
+@login_required
+def center_detail(request, pk):
+    center = get_object_or_404(ExamCenter, pk=pk)
+    
+    # Additional context
+    assignments = InvigilationAssignment.objects.filter(
+        exam_center=center
+    ).select_related('invigilator', 'exam_session')
+    
+    return render(request, 'exams/center_detail.html', {
+        'center': center,
+        'assignments': assignments,
+    })
+
+@login_required
+def invigilator_list(request):
+    invigilators_list = Invigilator.objects.filter(is_active=True).order_by('user__last_name')
+    
+    # Pagination
+    paginator = Paginator(invigilators_list, 20)
+    page_number = request.GET.get('page')
+    invigilators = paginator.get_page(page_number)
+    
+    return render(request, 'exams/invigilator_list.html', {
+        'invigilators': invigilators,
+        'is_paginated': invigilators.has_other_pages(),
+        'page_obj': invigilators,
+    })
+
+@login_required
+def invigilator_detail(request, pk):
+    invigilator = get_object_or_404(Invigilator, pk=pk)
+    
+    # Additional context
+    assignments = InvigilationAssignment.objects.filter(
+        invigilator=invigilator
+    ).select_related('exam_center', 'exam_session')
+    
+    return render(request, 'exams/invigilator_detail.html', {
+        'invigilator': invigilator,
+        'assignments': assignments,
+    })

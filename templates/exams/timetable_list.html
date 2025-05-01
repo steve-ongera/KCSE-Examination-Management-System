@@ -1,0 +1,128 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+  .knec-table {
+    font-size: 0.9rem;
+  }
+  .knec-table th {
+    background-color: #2c3e50;
+    color: white;
+    font-weight: 500;
+  }
+  .knec-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+  }
+  .knec-badge {
+    background-color: #3498db;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .filter-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0" style="color: #2c3e50;">
+          <i class="bi bi-calendar-event me-2"></i>Exam Timetables
+        </h1>
+        <div class="knec-badge">
+          Published: {{ timetables|length }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timetables Table -->
+  <div class="card">
+    <div class="card-header">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Available Exam Timetables</h5>
+        <small>Showing {{ page_obj|length }} of {{ page_obj.paginator.count }} records</small>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table knec-table table-hover">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Exam Year</th>
+              <th>Published</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for timetable in page_obj %}
+            <tr>
+              <td>{{ timetable.title }}</td>
+              <td>{{ timetable.exam_year.year }}</td>
+              <td>
+                {% if timetable.is_published %}
+                  <span class="badge bg-success">Published</span>
+                  <small class="text-muted">{{ timetable.published_date|date:"d M Y" }}</small>
+                {% else %}
+                  <span class="badge bg-warning">Draft</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{% url 'timetable_detail' timetable.pk %}" class="btn btn-sm btn-primary">
+                  <i class="bi bi-eye"></i> View
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="text-center">No timetables available</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination -->
+      {% if is_paginated %}
+      <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center mt-4">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          {% endif %}
+          
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+              <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+          {% endfor %}
+          
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

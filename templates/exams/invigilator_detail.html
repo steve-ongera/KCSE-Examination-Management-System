@@ -1,0 +1,204 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+  .profile-header {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .profile-pic {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+  .info-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+  .info-card h6 {
+    color: #3498db;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+  }
+  .assignment-card {
+    border-left: 4px solid #2c3e50;
+    margin-bottom: 10px;
+  }
+  .knec-badge {
+    background-color: #3498db;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <!-- Profile Header -->
+  <div class="profile-header">
+    <div class="row align-items-center">
+      <div class="col-md-2 text-center">
+        <img src="{% static 'images/default-profile.png' %}" alt="Profile" class="profile-pic">
+      </div>
+      <div class="col-md-6">
+        <h2 style="color: #2c3e50;">{{ invigilator.user.get_full_name }}</h2>
+        <p class="text-muted mb-1">
+          <i class="bi bi-person-badge"></i> ID: {{ invigilator.id_number }}
+          {% if invigilator.tsc_number %}
+            | <i class="bi bi-award"></i> TSC: {{ invigilator.tsc_number }}
+          {% endif %}
+        </p>
+        <p class="mb-0">
+          <span class="badge {% if invigilator.is_active %}bg-success{% else %}bg-danger{% endif %}">
+            {% if invigilator.is_active %}Active{% else %}Inactive{% endif %} Invigilator
+          </span>
+        </p>
+      </div>
+      <div class="col-md-4 text-md-end">
+        <div class="knec-badge">
+          KNEC Certified
+        </div>
+        <p class="text-muted mt-2">
+          <i class="bi bi-telephone"></i> {{ invigilator.phone_number }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-5">
+      <div class="info-card">
+        <h6><i class="bi bi-person-lines-fill"></i> Personal Information</h6>
+        <dl class="row">
+          <dt class="col-sm-4">Full Name:</dt>
+          <dd class="col-sm-8">{{ invigilator.user.get_full_name }}</dd>
+          
+          <dt class="col-sm-4">Email:</dt>
+          <dd class="col-sm-8">{{ invigilator.user.email }}</dd>
+          
+          <dt class="col-sm-4">Phone:</dt>
+          <dd class="col-sm-8">{{ invigilator.phone_number }}</dd>
+          
+          <dt class="col-sm-4">ID Number:</dt>
+          <dd class="col-sm-8">{{ invigilator.id_number }}</dd>
+          
+          {% if invigilator.tsc_number %}
+          <dt class="col-sm-4">TSC Number:</dt>
+          <dd class="col-sm-8">{{ invigilator.tsc_number }}</dd>
+          {% endif %}
+          
+          <dt class="col-sm-4">Qualification:</dt>
+          <dd class="col-sm-8">{{ invigilator.qualification }}</dd>
+          
+          <dt class="col-sm-4">Status:</dt>
+          <dd class="col-sm-8">
+            {% if invigilator.is_active %}
+              <span class="badge bg-success">Active</span>
+            {% else %}
+              <span class="badge bg-danger">Inactive</span>
+            {% endif %}
+          </dd>
+        </dl>
+      </div>
+      
+      <div class="info-card">
+        <h6><i class="bi bi-book"></i> Specialized Subjects</h6>
+        {% if invigilator.subjects.all %}
+          <div class="d-flex flex-wrap gap-2">
+            {% for subject in invigilator.subjects.all %}
+            <span class="badge bg-primary">{{ subject.name }}</span>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted">No specialized subjects assigned</p>
+        {% endif %}
+      </div>
+    </div>
+    
+    <div class="col-md-7">
+      <div class="info-card">
+        <h6><i class="bi bi-calendar-check"></i> Upcoming Assignments</h6>
+        {% if assignments %}
+          {% for assignment in assignments %}
+          <div class="assignment-card info-card">
+            <div class="d-flex justify-content-between">
+              <div>
+                <strong>{{ assignment.exam_session.subject.name }}</strong>
+                <div class="text-muted small">
+                  {{ assignment.exam_session.date|date:"d M Y" }} | 
+                  {{ assignment.exam_session.start_time|time:"H:i" }}-{{ assignment.exam_session.end_time|time:"H:i" }}
+                </div>
+              </div>
+              <span class="badge bg-primary">{{ assignment.role }}</span>
+            </div>
+            <div class="mt-2">
+              <small>
+                <strong>Center:</strong> 
+                {{ assignment.exam_center.name }} ({{ assignment.exam_center.code }})
+              </small>
+              <span class="badge ms-2 {% if assignment.is_confirmed %}bg-success{% else %}bg-warning{% endif %}">
+                {% if assignment.is_confirmed %}Confirmed{% else %}Pending{% endif %}
+              </span>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center py-3">
+            <i class="bi bi-calendar-x" style="font-size: 2rem; color: #bdc3c7;"></i>
+            <p class="mt-2">No upcoming assignments</p>
+          </div>
+        {% endif %}
+      </div>
+      
+      <div class="info-card">
+        <h6><i class="bi bi-graph-up"></i> Assignment History</h6>
+        <div class="chart-container" style="height: 200px;">
+          <canvas id="assignmentsChart"></canvas>
+        </div>
+        <div class="mt-3 text-center">
+          <span class="me-3"><i class="bi bi-check-circle-fill text-success"></i> Completed: {{ completed_assignments }}</span>
+          <span><i class="bi bi-x-circle-fill text-danger"></i> Missed: {{ missed_assignments }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Assignments History Chart
+  new Chart(document.getElementById('assignmentsChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Completed', 'Missed', 'Upcoming'],
+      datasets: [{
+        data: [{{ completed_assignments }}, {{ missed_assignments }}, {{ upcoming_assignments }}],
+        backgroundColor: ['#27ae60', '#e74c3c', '#3498db']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

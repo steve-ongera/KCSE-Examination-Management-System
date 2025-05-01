@@ -50,4 +50,20 @@ urlpatterns = [
     path('releases/', views.release_schedule, name='paper-release-schedule'),
 
 
+    # Dashboard
+    path('dashboard/', views.exam_management_dashboard, name='exam-dashboard'),
+    
+    # Timetable URLs
+    path('timetables/', views.timetable_list, name='timetable-list'),
+    path('timetables/<int:pk>/', views.timetable_detail, name='timetable-detail'),
+    
+    # Exam Center URLs
+    path('centers/', views.center_list, name='center-list'),
+    path('centers/<int:pk>/', views.center_detail, name='center_detail'),
+    
+    # Invigilator URLs
+    path('invigilators/', views.invigilator_list, name='invigilator-list'),
+    path('invigilators/<int:pk>/', views.invigilator_detail, name='invigilator-detail'),
+
+
 ]

@@ -349,3 +349,99 @@ class PaperReleaseScheduleAdmin(admin.ModelAdmin):
 
 admin.site.register(ExamPaperArchive, ExamPaperArchiveAdmin)
 admin.site.register(PaperReleaseSchedule, PaperReleaseScheduleAdmin)
+
+
+
+from django.contrib import admin
+from django.utils import timezone
+from .models import ExamCenter, ExamTimetable, ExamSession, Invigilator, InvigilationAssignment
+
+@admin.register(ExamCenter)
+class ExamCenterAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code', 'center_type', 'capacity', 'county', 'is_active')
+    list_filter = ('center_type', 'county', 'is_active')
+    search_fields = ('name', 'code', 'county', 'sub_county')
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('name', 'code', 'center_type', 'school', 'capacity', 'is_active')
+        }),
+        ('Location Details', {
+            'fields': ('county', 'sub_county', 'address', 'gps_coordinates')
+        }),
+        ('Contact Information', {
+            'fields': ('contact_person', 'contact_phone', 'contact_email')
+        }),
+    )
+
+@admin.register(ExamTimetable)
+class ExamTimetableAdmin(admin.ModelAdmin):
+    list_display = ('title', 'exam_year', 'is_published', 'published_date')
+    list_filter = ('exam_year', 'is_published')
+    search_fields = ('title', 'description')
+    readonly_fields = ('created_at', 'updated_at')
+    actions = ['publish_timetables']
+    
+    def save_model(self, request, obj, form, change):
+        if 'is_published' in form.changed_data and obj.is_published:
+            obj.published_date = timezone.now()
+            obj.published_by = request.user
+        super().save_model(request, obj, form, change)
+    
+    def publish_timetables(self, request, queryset):
+        updated = queryset.update(
+            is_published=True, 
+            published_date=timezone.now(), 
+            published_by=request.user
+        )
+        self.message_user(request, f"{updated} timetable(s) were successfully published.")
+    publish_timetables.short_description = "Publish selected timetables"
+
+class ExamSessionInline(admin.TabularInline):
+    model = ExamSession
+    extra = 1
+    fields = ('subject', 'date', 'start_time', 'end_time', 'duration_minutes', 'paper_code')
+
+@admin.register(ExamSession)
+class ExamSessionAdmin(admin.ModelAdmin):
+    list_display = ('subject', 'timetable', 'date', 'start_time', 'end_time', 'duration_minutes')
+    list_filter = ('date', 'subject', 'timetable')
+    search_fields = ('subject__name', 'paper_code', 'instructions')
+    date_hierarchy = 'date'
+
+@admin.register(Invigilator)
+class InvigilatorAdmin(admin.ModelAdmin):
+    list_display = ('user', 'tsc_number', 'id_number', 'phone_number', 'is_active')
+    list_filter = ('is_active', 'qualification')
+    search_fields = ('user__first_name', 'user__last_name', 'tsc_number', 'id_number')
+    filter_horizontal = ('subjects',)
+    readonly_fields = ('created_at', 'updated_at')
+
+@admin.register(InvigilationAssignment)
+class InvigilationAssignmentAdmin(admin.ModelAdmin):
+    list_display = ('invigilator', 'exam_center', 'exam_session', 'role', 'is_confirmed')
+    list_filter = ('role', 'is_confirmed', 'exam_session__date')
+    search_fields = (
+        'invigilator__user__first_name',
+        'invigilator__user__last_name',
+        'exam_center__name'
+    )
+    raw_id_fields = ('invigilator', 'exam_center', 'exam_session')
+    actions = ['confirm_assignments']
+    
+    def save_model(self, request, obj, form, change):
+        if not obj.assigned_by:
+            obj.assigned_by = request.user
+        super().save_model(request, obj, form, change)
+    
+    def confirm_assignments(self, request, queryset):
+        updated = queryset.update(is_confirmed=True)
+        self.message_user(request, f"{updated} assignment(s) were successfully confirmed.")
+    confirm_assignments.short_description = "Confirm selected assignments"
+
+# Register ExamTimetable with ExamSession inline
+admin.site.unregister(ExamTimetable)  # Unregister to re-register with inline
+@admin.register(ExamTimetable)
+class ExamTimetableWithSessionsAdmin(ExamTimetableAdmin):
+    inlines = [ExamSessionInline]
+
+    

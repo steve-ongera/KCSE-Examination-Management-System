@@ -1,0 +1,242 @@
+<!-- exams/student_performance.html -->
+{% extends 'base/base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4" style="background-color: #f8f9fa; min-height: 100vh;">
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light-primary text-dark py-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4 class="mb-0">
+                                <i class="fas fa-user-graduate mr-2"></i>
+                                Student Performance Report
+                            </h4>
+                        </div>
+                        <div class="col-md-4 text-md-right">
+                            <span class="badge bg-secondary">{{ student.school.name }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Student Info Section -->
+                    <div class="row mb-4">
+                        <div class="col-md-2 text-center">
+                            {% if student.passport_photo %}
+                                <img src="{{ student.passport_photo.url }}" class="img-thumbnail" alt="Student Photo" style="max-width: 120px;">
+                            {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                                    <i class="fas fa-user fa-3x text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-5">
+                            <h5 class="mb-3">{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</h5>
+                            <div class="row">
+                                <div class="col-6">
+                                    <p class="mb-1"><strong>Index No:</strong></p>
+                                    <p class="mb-1"><strong>Class:</strong></p>
+                                    <p class="mb-1"><strong>Gender:</strong></p>
+                                </div>
+                                <div class="col-6">
+                                    <p class="mb-1">{{ student.index_number }}</p>
+                                    <p class="mb-1">{{ student.current_class }}</p>
+                                    <p class="mb-1">{{ student.get_gender_display }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="bg-light p-3 rounded">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <p class="mb-1"><strong>Admission:</strong></p>
+                                        <p class="mb-1"><strong>KCPE Marks:</strong></p>
+                                        <p class="mb-1"><strong>Status:</strong></p>
+                                    </div>
+                                    <div class="col-6">
+                                        <p class="mb-1">{{ student.admission_date|date:"d M Y" }}</p>
+                                        <p class="mb-1">{{ student.kcpe_marks|default:"N/A" }}</p>
+                                        <p class="mb-1">
+                                            <span class="badge bg-{% if student.is_active %}success{% else %}secondary{% endif %}">
+                                                {% if student.is_active %}Active{% else %}Inactive{% endif %}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Sections -->
+                    {% for performance in performance_data %}
+                    <div class="performance-section mb-5">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">
+                                <i class="fas fa-calendar-alt mr-2"></i>
+                                KCSE {{ performance.exam_year.year }} Results
+                            </h5>
+                            {% if performance.is_active %}
+                                <span class="badge bg-success">Current</span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Subjects Table -->
+                        <div class="table-responsive mb-3">
+                            <table class="table table-bordered table-hover bg-white">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th width="30%">Subject</th>
+                                        <th width="15%">Category</th>
+                                        <th width="15%">Marks</th>
+                                        <th width="15%">Grade</th>
+                                        <th width="15%">Points</th>
+                                        <th width="10%">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for subject in performance.subjects %}
+                                    <tr>
+                                        <td>{{ subject.subject.name }} ({{ subject.subject.code }})</td>
+                                        <td>
+                                            {% if subject.is_compulsory %}
+                                                <span class="badge bg-primary">Compulsory</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Optional</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ subject.marks|default:"-" }}</td>
+                                        <td>
+                                            {% if subject.grade %}
+                                                <span class="badge 
+                                                    {% if subject.grade == 'A' or subject.grade == 'A (Plain)' %}bg-success
+                                                    {% elif subject.grade == 'A-' %}bg-success bg-opacity-75
+                                                    {% elif subject.grade == 'B+' %}bg-info bg-opacity-90
+                                                    {% elif subject.grade == 'B' or subject.grade == 'B (Plain)' %}bg-info
+                                                    {% elif subject.grade == 'B-' %}bg-info bg-opacity-75
+                                                    {% elif subject.grade == 'C+' %}bg-primary bg-opacity-90
+                                                    {% elif subject.grade == 'C' or subject.grade == 'C (Plain)' %}bg-primary
+                                                    {% elif subject.grade == 'C-' %}bg-primary bg-opacity-75
+                                                    {% elif subject.grade == 'D+' %}bg-warning bg-opacity-90
+                                                    {% elif subject.grade == 'D' or subject.grade == 'D (Plain)' %}bg-warning
+                                                    {% elif subject.grade == 'D-' %}bg-warning bg-opacity-75
+                                                    {% elif subject.grade == 'E' %}bg-danger
+                                                    {% else %}bg-secondary
+                                                    {% endif %} text-dark">
+                                                    {{ subject.grade }}
+                                                </span>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ subject.points|default:"-" }}</td>
+                                        <td>
+                                            {% if subject.marks is not None %}
+                                                <span class="badge bg-success">Complete</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Summary Metrics - Now below the table -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="performance-summary bg-white p-3 rounded border">
+                                    <div class="row text-center">
+                                        <div class="col-md-3 border-end">
+                                            <h6 class="text-muted mb-1">Total Marks</h6>
+                                            <h4 class="font-weight-bold text-primary">
+                                                {{ performance.total_marks|default:"N/A" }}
+                                            </h4>
+                                        </div>
+                                        <div class="col-md-3 border-end">
+                                            <h6 class="text-muted mb-1">Total Points</h6>
+                                            <h4 class="font-weight-bold text-success">
+                                                {{ performance.total_points|default:"N/A" }}
+                                            </h4>
+                                        </div>
+                                        <div class="col-md-3 border-end">
+                                            <h6 class="text-muted mb-1">Mean Grade</h6>
+                                            <h4 class="font-weight-bold text-warning">
+                                                {{ performance.mean_grade|default:"N/A" }}
+                                            </h4>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6 class="text-muted mb-1">Mean Points</h6>
+                                            <h4 class="font-weight-bold text-info">
+                                                {{ performance.mean_points|floatformat:2|default:"N/A" }}
+                                            </h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        No exam registrations found for this student.
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="card-footer bg-light">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                Generated on {% now "jS F Y H:i" %}
+                            </small>
+                        </div>
+                        <div class="col-md-6 text-md-right">
+                            <button onclick="window.print()" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-print mr-1"></i> Print Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-light-primary { background-color: #e3f2fd; }
+    .bg-light-info { background-color: #e1f5fe; }
+    .bg-light-success { background-color: #e8f5e9; }
+    .bg-light-warning { background-color: #fff8e1; }
+    .bg-light-danger { background-color: #ffebee; }
+    
+    .performance-section {
+        border-left: 4px solid #3f51b5;
+        padding-left: 15px;
+        background-color: #f5f5f5;
+        padding: 15px;
+        border-radius: 4px;
+    }
+    
+    .card-header.bg-light-primary {
+        background-color: #e3f2fd;
+        border-bottom: 1px solid #bbdefb;
+    }
+    
+    .table thead th {
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .performance-summary {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    @media print {
+        .performance-summary {
+            page-break-inside: avoid;
+        }
+    }
+</style>
+{% endblock %}

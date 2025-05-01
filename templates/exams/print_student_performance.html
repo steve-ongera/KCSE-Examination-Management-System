@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        .school-logo {
+            max-width: 100px;
+            max-height: 100px;
+        }
+        .school-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .report-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding: 5px;
+            background-color: #f0f0f0;
+            border-left: 4px solid #333;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        .info-label {
+            font-weight: bold;
+            width: 150px;
+        }
+        .info-value {
+            flex: 1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        tr.summary {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+        .performance-summary {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .performance-item {
+            width: 48%;
+            margin-bottom: 10px;
+        }
+        .footer {
+            margin-top: 30px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+            font-size: 12px;
+            text-align: center;
+        }
+        .signature-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            width: 45%;
+        }
+        .signature-line {
+            border-top: 1px solid #333;
+            margin-top: 50px;
+            padding-top: 5px;
+        }
+        @page {
+            margin: 2cm;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        {% if school.logo %}
+        <img src="{{ school.logo.url }}" alt="School Logo" class="school-logo">
+        {% endif %}
+        <div class="school-name">{{ school.name }}</div>
+        <div>{{ school.postal_address }}, {{ school.county }}</div>
+        <div>Tel: {{ school.phone_number }}</div>
+        {% if school.email %}
+        <div>Email: {{ school.email }}</div>
+        {% endif %}
+        <div class="report-title">STUDENT ACADEMIC PERFORMANCE REPORT</div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">STUDENT INFORMATION</div>
+        <div class="info-row">
+            <div class="info-label">Name:</div>
+            <div class="info-value">{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Index Number:</div>
+            <div class="info-value">{{ student.index_number }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Admission Number:</div>
+            <div class="info-value">{{ student.admision_number }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Gender:</div>
+            <div class="info-value">{{ student.get_gender_display }}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">EXAM INFORMATION</div>
+        <div class="info-row">
+            <div class="info-label">Exam Year:</div>
+            <div class="info-value">{{ exam_year.year }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Registration Date:</div>
+            <div class="info-value">{{ registration.registration_date }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Mean Grade:</div>
+            <div class="info-value">{{ overall_result.average_grade|default:mean_grade|default:"-" }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Division:</div>
+            <div class="info-value">{{ overall_result.division|default:division|default:"-" }}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">SUBJECT PERFORMANCE</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Subject Code</th>
+                    <th>Subject Name</th>
+                    <th>Marks (%)</th>
+                    <th>Grade</th>
+                    <th>Points</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in subject_results %}
+                <tr>
+                    <td>{{ result.code }}</td>
+                    <td>{{ result.subject }}</td>
+                    <td>{{ result.marks|default:"-" }}</td>
+                    <td>{{ result.grade|default:"-" }}</td>
+                    <td>{{ result.points|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="summary">
+                    <td colspan="2" style="text-align: right;">Total:</td>
+                    <td>{{ total_marks|default:"-" }}</td>
+                    <td>{{ overall_result.average_grade|default:mean_grade|default:"-" }}</td>
+                    <td>{{ total_points|default:"-" }}</td>
+                </tr>
+                <tr class="summary">
+                    <td colspan="2" style="text-align: right;">Average:</td>
+                    <td>{{ avg_marks|default:"-" }}</td>
+                    <td>{{ overall_result.average_grade|default:mean_grade|default:"-" }}</td>
+                    <td>{{ avg_points|default:"-" }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">OVERALL PERFORMANCE</div>
+        <div class="performance-summary">
+            <div class="performance-item">
+                <div class="info-row">
+                    <div class="info-label">Total Marks:</div>
+                    <div class="info-value">{{ total_marks|default:"-" }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Average Marks:</div>
+                    <div class="info-value">{{ avg_marks|default:"-" }}</div>
+                </div>
+            </div>
+            <div class="performance-item">
+                <div class="info-row">
+                    <div class="info-label">Total Points:</div>
+                    <div class="info-value">{{ total_points|default:"-" }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Average Points:</div>
+                    <div class="info-value">{{ avg_points|default:"-" }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Mean Grade:</div>
+                    <div class="info-value">{{ overall_result.average_grade|default:mean_grade|default:"-" }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Division:</div>
+                    <div class="info-value">{{ overall_result.division|default:division|default:"-" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-box">
+            <div class="signature-line">Principal's Signature</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line">School Stamp</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Generated on: {{ generated_date|date:"F d, Y H:i" }}</p>
+        <p>This is an official academic record from {{ school.name }}.</p>
+    </div>
+</body>
+</html>

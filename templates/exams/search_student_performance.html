@@ -1,0 +1,176 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Student Performance Report{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Student Performance Report</h2>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{% url 'student_performance' %}" class="mb-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="index_number">Student Index Number:</label>
+                            <input type="text" class="form-control" id="index_number" name="index_number" 
+                                value="{{ request.GET.index_number|default:'' }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="exam_year">Exam Year:</label>
+                            <select class="form-control" id="exam_year" name="exam_year">
+                                <option value="">All Years</option>
+                                {% for year in exam_years %}
+                                <option value="{{ year.id }}" {% if request.GET.exam_year == year.id|stringformat:"i" %}selected{% endif %}>
+                                    {{ year.year }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary btn-block">Search</button>
+                    </div>
+                </div>
+            </form>
+
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if student %}
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">Student Information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> {{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</p>
+                            <p><strong>Index Number:</strong> {{ student.index_number }}</p>
+                            <p><strong>School:</strong> {{ student.school.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Gender:</strong> {{ student.get_gender_display }}</p>
+                            <p><strong>Admission Number:</strong> {{ student.admision_number }}</p>
+                            <p><strong>Nationality:</strong> {{ student.nationality }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if registration %}
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">Exam Information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Exam Year:</strong> {{ exam_year.year }}</p>
+                            <p><strong>Registration Date:</strong> {{ registration.registration_date }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            {% if overall_result %}
+                                <p><strong>Mean Grade:</strong> {{ overall_result.average_grade }}</p>
+                                <p><strong>Division:</strong> {{ overall_result.division }}</p>
+                            {% elif mean_grade %}
+                                <p><strong>Mean Grade:</strong> {{ mean_grade }}</p>
+                                <p><strong>Division:</strong> {{ division }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0">Subject Performance</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Subject Code</th>
+                                    <th>Subject Name</th>
+                                    <th>Marks (%)</th>
+                                    <th>Grade</th>
+                                    <th>Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in subject_results %}
+                                <tr>
+                                    <td>{{ result.code }}</td>
+                                    <td>{{ result.subject }}</td>
+                                    <td>{{ result.marks|default:"-" }}</td>
+                                    <td>{{ result.grade|default:"-" }}</td>
+                                    <td>{{ result.points|default:"-" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No subjects registered</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="bg-light">
+                                <tr>
+                                    <th colspan="2" class="text-right">Total:</th>
+                                    <td>{{ total_marks|default:"-" }}</td>
+                                    <td>{{ overall_result.average_grade|default:mean_grade|default:"-" }}</td>
+                                    <td>{{ total_points|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <th colspan="2" class="text-right">Average:</th>
+                                    <td>{{ avg_marks|default:"-" }}</td>
+                                    <td>{{ overall_result.average_grade|default:mean_grade|default:"-" }}</td>
+                                    <td>{{ avg_points|default:"-" }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {% if overall_result or mean_grade %}
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h3 class="mb-0">Overall Performance</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Total Marks:</strong> {{ total_marks|default:"-" }}</p>
+                            <p><strong>Average Marks:</strong> {{ avg_marks|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Total Points:</strong> {{ total_points|default:"-" }}</p>
+                            <p><strong>Average Points:</strong> {{ avg_points|default:"-" }}</p>
+                            <p><strong>Mean Grade:</strong> {{ overall_result.average_grade|default:mean_grade|default:"-" }}</p>
+                            <p><strong>Division:</strong> {{ overall_result.division|default:division|default:"-" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="alert alert-warning">
+                No exam registration found for this student for the selected year.
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

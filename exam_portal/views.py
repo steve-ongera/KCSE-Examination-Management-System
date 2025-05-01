@@ -891,3 +891,371 @@ class EnterStudentMarksView(View):
 
         # Redirect back with the index number
         return redirect(f"{reverse('enter_student_marks')}?{urlencode({'index_number': index_number })}")
+    
+
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views import View
+from django.contrib import messages
+from django.db.models import Avg, Sum
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+from .models import Student, ExamYear, ExamRegistration, SubjectRegistration, ExamResult, OverallResult
+
+
+class StudentPerformanceView(LoginRequiredMixin, View):
+    template_name = 'exams/student_performance.html'
+    
+    def get(self, request):
+        context = {}
+        index_number = request.GET.get('index_number', '').strip()
+        exam_year_id = request.GET.get('exam_year', None)
+        
+        # Get all exam years for the dropdown
+        exam_years = ExamYear.objects.all().order_by('-year')
+        context['exam_years'] = exam_years
+        
+        if index_number:
+            try:
+                student = Student.objects.get(index_number=index_number)
+                context['student'] = student
+                
+                # Get all registrations for this student
+                registrations = ExamRegistration.objects.filter(student=student)
+                
+                if not registrations.exists():
+                    messages.error(request, f"No exam registrations found for student {index_number}")
+                    return render(request, self.template_name, context)
+                
+                # If year is specified, filter by that year
+                if exam_year_id:
+                    try:
+                        exam_year = ExamYear.objects.get(id=exam_year_id)
+                        registrations = registrations.filter(exam_year=exam_year)
+                    except ExamYear.DoesNotExist:
+                        messages.error(request, "Selected exam year not found")
+                        return render(request, self.template_name, context)
+                
+                # Get the latest registration if multiple exist
+                registration = registrations.order_by('-exam_year__year').first()
+                context['registration'] = registration
+                context['exam_year'] = registration.exam_year
+                
+                # Get all subject registrations and their results
+                subject_registrations = SubjectRegistration.objects.filter(
+                    registration=registration
+                ).select_related('subject', 'result')
+                
+                # Prepare subject results for display
+                subject_results = []
+                total_marks = 0
+                total_points = 0
+                valid_results_count = 0
+                
+                for subject_reg in subject_registrations:
+                    result_data = {
+                        'subject': subject_reg.subject.name,
+                        'code': subject_reg.subject.code,
+                        'marks': None,
+                        'grade': None,
+                        'points': None
+                    }
+                    
+                    try:
+                        result = subject_reg.result
+                        result_data['marks'] = result.marks
+                        result_data['grade'] = result.grade
+                        result_data['points'] = result.points
+                        
+                        # Only count if marks and points are not None
+                        if result.marks is not None and result.points is not None:
+                            total_marks += result.marks
+                            total_points += result.points
+                            valid_results_count += 1
+                    except ExamResult.DoesNotExist:
+                        pass  # Leave as None if no result exists
+                    
+                    subject_results.append(result_data)
+                
+                context['subject_results'] = subject_results
+                
+                # Calculate averages
+                if valid_results_count > 0:
+                    context['total_marks'] = total_marks
+                    context['avg_marks'] = round(total_marks / valid_results_count, 2)
+                    context['total_points'] = total_points
+                    context['avg_points'] = round(total_points / valid_results_count, 2)
+                
+                # Get overall result if exists
+                try:
+                    overall_result = OverallResult.objects.get(registration=registration)
+                    context['overall_result'] = overall_result
+                except OverallResult.DoesNotExist:
+                    # Calculate on the fly if no saved result exists
+                    if valid_results_count > 0:
+                        avg_points = total_points / valid_results_count
+                        
+                        # Get the grade that corresponds to this point average
+                        # (This is simplified - you'd need to match according to your grading system)
+                        grading_system = registration.exam_year.grading_system
+                        mean_grade = None
+                        division = None
+                        
+                        if isinstance(grading_system, dict):
+                            for grade, info in grading_system.items():
+                                if info.get('points') == round(avg_points):
+                                    mean_grade = grade
+                                    # Determine division based on points
+                                    points = info.get('points', 0)
+                                    if points >= 10:
+                                        division = "Division 1"
+                                    elif points >= 8:
+                                        division = "Division 2"
+                                    elif points >= 6:
+                                        division = "Division 3"
+                                    elif points >= 2:
+                                        division = "Division 4"
+                                    else:
+                                        division = "Division 5"
+                                    
+                                    break
+                        elif isinstance(grading_system, list):
+                            for grade_info in grading_system:
+                                if grade_info.get('points') == round(avg_points):
+                                    mean_grade = grade_info.get('grade', '')
+                                    division = grade_info.get('division', '')
+                                    break
+                        
+                        context['mean_grade'] = mean_grade
+                        context['division'] = division
+                
+            except Student.DoesNotExist:
+                messages.error(request, f"Student with index number {index_number} not found")
+            except Exception as e:
+                messages.error(request, f"An error occurred: {str(e)}")
+                # Log the full error for debugging
+                import traceback
+                print(f"Error in StudentPerformanceView:\n{traceback.format_exc()}")
+        
+        return render(request, self.template_name, context)
+    
+
+
+# from django.shortcuts import render, get_object_or_404
+# from django.views import View
+# from django.contrib.auth.mixins import LoginRequiredMixin
+# from django.http import HttpResponse
+# from django.template.loader import render_to_string
+# from django.utils import timezone
+# import weasyprint
+# #from io import BytesIO
+
+# from .models import Student, ExamRegistration, SubjectRegistration, ExamResult, OverallResult
+
+
+# class PrintStudentPerformanceView(LoginRequiredMixin, View):
+#     """View for generating a printable PDF of student performance"""
+    
+#     def get(self, request, registration_id):
+#         # Get the exam registration
+#         registration = get_object_or_404(ExamRegistration, id=registration_id)
+#         student = registration.student
+#         exam_year = registration.exam_year
+        
+#         # Get all subject registrations and their results
+#         subject_registrations = SubjectRegistration.objects.filter(
+#             registration=registration
+#         ).select_related('subject', 'result')
+        
+#         # Prepare subject results for display
+#         subject_results = []
+#         total_marks = 0
+#         total_points = 0
+#         valid_results_count = 0
+        
+#         for subject_reg in subject_registrations:
+#             result_data = {
+#                 'subject': subject_reg.subject.name,
+#                 'code': subject_reg.subject.code,
+#                 'marks': None,
+#                 'grade': None,
+#                 'points': None
+#             }
+            
+#             try:
+#                 result = subject_reg.result
+#                 result_data['marks'] = result.marks
+#                 result_data['grade'] = result.grade
+#                 result_data['points'] = result.points
+                
+#                 # Only count if marks and points are not None
+#                 if result.marks is not None and result.points is not None:
+#                     total_marks += result.marks
+#                     total_points += result.points
+#                     valid_results_count += 1
+#             except ExamResult.DoesNotExist:
+#                 pass  # Leave as None if no result exists
+            
+#             subject_results.append(result_data)
+        
+#         # Calculate averages
+#         avg_marks = None
+#         avg_points = None
+#         if valid_results_count > 0:
+#             avg_marks = round(total_marks / valid_results_count, 2)
+#             avg_points = round(total_points / valid_results_count, 2)
+        
+#         # Get overall result if exists
+#         try:
+#             overall_result = OverallResult.objects.get(registration=registration)
+#         except OverallResult.DoesNotExist:
+#             overall_result = None
+            
+#         # Determine mean grade if no overall result exists
+#         mean_grade = None
+#         division = None
+#         if overall_result is None and valid_results_count > 0:
+#             avg_points_value = total_points / valid_results_count
+            
+#             # Get the grade that corresponds to this point average
+#             grading_system = registration.exam_year.grading_system
+            
+#             if isinstance(grading_system, dict):
+#                 for grade, info in grading_system.items():
+#                     if info.get('points') == round(avg_points_value):
+#                         mean_grade = grade
+#                         # Determine division based on points
+#                         points = info.get('points', 0)
+#                         if points >= 10:
+#                             division = "Division 1"
+#                         elif points >= 8:
+#                             division = "Division 2"
+#                         elif points >= 6:
+#                             division = "Division 3"
+#                         elif points >= 2:
+#                             division = "Division 4"
+#                         else:
+#                             division = "Division 5"
+#                         break
+#             elif isinstance(grading_system, list):
+#                 for grade_info in grading_system:
+#                     if grade_info.get('points') == round(avg_points_value):
+#                         mean_grade = grade_info.get('grade', '')
+#                         division = grade_info.get('division', '')
+#                         break
+        
+#         # Prepare context for PDF template
+#         context = {
+#             'student': student,
+#             'registration': registration,
+#             'exam_year': exam_year,
+#             'subject_results': subject_results,
+#             'total_marks': total_marks,
+#             'avg_marks': avg_marks,
+#             'total_points': total_points,
+#             'avg_points': avg_points,
+#             'overall_result': overall_result,
+#             'mean_grade': mean_grade if not overall_result else overall_result.average_grade,
+#             'division': division if not overall_result else overall_result.division,
+#             'generated_date': timezone.now(),
+#             'school': student.school,
+#         }
+        
+#         # Render HTML template
+#         html_string = render_to_string('exams/print_student_performance.html', context)
+        
+#         # Generate PDF
+#         pdf_file = BytesIO()
+#         weasyprint.HTML(string=html_string).write_pdf(pdf_file)
+        
+#         # Create HTTP response with PDF
+#         response = HttpResponse(pdf_file.getvalue(), content_type='application/pdf')
+#         response['Content-Disposition'] = f'attachment; filename="report_card_{student.index_number}_{exam_year.year}.pdf"'
+        
+#         return response
+
+# views.py (updated)
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import Student, ExamRegistration, SubjectRegistration, ExamResult
+
+@login_required
+def student_performance_view(request, student_id):
+    # Get the student or return 404
+    student = get_object_or_404(Student, pk=student_id)
+    
+    # Verify the requesting user has permission to view this student's performance
+    if not request.user.is_superuser:
+        if hasattr(request.user, 'student_profile'):
+            if request.user.student_profile.student.id != student.id:
+                return render(request, '403.html', status=403)
+        elif hasattr(request.user, 'school_admin_profile'):
+            if request.user.school_admin_profile.school.id != student.school.id:
+                return render(request, '403.html', status=403)
+    
+    # Get all exam registrations for this student
+    exam_registrations = ExamRegistration.objects.filter(student=student).select_related(
+        'exam_year'
+    ).prefetch_related(
+        'subjects__subject',
+        'subjects__result'
+    ).order_by('-exam_year__year')
+    
+    # Prepare the performance data structure
+    performance_data = []
+    for registration in exam_registrations:
+        subjects_data = []
+        total_points = 0
+        total_marks = 0
+        total_subjects = 0
+        
+        for subject_reg in registration.subjects.all():
+            result = None
+            if hasattr(subject_reg, 'result'):
+                result = subject_reg.result
+                if result.points and result.marks:
+                    total_points += result.points
+                    total_marks += result.marks
+                    total_subjects += 1
+            
+            subjects_data.append({
+                'subject': subject_reg.subject,
+                'is_compulsory': subject_reg.is_compulsory,
+                'marks': result.marks if result else None,
+                'grade': result.grade if result else None,
+                'points': result.points if result else None,
+            })
+        
+        # Calculate mean grade and mean marks if there are results
+        mean_grade = None
+        mean_points = None
+        mean_marks = None
+        if total_subjects > 0:
+            mean_points = total_points / total_subjects
+            mean_marks = total_marks / total_subjects
+            # Simple grade calculation (customize based on your grading system)
+            if mean_points >= 11: mean_grade = 'A'
+            elif mean_points >= 8: mean_grade = 'B'
+            elif mean_points >= 5: mean_grade = 'C'
+            elif mean_points >= 3: mean_grade = 'D'
+            else: mean_grade = 'E'
+            
+        performance_data.append({
+            'exam_year': registration.exam_year,
+            'subjects': subjects_data,
+            'total_points': total_points,
+            'total_marks': total_marks,
+            'mean_points': mean_points,
+            'mean_marks': mean_marks,
+            'mean_grade': mean_grade,
+            'is_active': registration.is_active,
+        })
+    
+    context = {
+        'student': student,
+        'performance_data': performance_data,
+        'school': student.school,
+    }
+    
+    return render(request, 'exams/student_performance.html', context)

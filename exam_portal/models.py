@@ -1,7 +1,8 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import AbstractUser
-
+import random
+import string
 
 class User(AbstractUser):
     USER_TYPE_CHOICES = (
@@ -36,7 +37,7 @@ class School(models.Model):
     name = models.CharField(max_length=200)
     knec_code = models.CharField(max_length=20, unique=True)
     registration_number = models.CharField(max_length=50, unique=True)
-    special_code = models.CharField(max_length=100, blank=True, null=True)
+    special_code = models.CharField(max_length=100, blank=True, null=True , unique=True)
     school_type = models.CharField(max_length=20, choices=SCHOOL_TYPE_CHOICES)
     category = models.CharField(max_length=10, choices=SCHOOL_CATEGORY_CHOICES)
     registration_date = models.DateField()
@@ -78,6 +79,20 @@ class School(models.Model):
     # System Fields
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+    def generate_unique_special_code(self, length=10):
+        """Generates a unique uppercase special code."""
+        while True:
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+            if not School.objects.filter(special_code=code).exists():
+                return code
+
+    def save(self, *args, **kwargs):
+        # Generate special code if it's missing or invalid
+        if not self.special_code or len(self.special_code) < 8 or not self.special_code.isupper():
+            self.special_code = self.generate_unique_special_code()
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return f"{self.name} ({self.knec_code}) - {self.get_school_type_display()}"

@@ -237,6 +237,10 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Only showing the problematic model for clarity
+from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 class ExamResult(models.Model):
     """Model representing a student's results for a subject in KCSE"""
@@ -247,27 +251,20 @@ class ExamResult(models.Model):
     grade = models.CharField(max_length=2, blank=True)
     points = models.PositiveIntegerField(blank=True, null=True)
     
-    def save(self, *args, **kwargs):
-        # Calculate grade and points based on the exam year's grading system
+    def calculate_grade_and_points(self):
+        """Calculate grade and points based on marks and grading system"""
         grading_system = self.subject_registration.registration.exam_year.grading_system
         marks = self.marks
         
-        # Debug check - what type is grading_system?
-        print(f"Grading system type: {type(grading_system)}")
-        print(f"Grading system content: {grading_system}")
-        
-        # Determine grade and points based on the grading system
-        # Handle your specific grading system format with min_score and max_score keys
-        
         if isinstance(grading_system, dict):
-            # Your current format: dictionary with grade keys
+            # Dictionary format with grade keys
             for grade, info in grading_system.items():
                 if info.get('min_score', 0) <= marks <= info.get('max_score', 100):
                     self.grade = grade
                     self.points = info.get('points', 0)
                     break
         elif isinstance(grading_system, list):
-            # Handle alternative list format if needed
+            # List format with grade info dictionaries
             for grade_info in grading_system:
                 min_val = grade_info.get('min_score', grade_info.get('min', 0))
                 max_val = grade_info.get('max_score', grade_info.get('max', 100))
@@ -276,12 +273,31 @@ class ExamResult(models.Model):
                     self.grade = grade_info.get('grade', '')
                     self.points = grade_info.get('points', 0)
                     break
-                    
+    
+    def save(self, *args, **kwargs):
+        self.calculate_grade_and_points()
         super().save(*args, **kwargs)
     
     def __str__(self):
         return f"{self.subject_registration}: {self.marks}% ({self.grade})"
 
+
+@receiver(pre_save, sender=ExamResult)
+def ensure_grade_points_updated(sender, instance, **kwargs):
+    """Signal handler to ensure grade and points are updated when marks change"""
+    if instance.pk:  # If this is an update, not a new record
+        try:
+            # Get the previous instance from database
+            old_instance = ExamResult.objects.get(pk=instance.pk)
+            
+            # If marks have changed, recalculate grade and points
+            if old_instance.marks != instance.marks:
+                instance.calculate_grade_and_points()
+        except ExamResult.DoesNotExist:
+            # This is a new instance, save() will handle it
+            pass
+
+        
 class OverallResult(models.Model):
     """Model representing a student's overall KCSE performance"""
     registration = models.OneToOneField(ExamRegistration, on_delete=models.CASCADE, related_name='overall_result')

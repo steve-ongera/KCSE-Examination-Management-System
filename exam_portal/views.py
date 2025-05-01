@@ -1589,3 +1589,125 @@ def performance_dashboard(request):
     }
     
     return render(request, 'dashboards/performance_dashboard.html', context)
+
+
+from django.db.models import Count, Sum, Avg, F
+from django.shortcuts import render
+
+def top_students_view(request):
+    # Get filter parameters
+    selected_year = request.GET.get('year')
+    selected_school = request.GET.get('school')
+    
+    # Base queryset - don't slice yet
+    top_students = ExamResult.objects.values(
+        'subject_registration__registration__student',
+        'subject_registration__registration__student__first_name',
+        'subject_registration__registration__student__last_name',
+        'subject_registration__registration__student__gender',
+        'subject_registration__registration__student__school__name',
+        'subject_registration__registration__student__school__id',
+        'subject_registration__registration__exam_year__year',
+        'subject_registration__registration__exam_year'
+    ).annotate(
+        total_points=Sum('points'),
+        mean_grade=Avg('points')  # This would need adjustment to calculate actual mean grade
+    ).order_by('-total_points')
+    
+    # Apply filters before slicing
+    if selected_year:
+        top_students = top_students.filter(
+            subject_registration__registration__exam_year__year=selected_year
+        )
+    
+    if selected_school:
+        top_students = top_students.filter(
+            subject_registration__registration__student__school__id=selected_school
+        )
+    
+    # Now take the top 100 after filtering
+    top_students = top_students[:100]
+    
+    # Get all years for filter dropdown
+    all_years = ExamYear.objects.values('year').distinct().order_by('-year')
+    
+    # Get all schools for filter dropdown
+    all_schools = School.objects.all().order_by('name')
+    
+    # Gender analysis - create a new queryset for this
+    gender_queryset = ExamResult.objects.filter(
+        subject_registration__registration__student__in=[s['subject_registration__registration__student'] for s in top_students]
+    )
+    
+    gender_counts = gender_queryset.values(
+        'subject_registration__registration__student__gender'
+    ).annotate(
+        count=Count('subject_registration__registration__student', distinct=True)
+    )
+    
+    male_count = next(
+        (item['count'] for item in gender_counts if item['subject_registration__registration__student__gender'] == 'M'), 
+        0
+    )
+    female_count = next(
+        (item['count'] for item in gender_counts if item['subject_registration__registration__student__gender'] == 'F'), 
+        0
+    )
+    total_count = male_count + female_count
+    male_percentage = round((male_count / total_count) * 100, 1) if total_count > 0 else 0
+    female_percentage = round((female_count / total_count) * 100, 1) if total_count > 0 else 0
+    
+    # School analysis - create a new queryset
+    school_queryset = ExamResult.objects.filter(
+        subject_registration__registration__student__in=[s['subject_registration__registration__student'] for s in top_students]
+    )
+    
+    top_schools = school_queryset.values(
+        'subject_registration__registration__student__school__name',
+        'subject_registration__registration__student__school__id'
+    ).annotate(
+        count=Count('subject_registration__registration__student', distinct=True)
+    ).order_by('-count')[:5]
+    
+    # Grade distribution - create a new queryset
+    grade_queryset = ExamResult.objects.filter(
+        subject_registration__registration__student__in=[s['subject_registration__registration__student'] for s in top_students]
+    )
+    
+    grade_distribution = grade_queryset.values(
+        'grade'  # Assuming you have a grade field
+    ).annotate(
+        count=Count('subject_registration__registration__student', distinct=True)
+    ).order_by('grade')
+    
+    # Transform data for template
+    students = [
+        {
+            'student__id': s['subject_registration__registration__student'],
+            'student__first_name': s['subject_registration__registration__student__first_name'],
+            'student__last_name': s['subject_registration__registration__student__last_name'],
+            'student__gender': s['subject_registration__registration__student__gender'],
+            'student__school__name': s['subject_registration__registration__student__school__name'],
+            'student__school__id': s['subject_registration__registration__student__school__id'],
+            'total_points': s['total_points'],
+            'mean_grade': s['mean_grade'],
+            'exam_year__year': s['subject_registration__registration__exam_year__year']
+        }
+        for s in top_students
+    ]
+    
+    context = {
+        'students': students,
+        'all_years': all_years,
+        'all_schools': all_schools,
+        'selected_year': selected_year,
+        'selected_school': selected_school,
+        'male_count': male_count,
+        'female_count': female_count,
+        'male_percentage': male_percentage,
+        'female_percentage': female_percentage,
+        'top_schools': top_schools,
+        'grade_distribution': grade_distribution,
+    }
+    
+    return render(request, 'dashboards/top_students.html', context)

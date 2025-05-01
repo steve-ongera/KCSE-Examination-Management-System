@@ -14,6 +14,7 @@ urlpatterns = [
     path('knec/', views.knec_dashboard, name='knec_dashboard'),
     path('register-student-exam/', views.register_student_exam, name='register-student-exam'),
     path('performance_dashboard/', views.performance_dashboard , name='examination_dashboard'),
+     path('top_students/', views.top_students_view , name='top_students_view'),
 
 
     #admin/ student crud opertaions 

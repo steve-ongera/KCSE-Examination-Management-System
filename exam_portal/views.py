@@ -793,7 +793,6 @@ def school_student_delete(request, pk):
         'student': student
     }
     return render(request, 'students/school_admin/student_confirm_delete.html', context)
-
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib import messages
@@ -863,11 +862,11 @@ class EnterStudentMarksView(View):
                     if mark < 0 or mark > 100:
                         raise ValidationError(f"Mark for {subject_reg.subject.name} must be between 0 and 100.")
 
-                    # Update or create exam result
-                    ExamResult.objects.update_or_create(
-                        subject_registration=subject_reg,
-                        defaults={'marks': mark}
-                    )
+                    # Modified approach: Get or create result then explicitly save changes
+                    result, created = ExamResult.objects.get_or_create(subject_registration=subject_reg)
+                    result.marks = mark
+                    # Force save to trigger the grade and points calculation
+                    result.save()
 
                 except ValueError:
                     messages.error(request, f"Invalid mark format for {subject_reg.subject.name}. Must be a whole number.")

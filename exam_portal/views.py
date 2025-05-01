@@ -1711,3 +1711,88 @@ def top_students_view(request):
     }
     
     return render(request, 'dashboards/top_students.html', context)
+
+
+
+from django.db.models import Count, Avg, Sum, Q, F
+from django.shortcuts import render
+
+def subject_analysis_view(request):
+    current_year = ExamYear.objects.filter(is_current=True).first()
+    
+    # Overall subject performance in current year
+    current_subjects = SubjectRegistration.objects.filter(
+        registration__exam_year=current_year
+    ).values(
+        'subject__name',
+        'subject__code'
+    ).annotate(
+        avg_points=Avg('result__points'),
+        avg_grade=Avg('result__grade'),  # Assuming grade is stored numerically
+        total_students=Count('id'),
+        male_avg=Avg('result__points', filter=Q(registration__student__gender='M')),
+        female_avg=Avg('result__points', filter=Q(registration__student__gender='F'))
+    ).order_by('-avg_points')
+    
+    # Historical subject performance (all years)
+    historical_subjects = SubjectRegistration.objects.values(
+        'subject__name',
+        'subject__code',
+        'registration__exam_year__year'
+    ).annotate(
+        avg_points=Avg('result__points'),
+        total_students=Count('id')
+    ).order_by('subject__name', 'registration__exam_year__year')
+    
+    # Gender-based best subjects
+    male_best_subjects = SubjectRegistration.objects.filter(
+        registration__student__gender='M',
+        registration__exam_year=current_year
+    ).values(
+        'subject__name'
+    ).annotate(
+        avg_points=Avg('result__points'),
+        total_students=Count('id')
+    ).order_by('-avg_points')[:5]
+    
+    female_best_subjects = SubjectRegistration.objects.filter(
+        registration__student__gender='F',
+        registration__exam_year=current_year
+    ).values(
+        'subject__name'
+    ).annotate(
+        avg_points=Avg('result__points'),
+        total_students=Count('id')
+    ).order_by('-avg_points')[:5]
+    
+    # School performance by subject
+    school_subject_performance = SubjectRegistration.objects.filter(
+        registration__exam_year=current_year
+    ).values(
+        'subject__name',
+        'registration__student__school__name',
+        'registration__student__school__knec_code'
+    ).annotate(
+        avg_points=Avg('result__points'),
+        total_students=Count('id')
+    ).order_by('subject__name', '-avg_points')
+    
+    # Subject registration trends
+    subject_registration_trends = SubjectRegistration.objects.values(
+        'subject__name',
+        'registration__exam_year__year'
+    ).annotate(
+        total_students=Count('id')
+    ).order_by('subject__name', 'registration__exam_year__year')
+    
+    context = {
+        'current_year': current_year,
+        'current_subjects': current_subjects,
+        'historical_subjects': historical_subjects,
+        'male_best_subjects': male_best_subjects,
+        'female_best_subjects': female_best_subjects,
+        'school_subject_performance': school_subject_performance,
+        'subject_registration_trends': subject_registration_trends,
+    }
+    
+    return render(request, 'dashboards/subject_analysis.html', context)

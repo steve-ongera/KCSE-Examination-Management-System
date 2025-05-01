@@ -15,6 +15,7 @@ urlpatterns = [
     path('register-student-exam/', views.register_student_exam, name='register-student-exam'),
     path('performance_dashboard/', views.performance_dashboard , name='examination_dashboard'),
      path('top_students/', views.top_students_view , name='top_students_view'),
+     path('subject-analysis' , views.subject_analysis_view , name='subject-analysis'),
 
 
     #admin/ student crud opertaions 

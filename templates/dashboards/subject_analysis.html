@@ -1,0 +1,286 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+  /* Light Gray Theme */
+  body {
+    background-color: #f8f9fa;
+  }
+  .knec-card {
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #e0e0e0;
+  }
+  .subject-table {
+    font-size: 0.85rem;
+  }
+  .subject-table th {
+    background-color: #6c757d;
+    color: white;
+    font-weight: 500;
+  }
+  .subject-table td {
+    padding: 8px 10px;
+  }
+  .gender-badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  .male-badge {
+    background-color: #6c757d;
+    color: white;
+  }
+  .female-badge {
+    background-color: #adb5bd;
+    color: white;
+  }
+  .chart-container {
+    height: 250px;
+    width: 100%;
+  }
+  h1, h4 {
+    color: #495057;
+  }
+  .text-muted {
+    color: #6c757d !important;
+  }
+</style>
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+
+<div class="container-fluid py-3">
+  <div class="row mb-3">
+    <div class="col-12">
+      <h1 class="h4 mb-0">
+        <i class="bi bi-book me-2"></i>Subject Performance Analysis
+      </h1>
+      <p class="text-muted">Comprehensive analysis of subject performance across schools and demographics</p>
+    </div>
+  </div>
+
+  <!-- Current Year Performance -->
+  <div class="knec-card">
+    <h5><i class="bi bi-graph-up me-2"></i>Current Year ({{ current_year.year }}) Subject Performance</h5>
+    <div class="table-responsive">
+      <table class="table subject-table table-hover" id="currentSubjectsTable">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Avg Points</th>
+            <th>Avg Grade</th>
+            <th>Students</th>
+            <th>Male Avg</th>
+            <th>Female Avg</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for subject in current_subjects %}
+          <tr>
+            <td>{{ subject.subject__name }} ({{ subject.subject__code }})</td>
+            <td>{{ subject.avg_points|floatformat:2 }}</td>
+            <td>{{ subject.avg_grade|floatformat:1 }}</td>
+            <td>{{ subject.total_students }}</td>
+            <td>{{ subject.male_avg|floatformat:2 }}</td>
+            <td>{{ subject.female_avg|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Gender Best Subjects -->
+    <div class="col-md-6">
+      <div class="knec-card">
+        <h5><i class="bi bi-gender-male me-2"></i>Top Subjects for Male Students</h5>
+        <div class="chart-container">
+          <canvas id="maleSubjectsChart"></canvas>
+        </div>
+        <div class="mt-3">
+          {% for subject in male_best_subjects %}
+          <div class="d-flex justify-content-between mb-2">
+            <span class="small">{{ subject.subject__name|truncatechars:25 }}</span>
+            <span class="badge male-badge">{{ subject.avg_points|floatformat:2 }} pts ({{ subject.total_students }})</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="knec-card">
+        <h5><i class="bi bi-gender-female me-2"></i>Top Subjects for Female Students</h5>
+        <div class="chart-container">
+          <canvas id="femaleSubjectsChart"></canvas>
+        </div>
+        <div class="mt-3">
+          {% for subject in female_best_subjects %}
+          <div class="d-flex justify-content-between mb-2">
+            <span class="small">{{ subject.subject__name|truncatechars:25 }}</span>
+            <span class="badge female-badge">{{ subject.avg_points|floatformat:2 }} pts ({{ subject.total_students }})</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- School Performance by Subject -->
+  <div class="knec-card">
+    <h5><i class="bi bi-building me-2"></i>School Performance by Subject</h5>
+    <div class="table-responsive">
+      <table class="table subject-table table-hover" id="schoolPerformanceTable">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>School</th>
+            <th>Avg Points</th>
+            <th>Students</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for performance in school_subject_performance|slice:":20" %}
+          <tr>
+            <td>{{ performance.subject__name }}</td>
+            <td>{{ performance.registration__student__school__name }} ({{ performance.registration__student__school__knec_code }})</td>
+            <td>{{ performance.avg_points|floatformat:2 }}</td>
+            <td>{{ performance.total_students }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Historical Trends -->
+  <div class="knec-card">
+    <h5><i class="bi bi-calendar-range me-2"></i>Subject Performance Trends</h5>
+    <div class="chart-container">
+      <canvas id="subjectTrendsChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Initialize DataTables
+  $('#currentSubjectsTable').DataTable({
+    pageLength: 5,
+    lengthMenu: [5, 10, 25, 50],
+    responsive: true
+  });
+  
+  $('#schoolPerformanceTable').DataTable({
+    pageLength: 5,
+    lengthMenu: [5, 10, 25],
+    responsive: true
+  });
+
+  // Male Subjects Chart
+  new Chart(document.getElementById('maleSubjectsChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: [
+        {% for subject in male_best_subjects %}
+          "{{ subject.subject__name }}"{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ],
+      datasets: [{
+        label: 'Average Points',
+        data: [
+          {% for subject in male_best_subjects %}
+            {{ subject.avg_points|floatformat:2 }}{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ],
+        backgroundColor: '#6c757d'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+
+  // Female Subjects Chart
+  new Chart(document.getElementById('femaleSubjectsChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: [
+        {% for subject in female_best_subjects %}
+          "{{ subject.subject__name }}"{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ],
+      datasets: [{
+        label: 'Average Points',
+        data: [
+          {% for subject in female_best_subjects %}
+            {{ subject.avg_points|floatformat:2 }}{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ],
+        backgroundColor: '#adb5bd'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+
+  // Subject Trends Chart
+  new Chart(document.getElementById('subjectTrendsChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: [
+        {% for subject in historical_subjects|slice:":10" %}
+          "{{ subject.registration__exam_year__year }}"{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ],
+      datasets: [
+        {% for subject in current_subjects|slice:":5" %}
+        {
+          label: '{{ subject.subject__name }}',
+          data: [
+            {% for year in historical_subjects %}
+              {% if year.subject__name == subject.subject__name %}
+                {{ year.avg_points|floatformat:2 }}{% if not forloop.last %},{% endif %}
+              {% endif %}
+            {% endfor %}
+          ],
+          borderColor: '#6c757d',
+          tension: 0.3,
+          fill: false
+        },
+        {% endfor %}
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom' }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

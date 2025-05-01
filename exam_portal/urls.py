@@ -43,4 +43,11 @@ urlpatterns = [
     path('school-ranking/', views.school_ranking , name="school_ranking"),
 
 
+    path('papers/', views.paper_archive_list, name='paper-archive-list'),
+    path('papers/upload/', views.paper_upload, name='paper-upload'),
+    path('papers/<int:pk>/', views.paper_detail, name='paper-detail'),
+    path('papers/release/', views.paper_release, name='paper-release'),
+    path('releases/', views.release_schedule, name='paper-release-schedule'),
+
+
 ]

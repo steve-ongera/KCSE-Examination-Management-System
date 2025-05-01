@@ -254,3 +254,98 @@ class OverallResultAdmin(admin.ModelAdmin):
     
     def has_add_permission(self, request):
         return False  # Prevent manual addition since it's auto-calculated
+    
+
+
+from django.utils import timezone  # Add this import
+from django.contrib import admin
+from django.utils.html import format_html
+from .models import ExamPaperArchive, PaperReleaseSchedule
+
+class ExamPaperArchiveAdmin(admin.ModelAdmin):
+    list_display = ('paper_code', 'subject', 'exam_year', 'paper_type', 
+                    'is_confidential', 'approved', 'uploaded_by', 'date_uploaded')
+    list_filter = ('exam_year', 'subject', 'paper_type', 'is_confidential', 'approved')
+    search_fields = ('paper_code', 'paper_title', 'subject__name')
+    readonly_fields = ('date_uploaded', 'uploaded_by', 'approval_date')
+    list_per_page = 20
+    actions = ['approve_papers', 'mark_as_confidential']
+    raw_id_fields = ('subject', 'exam_year')
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('exam_year', 'subject', 'paper_type', 'paper_code', 'paper_title')
+        }),
+        ('Paper File', {
+            'fields': ('paper_file', 'is_confidential')
+        }),
+        ('Approval Status', {
+            'fields': ('approved', 'approved_by', 'approval_date')
+        }),
+        ('Upload Information', {
+            'fields': ('uploaded_by', 'date_uploaded'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(uploaded_by=request.user)
+    
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.uploaded_by = request.user
+        super().save_model(request, obj, form, change)
+    
+    def approve_papers(self, request, queryset):
+        updated = queryset.update(
+            approved=True,
+            approved_by=request.user,
+            approval_date=timezone.now()
+        )
+        self.message_user(request, f"{updated} papers were approved.")
+    approve_papers.short_description = "Approve selected papers"
+    
+    def mark_as_confidential(self, request, queryset):
+        updated = queryset.update(is_confidential=True)
+        self.message_user(request, f"{updated} papers were marked as confidential.")
+    mark_as_confidential.short_description = "Mark selected as confidential"
+    
+    def view_paper_link(self, obj):
+        if obj.paper_file:
+            return format_html('<a href="{}" target="_blank">View Paper</a>', obj.paper_file.url)
+        return "-"
+    view_paper_link.short_description = "Paper Link"
+
+class PaperReleaseScheduleAdmin(admin.ModelAdmin):
+    list_display = ('paper', 'release_date', 'is_released', 'released_by')
+    list_filter = ('is_released', 'release_date')
+    search_fields = ('paper__paper_code', 'paper__paper_title')
+    date_hierarchy = 'release_date'
+    readonly_fields = ('released_by',)
+    raw_id_fields = ('paper',)
+    
+    fieldsets = (
+        (None, {
+            'fields': ('paper', 'release_date', 'is_released', 'release_notes')
+        }),
+    )
+    
+    def save_model(self, request, obj, form, change):
+        if obj.is_released and not change:
+            obj.released_by = request.user
+        super().save_model(request, obj, form, change)
+    
+    def release_papers(self, request, queryset):
+        updated = queryset.update(
+            is_released=True,
+            released_by=request.user,
+            release_date=timezone.now()
+        )
+        self.message_user(request, f"{updated} papers were released.")
+    release_papers.short_description = "Release selected papers"
+
+admin.site.register(ExamPaperArchive, ExamPaperArchiveAdmin)
+admin.site.register(PaperReleaseSchedule, PaperReleaseScheduleAdmin)

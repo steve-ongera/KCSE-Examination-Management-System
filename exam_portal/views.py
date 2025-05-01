@@ -1796,3 +1796,110 @@ def subject_analysis_view(request):
     }
     
     return render(request, 'dashboards/subject_analysis.html', context)
+
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required, permission_required
+from django.urls import reverse_lazy, reverse
+from .models import ExamPaperArchive, PaperReleaseSchedule
+from django.http import HttpResponseRedirect
+
+@login_required
+def paper_archive_list(request):
+    queryset = ExamPaperArchive.objects.all()
+    
+    # Filter by query parameters
+    if 'year' in request.GET:
+        queryset = queryset.filter(exam_year__year=request.GET['year'])
+    if 'subject' in request.GET:
+        queryset = queryset.filter(subject__id=request.GET['subject'])
+    
+    # Apply select_related optimization
+    queryset = queryset.select_related('exam_year', 'subject')
+    
+    # Pagination
+    paginator = Paginator(queryset, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'papers': page_obj,
+        'is_paginated': page_obj.has_other_pages(),
+        'page_obj': page_obj,
+    }
+    
+    return render(request, 'exams/paper_archive_list.html', context)
+
+@permission_required('exams.add_exampaperarchive')
+def paper_upload(request):
+    if request.method == 'POST':
+        # Create a new paper archive instance
+        paper = ExamPaperArchive(
+            exam_year_id=request.POST.get('exam_year'),
+            subject_id=request.POST.get('subject'),
+            paper_type=request.POST.get('paper_type'),
+            paper_code=request.POST.get('paper_code'),
+            paper_title=request.POST.get('paper_title'),
+            paper_file=request.FILES.get('paper_file'),
+            is_confidential=request.POST.get('is_confidential') == 'on',
+            uploaded_by=request.user
+        )
+        paper.save()
+        return HttpResponseRedirect(reverse('paper-archive-list'))
+    
+    # If GET request, show empty form
+    context = {
+        'form': {
+            'fields': ['exam_year', 'subject', 'paper_type', 'paper_code', 'paper_title', 'paper_file', 'is_confidential']
+        }
+    }
+    return render(request, 'exams/paper_upload.html', context)
+
+@login_required
+def paper_detail(request, pk):
+    paper = get_object_or_404(ExamPaperArchive, pk=pk)
+    context = {
+        'paper': paper
+    }
+    return render(request, 'exams/paper_detail.html', context)
+
+@permission_required('exams.add_paperreleaseschedule')
+def paper_release(request):
+    if request.method == 'POST':
+        # Create a new paper release schedule
+        release = PaperReleaseSchedule(
+            paper_id=request.POST.get('paper'),
+            release_date=request.POST.get('release_date'),
+            release_notes=request.POST.get('release_notes'),
+            released_by=request.user
+        )
+        release.save()
+        return HttpResponseRedirect(reverse('paper-release-schedule'))
+    
+    # If GET request, show empty form
+    context = {
+        'form': {
+            'fields': ['paper', 'release_date', 'release_notes']
+        }
+    }
+    return render(request, 'exams/paper_release.html', context)
+
+@login_required
+def release_schedule(request):
+    # Get all releases and order by release date descending
+    releases = PaperReleaseSchedule.objects.all().order_by('-release_date')
+    
+    # Pagination
+    paginator = Paginator(releases, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'releases': page_obj,
+        'is_paginated': page_obj.has_other_pages(),
+        'page_obj': page_obj,
+    }
+    
+    return render(request, 'exams/release_schedule.html', context)

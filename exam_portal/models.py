@@ -305,7 +305,57 @@ def ensure_grade_points_updated(sender, instance, **kwargs):
             # This is a new instance, save() will handle it
             pass
 
-        
+
+
+from django.db import models
+from django.core.validators import FileExtensionValidator
+
+class ExamPaperArchive(models.Model):
+    PAPER_TYPE_CHOICES = [
+        ('MAIN', 'Main Exam'),
+        ('SUPP', 'Supplementary'),
+        ('MOCK', 'Mock Exam'),
+        ('SPEC', 'Special Paper'),
+    ]
+    
+    exam_year = models.ForeignKey('ExamYear', on_delete=models.PROTECT)
+    subject = models.ForeignKey('Subject', on_delete=models.PROTECT)
+    paper_type = models.CharField(max_length=4, choices=PAPER_TYPE_CHOICES, default='MAIN')
+    paper_code = models.CharField(max_length=20, help_text="Unique code for this paper")
+    paper_title = models.CharField(max_length=200)
+    paper_file = models.FileField(
+        upload_to='exam_papers/%Y/%m/%d/',
+        validators=[FileExtensionValidator(['pdf', 'jpg', 'jpeg', 'png'])]
+    )
+    is_confidential = models.BooleanField(default=True)
+    date_uploaded = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
+    approved = models.BooleanField(default=False)
+    approved_by = models.ForeignKey('User', related_name='approved_papers', on_delete=models.SET_NULL, null=True)
+    approval_date = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ('exam_year', 'subject', 'paper_code')
+        verbose_name_plural = "Exam Paper Archives"
+        ordering = ['-exam_year__year', 'subject__name']
+    
+    def __str__(self):
+        return f"{self.subject.name} ({self.paper_code}) - {self.exam_year.year}"
+
+class PaperReleaseSchedule(models.Model):
+    paper = models.ForeignKey('ExamPaperArchive', on_delete=models.CASCADE)
+    release_date = models.DateTimeField()
+    released_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
+    is_released = models.BooleanField(default=False)
+    release_notes = models.TextField(blank=True)
+    
+    class Meta:
+        verbose_name_plural = "Paper Release Schedules"
+    
+    def __str__(self):
+        return f"Release of {self.paper} on {self.release_date}"
+    
+    
 class OverallResult(models.Model):
     """Model representing a student's overall KCSE performance"""
     registration = models.OneToOneField(ExamRegistration, on_delete=models.CASCADE, related_name='overall_result')

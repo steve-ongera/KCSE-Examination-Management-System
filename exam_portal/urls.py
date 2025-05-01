@@ -23,5 +23,12 @@ urlpatterns = [
     path('student/<int:pk>/delete/', views.student_delete, name='student_delete'),
     path('student/search/', views.student_search, name='student_search'),
 
+    #school admin crud operations 
+    path('school_students/', views.school_student_list, name='school_student_list'),
+    path('school_student/<int:pk>/', views.school_student_detail, name='school_student_detail'),
+    path('school_students/create/', views.school_student_create, name='school_student_create'),
+    path('school_students/update/<int:pk>/', views.school_student_update, name='school_student_update'),
+    path('school_students/delete/<int:pk>/', views.school_student_delete, name='school_student_delete'),
+
 
 ]

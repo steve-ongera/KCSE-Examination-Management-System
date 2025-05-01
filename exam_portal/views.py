@@ -611,3 +611,185 @@ def student_search(request):
         'search_term': search_term,
     }
     return render(request, 'students/admin/student_search_results.html', context)
+
+
+# school admin crud operations
+
+from functools import wraps
+from django.shortcuts import redirect
+
+def school_admin_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated or request.user.user_type != 2:
+            return redirect('login')
+        
+        try:
+            admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
+            request.school = admin_profile.school
+        except SchoolAdminProfile.DoesNotExist:
+            return redirect('login')
+        
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+def school_student_list(request):
+    # Authentication and permission check
+    if not request.user.is_authenticated or request.user.user_type != 2:
+        return redirect('login')
+
+    try:
+        # Get the SchoolAdminProfile using the special_code which matches the username
+        admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
+        school = admin_profile.school
+    except SchoolAdminProfile.DoesNotExist:
+        return redirect('login')
+
+    # Get search query from GET request
+    search_query = request.GET.get('search', '')
+
+    # Filter students based on search query and school
+    students = Student.objects.filter(
+        school=school,
+        is_active=True
+    ).filter(
+        Q(first_name__icontains=search_query) |
+        Q(last_name__icontains=search_query) |
+        Q(index_number__icontains=search_query) |
+        Q(admision_number__icontains=search_query)
+    ).order_by('first_name')
+
+    # Paginate results
+    paginator = Paginator(students, 10)  # Show 10 students per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'students': students,  # Optional: not used in template directly
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'school': school
+    }
+    return render(request, 'students/school_admin/student_list.html', context)
+
+
+def school_student_detail(request, pk):
+    # Authentication and permission check
+    if not request.user.is_authenticated or request.user.user_type != 2:
+        return redirect('login')
+
+    try:
+        admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
+        school = admin_profile.school
+    except SchoolAdminProfile.DoesNotExist:
+        return redirect('login')
+
+    # Ensure the student belongs to this admin's school
+    student = get_object_or_404(Student, pk=pk, school=school)
+
+    context = {
+        'student': student,
+    }
+    return render(request, 'students/admin/student_detail.html', context)
+
+
+
+def school_student_create(request):
+    # Authentication and permission check
+    if not request.user.is_authenticated or request.user.user_type != 2:
+        return redirect('login')
+    
+    try:
+        admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
+        school = admin_profile.school
+    except SchoolAdminProfile.DoesNotExist:
+        return redirect('login')
+    
+    if request.method == 'POST':
+        form = StudentForm(request.POST, request.FILES)
+        if form.is_valid():
+            student = form.save(commit=False)
+            student.school = school
+            
+            # Generate admission number if not provided
+            if not student.admision_number:
+                last_student = Student.objects.filter(school=school).order_by('-id').first()
+                last_number = int(last_student.admision_number) if last_student else 0
+                student.admision_number = str(last_number + 1).zfill(4)
+            
+            student.save()
+            messages.success(request, 'Student created successfully!')
+            return redirect('student_list')
+    else:
+        form = StudentForm(initial={'school': school})
+    
+    context = {
+        'form': form,
+        'school': school
+    }
+    return render(request, 'students/school_admin/student_form.html', context)
+
+def school_student_update(request, pk):
+    # Authentication and permission check
+    if not request.user.is_authenticated or request.user.user_type != 2:
+        return redirect('login')
+    
+    try:
+        admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
+        school = admin_profile.school
+    except SchoolAdminProfile.DoesNotExist:
+        return redirect('login')
+    
+    student = get_object_or_404(Student, pk=pk)
+    
+    # Verify the student belongs to the admin's school
+    if student.school != school:
+        messages.error(request, "You can only update students from your school.")
+        return redirect('student_list')
+    
+    if request.method == 'POST':
+        form = StudentForm(request.POST, request.FILES, instance=student)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Student updated successfully!')
+            return redirect('student_list')
+    else:
+        form = StudentForm(instance=student)
+    
+    context = {
+        'form': form,
+        'student': student,
+        'school': school
+    }
+    return render(request, 'students/school_admin/student_form.html', context)
+
+
+def school_student_delete(request, pk):
+    # Authentication and permission check
+    if not request.user.is_authenticated or request.user.user_type != 2:
+        return redirect('login')
+    
+    try:
+        admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
+        school = admin_profile.school
+    except SchoolAdminProfile.DoesNotExist:
+        return redirect('login')
+    
+    student = get_object_or_404(Student, pk=pk)
+    
+    # Verify the student belongs to the admin's school
+    if student.school != school:
+        messages.error(request, "You can only delete students from your school.")
+        return redirect('student_list')
+    
+    if request.method == 'POST':
+        # Soft delete by setting is_active to False
+        student.is_active = False
+        student.save()
+        messages.success(request, 'Student deleted successfully!')
+        return redirect('student_list')
+    
+    context = {
+        'student': student
+    }
+    return render(request, 'students/school_admin/student_confirm_delete.html', context)

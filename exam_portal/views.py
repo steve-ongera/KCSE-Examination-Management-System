@@ -905,7 +905,7 @@ from .models import Student, ExamYear, ExamRegistration, SubjectRegistration, Ex
 
 
 class StudentPerformanceView(LoginRequiredMixin, View):
-    template_name = 'exams/student_performance.html'
+    template_name = 'exams/search_student_performance.html'
     
     def get(self, request):
         context = {}
@@ -1381,3 +1381,68 @@ def current_year_performance(request):
         'search_query': search_query,
     }
     return render(request, 'exams/current_performance.html', context)
+
+
+from django.db.models import Avg, Count, Q, Sum
+from django.db.models.functions import Coalesce
+from django.db.models import FloatField
+
+from django.db.models import Avg, Count, Q, Sum
+from django.db.models.functions import Coalesce
+from django.db.models import FloatField, Value
+
+def school_ranking(request):
+    # Get the current exam year
+    current_year = ExamYear.objects.filter(is_current=True).first()
+    if not current_year:
+        return render(request, 'exams/ranking/school_rankings.html', {
+            'error': 'No current exam year configured'
+        })
+    
+    # Base queryset - schools with students who have exam results
+    queryset = School.objects.filter(
+        students__registrations__exam_year=current_year,
+        students__registrations__subjects__result__isnull=False
+    ).distinct()
+    
+    # Annotate with mean points and student count
+    queryset = queryset.annotate(
+        mean_points=Coalesce(
+            Avg(
+                'students__registrations__subjects__result__points',
+                filter=Q(
+                    students__registrations__exam_year=current_year,
+                    students__registrations__subjects__result__points__isnull=False
+                ),
+                output_field=FloatField()
+            ),
+            Value(0.0, output_field=FloatField())
+        ),
+        student_count=Count(
+            'students__registrations',
+            filter=Q(
+                students__registrations__exam_year=current_year,
+                students__registrations__subjects__result__isnull=False
+            ),
+            distinct=True
+        )
+    ).order_by('-mean_points', '-student_count', 'name')
+    
+    # Pagination
+    page_number = request.GET.get('page', 1)
+    paginator = Paginator(queryset, 20)  # 20 schools per page
+    page_obj = paginator.get_page(page_number)
+    
+    # Add ranking to schools
+    ranked_schools = []
+    for rank, school in enumerate(page_obj, start=1):
+        school.rank = rank
+        ranked_schools.append(school)
+    
+    context = {
+        'current_year': current_year,
+        'schools': ranked_schools,
+        'page_obj': page_obj,
+    }
+    
+    return render(request, 'exams/ranking/school_rankings.html', context)

@@ -890,4 +890,4 @@ class EnterStudentMarksView(View):
             print(f"Full Error Traceback:\n{traceback.format_exc()}")
 
         # Redirect back with the index number
-        return redirect(f"{reverse('enter_student_marks')}?{urlencode({'index_number': index_number})}")
+        return redirect(f"{reverse('enter_student_marks')}?{urlencode({'index_number': index_number })}")

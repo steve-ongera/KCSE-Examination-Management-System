@@ -241,25 +241,31 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
-
 class ExamResult(models.Model):
     """Model representing a student's results for a subject in KCSE"""
     subject_registration = models.OneToOneField('SubjectRegistration', on_delete=models.CASCADE, related_name='result')
-    marks = models.PositiveIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
-    )
-    grade = models.CharField(max_length=2, blank=True)
+    marks = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)], null=True, blank=True)
+    grade = models.CharField(max_length=2, blank=True, null=True)  # Changed to allow null
     points = models.PositiveIntegerField(blank=True, null=True)
     
     def calculate_grade_and_points(self):
         """Calculate grade and points based on marks and grading system"""
+        # Exit early if marks are None
+        if self.marks is None:
+            self.grade = None
+            self.points = None
+            return
+        
         grading_system = self.subject_registration.registration.exam_year.grading_system
         marks = self.marks
         
         if isinstance(grading_system, dict):
             # Dictionary format with grade keys
             for grade, info in grading_system.items():
-                if info.get('min_score', 0) <= marks <= info.get('max_score', 100):
+                min_score = info.get('min_score', 0)
+                max_score = info.get('max_score', 100)
+                
+                if min_score <= marks <= max_score:
                     self.grade = grade
                     self.points = info.get('points', 0)
                     break
@@ -279,7 +285,9 @@ class ExamResult(models.Model):
         super().save(*args, **kwargs)
     
     def __str__(self):
-        return f"{self.subject_registration}: {self.marks}% ({self.grade})"
+        mark_display = f"{self.marks}%" if self.marks is not None else "No marks"
+        grade_display = f"({self.grade})" if self.grade else ""
+        return f"{self.subject_registration}: {mark_display} {grade_display}"
 
 
 @receiver(pre_save, sender=ExamResult)
@@ -302,9 +310,9 @@ class OverallResult(models.Model):
     """Model representing a student's overall KCSE performance"""
     registration = models.OneToOneField(ExamRegistration, on_delete=models.CASCADE, related_name='overall_result')
     total_marks = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
-    average_grade = models.CharField(max_length=2, blank=True)
+    average_grade = models.CharField(max_length=2, blank=True, null=True)  # Changed to allow null
     average_points = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
-    division = models.CharField(max_length=20, blank=True)
+    division = models.CharField(max_length=20, blank=True, null=True)  # Changed to allow null
     
     def calculate_results(self):
         # Get all subject results for this registration
@@ -312,16 +320,24 @@ class OverallResult(models.Model):
             subject_registration__registration=self.registration
         )
         
+        # Exit early if no results or no results with points
+        valid_results = [result for result in subject_results if result.marks is not None and result.points is not None]
+        if not valid_results:
+            self.total_marks = None
+            self.average_points = None
+            self.average_grade = None
+            self.division = None
+            return
+        
         # Calculate total marks and average points
         total_points = 0
         total_marks = 0
         count = 0
         
-        for result in subject_results:
-            if result.points is not None:
-                total_points += result.points
-                total_marks += result.marks
-                count += 1
+        for result in valid_results:
+            total_points += result.points
+            total_marks += result.marks
+            count += 1
         
         if count > 0:
             self.total_marks = total_marks / count
@@ -332,11 +348,9 @@ class OverallResult(models.Model):
             
             # Debug info
             print(f"Overall grading system type: {type(grading_system)}")
+            print(f"Average points: {self.average_points}")
             
             # Match average points to the closest grade in the grading system
-            # Since your grading system doesn't have min_avg/max_avg fields,
-            # we'll determine the grade based on the points directly
-            
             if isinstance(grading_system, dict):
                 # Find the grade that matches the average points
                 for grade, info in grading_system.items():
@@ -363,10 +377,18 @@ class OverallResult(models.Model):
                         self.average_grade = grade_info.get('grade', '')
                         self.division = grade_info.get('division', '')
                         break
+        else:
+            # Set all fields to None if no valid results
+            self.total_marks = None
+            self.average_points = None
+            self.average_grade = None
+            self.division = None
     
     def save(self, *args, **kwargs):
         self.calculate_results()
         super().save(*args, **kwargs)
     
     def __str__(self):
-        return f"{self.registration}: {self.average_grade} ({self.average_points} points)"
+        if self.average_grade and self.average_points is not None:
+            return f"{self.registration}: {self.average_grade} ({self.average_points} points)"
+        return f"{self.registration}: No results yet"

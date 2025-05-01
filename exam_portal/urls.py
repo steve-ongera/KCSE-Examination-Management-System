@@ -31,4 +31,8 @@ urlpatterns = [
     path('school_students/delete/<int:pk>/', views.school_student_delete, name='school_student_delete'),
 
 
+    #examinations
+    path('enter-marks/', views.EnterStudentMarksView.as_view(), name='enter_student_marks'),
+
+
 ]

@@ -1,0 +1,57 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Enter Student Marks</h2>
+    
+    <form method="get" class="mb-4">
+        <div class="form-group">
+            <label for="index_number">Student Index Number</label>
+            <input type="text" class="form-control" id="index_number" name="index_number" 
+                   value="{{ request.GET.index_number }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Fetch Subjects</button>
+    </form>
+
+    {% if student %}
+    <div class="card mb-4">
+        <div class="card-header">
+            Student: {{ student.first_name }} {{ student.last_name }} | School: {{ student.school.name }}
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="index_number" value="{{ student.index_number }}">
+        
+        <table class="table table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Subject</th>
+                    <th>Code</th>
+                    <th>Category</th>
+                    <th>Marks (0-100)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub_reg in subject_registrations %}
+                <tr>
+                    <td>{{ sub_reg.subject.name }}</td>
+                    <td>{{ sub_reg.subject.code }}</td>
+                    <td>{{ sub_reg.subject.get_category_display }}</td>
+                    <td>
+                        <input type="number" name="mark_{{ sub_reg.id }}" 
+                               class="form-control" min="0" max="100"
+                               value="{{ sub_reg.result.marks|default_if_none:'' }}">
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <button type="submit" class="btn btn-success">Save All Marks</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

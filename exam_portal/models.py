@@ -233,9 +233,14 @@ class SubjectRegistration(models.Model):
     def __str__(self):
         return f"{self.registration.student} - {self.subject.name} ({self.registration.exam_year.year})"
 
+from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+# Only showing the problematic model for clarity
+
 class ExamResult(models.Model):
     """Model representing a student's results for a subject in KCSE"""
-    subject_registration = models.OneToOneField(SubjectRegistration, on_delete=models.CASCADE, related_name='result')
+    subject_registration = models.OneToOneField('SubjectRegistration', on_delete=models.CASCADE, related_name='result')
     marks = models.PositiveIntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(100)]
     )
@@ -247,13 +252,31 @@ class ExamResult(models.Model):
         grading_system = self.subject_registration.registration.exam_year.grading_system
         marks = self.marks
         
-        # Determine grade and points based on the grading system
-        for grade_info in grading_system:
-            if grade_info['min'] <= marks <= grade_info['max']:
-                self.grade = grade_info['grade']
-                self.points = grade_info['points']
-                break
+        # Debug check - what type is grading_system?
+        print(f"Grading system type: {type(grading_system)}")
+        print(f"Grading system content: {grading_system}")
         
+        # Determine grade and points based on the grading system
+        # Handle your specific grading system format with min_score and max_score keys
+        
+        if isinstance(grading_system, dict):
+            # Your current format: dictionary with grade keys
+            for grade, info in grading_system.items():
+                if info.get('min_score', 0) <= marks <= info.get('max_score', 100):
+                    self.grade = grade
+                    self.points = info.get('points', 0)
+                    break
+        elif isinstance(grading_system, list):
+            # Handle alternative list format if needed
+            for grade_info in grading_system:
+                min_val = grade_info.get('min_score', grade_info.get('min', 0))
+                max_val = grade_info.get('max_score', grade_info.get('max', 100))
+                
+                if min_val <= marks <= max_val:
+                    self.grade = grade_info.get('grade', '')
+                    self.points = grade_info.get('points', 0)
+                    break
+                    
         super().save(*args, **kwargs)
     
     def __str__(self):
@@ -290,11 +313,40 @@ class OverallResult(models.Model):
             
             # Determine overall grade based on average points
             grading_system = self.registration.exam_year.grading_system
-            for grade_info in grading_system:
-                if grade_info['min_avg'] <= self.average_points <= grade_info['max_avg']:
-                    self.average_grade = grade_info['grade']
-                    self.division = grade_info['division']
-                    break
+            
+            # Debug info
+            print(f"Overall grading system type: {type(grading_system)}")
+            
+            # Match average points to the closest grade in the grading system
+            # Since your grading system doesn't have min_avg/max_avg fields,
+            # we'll determine the grade based on the points directly
+            
+            if isinstance(grading_system, dict):
+                # Find the grade that matches the average points
+                for grade, info in grading_system.items():
+                    if info.get('points') == round(self.average_points):
+                        self.average_grade = grade
+                        # Set division based on grade ranges
+                        points = info.get('points', 0)
+                        if points >= 10:  # A, A-, B+
+                            self.division = "Division 1"
+                        elif points >= 8:  # B, B-
+                            self.division = "Division 2"
+                        elif points >= 6:  # C+, C
+                            self.division = "Division 3"
+                        elif points >= 2:  # C-, D+, D, D-
+                            self.division = "Division 4"
+                        else:  # E
+                            self.division = "Division 5"
+                        break
+            elif isinstance(grading_system, list):
+                # Alternative format handling if needed
+                for grade_info in grading_system:
+                    points_val = grade_info.get('points', 0)
+                    if points_val == round(self.average_points):
+                        self.average_grade = grade_info.get('grade', '')
+                        self.division = grade_info.get('division', '')
+                        break
     
     def save(self, *args, **kwargs):
         self.calculate_results()

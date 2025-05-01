@@ -793,3 +793,102 @@ def school_student_delete(request, pk):
         'student': student
     }
     return render(request, 'students/school_admin/student_confirm_delete.html', context)
+
+from django.shortcuts import render, redirect
+from django.views import View
+from django.contrib import messages
+from django.urls import reverse
+from urllib.parse import urlencode
+from django.core.exceptions import ValidationError
+
+from .models import Student, ExamYear, ExamRegistration, ExamResult
+
+
+class EnterStudentMarksView(View):
+    template_name = 'exams/enter_student_marks.html'
+
+    def get(self, request):
+        context = {}
+        index_number = request.GET.get('index_number', '').strip()
+
+        if index_number:
+            try:
+                current_year = ExamYear.objects.get(is_current=True)
+                student = Student.objects.get(index_number=index_number)
+                registration = student.registrations.get(exam_year=current_year)
+                subject_registrations = registration.subjects.all()
+
+                context.update({
+                    'student': student,
+                    'subject_registrations': subject_registrations,
+                    'current_year': current_year,
+                })
+
+            except Student.DoesNotExist:
+                messages.error(request, 'Student with this index number was not found.')
+            except ExamYear.DoesNotExist:
+                messages.error(request, 'No current exam year is set.')
+            except ExamRegistration.DoesNotExist:
+                messages.error(request, 'Student is not registered for the current exam year.')
+            except Exception as e:
+                messages.error(request, f'Unexpected error: {str(e)}')
+
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        index_number = request.POST.get('index_number', '').strip()
+        if not index_number:
+            messages.error(request, 'Index number is required.')
+            return redirect(reverse('enter_student_marks'))
+
+        try:
+            # Debug: Print POST data for verification
+            print("POST Data Received:", request.POST)
+
+            current_year = ExamYear.objects.get(is_current=True)
+            student = Student.objects.get(index_number=index_number)
+            registration = student.registrations.get(exam_year=current_year)
+
+            # Process each subject mark
+            for subject_reg in registration.subjects.all():
+                mark_field = f'mark_{subject_reg.id}'
+                mark_value = request.POST.get(mark_field, '').strip()
+
+                if not mark_value:
+                    continue  # Skip if no mark provided
+
+                try:
+                    # Validate and convert mark
+                    mark = int(mark_value)
+                    if mark < 0 or mark > 100:
+                        raise ValidationError(f"Mark for {subject_reg.subject.name} must be between 0 and 100.")
+
+                    # Update or create exam result
+                    ExamResult.objects.update_or_create(
+                        subject_registration=subject_reg,
+                        defaults={'marks': mark}
+                    )
+
+                except ValueError:
+                    messages.error(request, f"Invalid mark format for {subject_reg.subject.name}. Must be a whole number.")
+                except ValidationError as ve:
+                    messages.error(request, str(ve))
+                except Exception as e:
+                    messages.error(request, f"Error processing {subject_reg.subject.name}: {str(e)}")
+
+            messages.success(request, 'Marks saved successfully!')
+
+        except ExamYear.DoesNotExist:
+            messages.error(request, 'No current exam year is set.')
+        except Student.DoesNotExist:
+            messages.error(request, 'Student with this index number was not found.')
+        except ExamRegistration.DoesNotExist:
+            messages.error(request, 'Student is not registered for the current exam year.')
+        except Exception as e:
+            messages.error(request, f'System error: {str(e)}')
+            # Log full error for debugging
+            import traceback
+            print(f"Full Error Traceback:\n{traceback.format_exc()}")
+
+        # Redirect back with the index number
+        return redirect(f"{reverse('enter_student_marks')}?{urlencode({'index_number': index_number})}")

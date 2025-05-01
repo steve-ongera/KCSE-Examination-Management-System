@@ -14,13 +14,15 @@ class Command(BaseCommand):
         for reg in subject_regs:
             try:
                 result = reg.result  # Try to access related ExamResult
-                if result.marks is None:
+                if result.marks is None:  # Check if marks are None
                     result.marks = random.randint(0, 100)
                     result.save()
                     count_updated += 1
                     self.stdout.write(f"Updated marks for {reg}")
+                else:
+                    self.stdout.write(f"Skipped {reg} as it already has marks.")
             except ExamResult.DoesNotExist:
-                # Create new ExamResult with random marks
+                # If no ExamResult exists, create a new one with random marks
                 result = ExamResult.objects.create(
                     subject_registration=reg,
                     marks=random.randint(0, 100)

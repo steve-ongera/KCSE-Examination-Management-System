@@ -20,6 +20,7 @@ urlpatterns = [
 
      #school 
      path('school_performance_analysis/', views.school_performance_analysis, name='school_performance_analysis'),
+     #path('school-performance/', views.school_exam_performance, name='school-exam-performance'),
 
 
     #admin/ student crud opertaions 

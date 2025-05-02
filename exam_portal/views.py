@@ -30,6 +30,9 @@ from django.views.decorators.http import require_GET
 import os
 from django.contrib.auth import authenticate, login , logout
 
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
 def custom_login(request):
     if request.method == 'POST':
         username = request.POST.get('username')

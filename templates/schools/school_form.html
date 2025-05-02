@@ -1,0 +1,438 @@
+{% extends 'base/base.html'%}
+{% load custom_filters %}
+{% load static %}
+
+{% block content %}
+<div class="message-container" id="system-messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        <i class="bi {% if message.tags == 'success' %}bi-check-circle{% else %}bi-exclamation-triangle{% endif %} me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="pagetitle">
+    <h1>
+        <i class="bi bi-building me-2"></i>
+        {% if school.id %}Edit School{% else %}Add New School{% endif %}
+    </h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school_list' %}">Schools</a></li>
+            <li class="breadcrumb-item active">{% if school.id %}Edit {{ school.name }}{% else %}Add New School{% endif %}</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-university-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            {% if school.id %}Edit School Information{% else %}School Information{% endif %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Main Form Tabs -->
+                        <ul class="nav nav-tabs nav-tabs-bordered" id="schoolFormTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic-info" type="button" role="tab" aria-controls="basic-info" aria-selected="true">
+                                    <i class="bi bi-info-circle me-1"></i> Basic Information
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="location-tab" data-bs-toggle="tab" data-bs-target="#location-info" type="button" role="tab" aria-controls="location-info" aria-selected="false">
+                                    <i class="bi bi-geo-alt me-1"></i> Location & Contact
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="principal-tab" data-bs-toggle="tab" data-bs-target="#principal-info" type="button" role="tab" aria-controls="principal-info" aria-selected="false">
+                                    <i class="bi bi-person-badge me-1"></i> Principal
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="academic-tab" data-bs-toggle="tab" data-bs-target="#academic-info" type="button" role="tab" aria-controls="academic-info" aria-selected="false">
+                                    <i class="bi bi-book me-1"></i> Academic
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="additional-tab" data-bs-toggle="tab" data-bs-target="#additional-info" type="button" role="tab" aria-controls="additional-info" aria-selected="false">
+                                    <i class="bi bi-plus-circle me-1"></i> Additional
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content pt-4" id="schoolFormTabContent">
+                            <!-- Basic Information Tab -->
+                            <div class="tab-pane fade show active" id="basic-info" role="tabpanel" aria-labelledby="basic-tab">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.name}}
+                                            <label for="{{ form.name.id_for_label }}">School Name <span class="text-danger">*</span></label>
+                                            {% if form.name.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.knec_code}}
+                                            <label for="{{ form.knec_code.id_for_label }}">KNEC Code <span class="text-danger">*</span></label>
+                                            {% if form.knec_code.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.knec_code.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.registration_number}}
+                                            <label for="{{ form.registration_number.id_for_label }}">Registration Number <span class="text-danger">*</span></label>
+                                            {% if form.registration_number.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.registration_number.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.special_code}}
+                                            <label for="{{ form.special_code.id_for_label }}">Special Code</label>
+                                            {% if form.special_code.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.special_code.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-floating mb-3">
+                                            {{ form.school_type }}
+                                            <label for="{{ form.school_type.id_for_label }}">School Type <span class="text-danger">*</span></label>
+                                            {% if form.school_type.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.school_type.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-floating mb-3">
+                                            {{ form.category }}
+                                            <label for="{{ form.category.id_for_label }}">Category <span class="text-danger">*</span></label>
+                                            {% if form.category.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.category.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check form-switch mt-3">
+                                            {{ form.is_active}}
+                                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                                Active Status
+                                            </label>
+                                            {% if form.is_active.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.is_active.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.registration_date}}
+                                            <label for="{{ form.registration_date.id_for_label }}">Registration Date</label>
+                                            {% if form.registration_date.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.registration_date.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.established_date}}
+                                            <label for="{{ form.established_date.id_for_label }}">Established Date</label>
+                                            {% if form.established_date.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.established_date.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.last_inspection_date}}
+                                            <label for="{{ form.last_inspection_date.id_for_label }}">Last Inspection Date</label>
+                                            {% if form.last_inspection_date.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.last_inspection_date.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Location & Contact Tab -->
+                            <div class="tab-pane fade" id="location-info" role="tabpanel" aria-labelledby="location-tab">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="form-floating mb-3">
+                                            {{ form.county }}
+                                            <label for="{{ form.county.id_for_label }}">County <span class="text-danger">*</span></label>
+                                            {% if form.county.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.county.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-floating mb-3">
+                                            {{ form.sub_county }}
+                                            <label for="{{ form.sub_county.id_for_label }}">Sub County <span class="text-danger">*</span></label>
+                                            {% if form.sub_county.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.sub_county.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-floating mb-3">
+                                            {{ form.ward}}
+                                            <label for="{{ form.ward.id_for_label }}">Ward</label>
+                                            {% if form.ward.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.ward.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.postal_address}}
+                                            <label for="{{ form.postal_address.id_for_label }}">Postal Address <span class="text-danger">*</span></label>
+                                            {% if form.postal_address.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.postal_address.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.gps_coordinates}}
+                                            <label for="{{ form.gps_coordinates.id_for_label }}">GPS Coordinates</label>
+                                            {% if form.gps_coordinates.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.gps_coordinates.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-floating mb-3">
+                                            {{ form.physical_address}}
+                                            <label for="{{ form.physical_address.id_for_label }}">Physical Address <span class="text-danger">*</span></label>
+                                            {% if form.physical_address.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.physical_address.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.phone_number}}
+                                            <label for="{{ form.phone_number.id_for_label }}">Phone Number <span class="text-danger">*</span></label>
+                                            {% if form.phone_number.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.phone_number.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.alternative_phone}}
+                                            <label for="{{ form.alternative_phone.id_for_label }}">Alternative Phone</label>
+                                            {% if form.alternative_phone.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.alternative_phone.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.email}}
+                                            <label for="{{ form.email.id_for_label }}">Email Address</label>
+                                            {% if form.email.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.email.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.website}}
+                                            <label for="{{ form.website.id_for_label }}">Website</label>
+                                            {% if form.website.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.website.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Principal Information Tab -->
+                            <div class="tab-pane fade" id="principal-info" role="tabpanel" aria-labelledby="principal-tab">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.principal_name}}
+                                            <label for="{{ form.principal_name.id_for_label }}">Principal Name <span class="text-danger">*</span></label>
+                                            {% if form.principal_name.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.principal_name.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.principal_phone}}
+                                            <label for="{{ form.principal_phone.id_for_label }}">Principal Phone <span class="text-danger">*</span></label>
+                                            {% if form.principal_phone.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.principal_phone.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.principal_email}}
+                                            <label for="{{ form.principal_email.id_for_label }}">Principal Email</label>
+                                            {% if form.principal_email.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.principal_email.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.principal_tsc_number}}
+                                            <label for="{{ form.principal_tsc_number.id_for_label }}">Principal TSC Number</label>
+                                            {% if form.principal_tsc_number.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.principal_tsc_number.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Academic Information Tab -->
+                            <div class="tab-pane fade" id="academic-info" role="tabpanel" aria-labelledby="academic-tab">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.curriculum }}
+                                            <label for="{{ form.curriculum.id_for_label }}">Curriculum <span class="text-danger">*</span></label>
+                                            {% if form.curriculum.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.curriculum.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ form.number_of_streams}}
+                                            <label for="{{ form.number_of_streams.id_for_label }}">Number of Streams <span class="text-danger">*</span></label>
+                                            {% if form.number_of_streams.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.number_of_streams.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Information Tab -->
+                            <div class="tab-pane fade" id="additional-info" role="tabpanel" aria-labelledby="additional-tab">
+                                <div class="row g-3">
+                                    <div class="col-md-12">
+                                        <div class="form-floating mb-3">
+                                            {{ form.motto}}
+                                            <label for="{{ form.motto.id_for_label }}">School Motto</label>
+                                            {% if form.motto.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.motto.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.mission.id_for_label }}" class="form-label">School Mission</label>
+                                            {{ form.mission}}
+                                            {% if form.mission.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.mission.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.vision.id_for_label }}" class="form-label">School Vision</label>
+                                            {{ form.vision}}
+                                            {% if form.vision.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.vision.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-university-light">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'school_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-university">
+                                <i class="bi bi-save me-1"></i> 
+                                {% if school.id %}Save Changes{% else %}Create School{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Initialize date pickers for date fields
+    document.addEventListener('DOMContentLoaded', function() {
+        // Format date inputs
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        dateInputs.forEach(function(input) {
+            // Add datepicker initialization if needed
+        });
+
+        // County and sub-county dependent dropdown
+        const countySelect = document.getElementById('{{ form.county.id_for_label }}');
+        const subCountySelect = document.getElementById('{{ form.sub_county.id_for_label }}');
+        
+        if (countySelect && subCountySelect) {
+            countySelect.addEventListener('change', function() {
+                const countyId = this.value;
+                
+                // Clear current options
+                subCountySelect.innerHTML = '<option value="">Select Sub County</option>';
+                
+                if (countyId) {
+                    // Fetch sub counties for the selected county via AJAX
+                    fetch(`/api/sub-counties/?county=${countyId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            data.forEach(subCounty => {
+                                const option = document.createElement('option');
+                                option.value = subCounty.id;
+                                option.textContent = subCounty.name;
+                                subCountySelect.appendChild(option);
+                            });
+                        })
+                        .catch(error => console.error('Error fetching sub counties:', error));
+                }
+            });
+        }
+
+        // Form validation
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    });
+</script>
+{% endblock %}

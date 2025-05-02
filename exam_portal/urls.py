@@ -46,12 +46,21 @@ urlpatterns = [
     path('school_registration_detail/<int:school_id>/', views.school_registration_detail, name='school_registration_detail'),
     path('school_registered_students/<int:school_id>/', views.school_registered_students, name='school_registered_students'),
 
+    path('schools/', views.school_list, name='school_list'),
+    path('schools/<int:pk>/', views.school_detail, name='school_detail'),
+    path('schools/create/', views.school_create_edit, name='school_create'),
+    path('schools/edit/<int:pk>/', views.school_create_edit, name='school_edit'),
+    path('schools/delete/<int:pk>/', views.school_delete, name='school_delete'),
+
 
     path('papers/', views.paper_archive_list, name='paper-archive-list'),
     path('papers/upload/', views.paper_upload, name='paper-upload'),
     path('papers/<int:pk>/', views.paper_detail, name='paper-detail'),
     path('papers/release/', views.paper_release, name='paper-release'),
     path('releases/', views.release_schedule, name='paper-release-schedule'),
+
+    path('knec_official_support/', views.knec_official_support, name='knec_official_support'),
+    path('knec_system_configuration/', views.knec_system_configuration, name='knec_system_configuration'),
 
 
     # Dashboard

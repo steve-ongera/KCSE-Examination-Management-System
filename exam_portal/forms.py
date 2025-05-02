@@ -134,3 +134,54 @@ class StudentForm(forms.ModelForm):
         # Special handling for boolean field
         self.fields['is_boarder'].widget.attrs.update({'class': 'form-check-input'})
         self.fields['is_active'].widget.attrs.update({'class': 'form-check-input'})
+
+
+from django import forms
+from .models import School
+
+class SchoolForm(forms.ModelForm):
+    class Meta:
+        model = School
+        fields = '__all__'
+        widgets = {
+            # Basic Info
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'knec_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'registration_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'special_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'school_type': forms.Select(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
+            'registration_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'established_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'motto': forms.TextInput(attrs={'class': 'form-control'}),
+            'mission': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'vision': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            
+            # Location
+            'county': forms.TextInput(attrs={'class': 'form-control'}),
+            'sub_county': forms.TextInput(attrs={'class': 'form-control'}),
+            'ward': forms.TextInput(attrs={'class': 'form-control'}),
+            'postal_address': forms.TextInput(attrs={'class': 'form-control'}),
+            'physical_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'gps_coordinates': forms.TextInput(attrs={'class': 'form-control'}),
+            'website': forms.URLInput(attrs={'class': 'form-control'}),
+
+            # Contact
+            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'alternative_phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+
+            # Principal
+            'principal_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'principal_phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'principal_email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'principal_tsc_number': forms.TextInput(attrs={'class': 'form-control'}),
+
+            # Academic
+            'curriculum': forms.TextInput(attrs={'class': 'form-control'}),
+            'number_of_streams': forms.NumberInput(attrs={'class': 'form-control'}),
+
+            # Status
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'last_inspection_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        }

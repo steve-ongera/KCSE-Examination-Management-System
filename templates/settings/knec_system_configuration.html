@@ -1,0 +1,350 @@
+{% extends 'base/base.html'%}
+{% load custom_filters %}
+{% load static %}
+
+{% block content %}
+<div class="message-container" id="system-messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        <i class="bi {% if message.tags == 'success' %}bi-check-circle{% else %}bi-exclamation-triangle{% endif %} me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="pagetitle">
+    <h1><i class="bi bi-gear me-2"></i>KNEC System Configuration</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Dashboard</a></li>
+            <li class="breadcrumb-item active">System Configuration</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-knec-dark text-white">
+                    <h5 style="color:white;" class="card-title mb-0"><i class="bi bi-sliders me-2"></i>Examination System Settings</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Current Exam Year Configuration -->
+                    <div class="mb-5">
+                        <h5 class="text-knec mb-3"><i class="bi bi-calendar-date me-2"></i>Examination Year Settings</h5>
+                        <form method="post" action="#">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="current_exam_year" class="form-label">Current Examination Year</label>
+                                    <select class="form-select" id="current_exam_year" name="current_exam_year" required>
+                                        {% for year in exam_years %}
+                                        <option value="{{ year.id }}" {% if year.is_current %}selected{% endif %}>
+                                            KCSE {{ year.year }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Grading System</label>
+                                    <button type="button" class="btn btn-knec-outline w-100" data-bs-toggle="modal" data-bs-target="#gradingSystemModal">
+                                        <i class="bi bi-table me-1"></i> View/Edit Grading System
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-knec">
+                                    <i class="bi bi-save me-1"></i> Update Exam Year
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Registration Settings -->
+                    <div class="mb-5">
+                        <h5 class="text-knec mb-3"><i class="bi bi-pencil-square me-2"></i>Registration Settings</h5>
+                        <form method="post" action="#">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="registration_start" class="form-label">Registration Start Date</label>
+                                    <input type="date" class="form-control" id="registration_start" 
+                                        name="registration_start" value="{{ settings.registration_start|date:'Y-m-d' }}" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="registration_end" class="form-label">Registration End Date</label>
+                                    <input type="date" class="form-control" id="registration_end" 
+                                        name="registration_end" value="{{ settings.registration_end|date:'Y-m-d' }}" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="max_subjects" class="form-label">Max Subjects per Student</label>
+                                    <input type="number" class="form-control" id="max_subjects" 
+                                        name="max_subjects" value="{{ settings.max_subjects }}" min="5" max="14" required>
+                                </div>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="allow_late_registration" 
+                                    name="allow_late_registration" {% if settings.allow_late_registration %}checked{% endif %}>
+                                <label class="form-check-label" for="allow_late_registration">Allow Late Registration (with penalty)</label>
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-knec">
+                                    <i class="bi bi-save me-1"></i> Update Registration Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Result Processing -->
+                    <div class="mb-5">
+                        <h5 class="text-knec mb-3"><i class="bi bi-graph-up me-2"></i>Result Processing</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-knec-light">
+                                        <h6 class="mb-0"><i class="bi bi-lock me-2"></i>Result Approval</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <form method="post" action="#">
+                                            {% csrf_token %}
+                                            <div class="form-check form-switch mb-3">
+                                                <input class="form-check-input" type="checkbox" id="require_supervisor_approval" 
+                                                    name="require_supervisor_approval" {% if settings.require_supervisor_approval %}checked{% endif %}>
+                                                <label class="form-check-label" for="require_supervisor_approval">Require Supervisor Approval</label>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="approval_threshold" class="form-label">Minimum Approval Level</label>
+                                                <select class="form-select" id="approval_threshold" name="approval_threshold">
+                                                    <option value="1" {% if settings.approval_threshold == 1 %}selected{% endif %}>Level 1 (School)</option>
+                                                    <option value="2" {% if settings.approval_threshold == 2 %}selected{% endif %}>Level 2 (County)</option>
+                                                    <option value="3" {% if settings.approval_threshold == 3 %}selected{% endif %}>Level 3 (National)</option>
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-knec btn-sm">
+                                                <i class="bi bi-save me-1"></i> Update
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-knec-light">
+                                        <h6 class="mb-0"><i class="bi bi-eye me-2"></i>Result Visibility</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <form method="post" action="#">
+                                            {% csrf_token %}
+                                            <div class="form-check form-switch mb-3">
+                                                <input class="form-check-input" type="checkbox" id="show_marks" 
+                                                    name="show_marks" {% if settings.show_marks %}checked{% endif %}>
+                                                <label class="form-check-label" for="show_marks">Show Raw Marks to Schools</label>
+                                            </div>
+                                            <div class="form-check form-switch mb-3">
+                                                <input class="form-check-input" type="checkbox" id="show_grades" 
+                                                    name="show_grades" {% if settings.show_grades %}checked{% endif %}>
+                                                <label class="form-check-label" for="show_grades">Show Grades to Public</label>
+                                            </div>
+                                            <div class="form-check form-switch mb-3">
+                                                <input class="form-check-input" type="checkbox" id="allow_result_comparison" 
+                                                    name="allow_result_comparison" {% if settings.allow_result_comparison %}checked{% endif %}>
+                                                <label class="form-check-label" for="allow_result_comparison">Allow School Comparison</label>
+                                            </div>
+                                            <button type="submit" class="btn btn-knec btn-sm">
+                                                <i class="bi bi-save me-1"></i> Update
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Maintenance -->
+                    <div>
+                        <h5 class="text-knec mb-3"><i class="bi bi-tools me-2"></i>System Maintenance</h5>
+                        <div class="alert alert-warning">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+                                <div>
+                                    <h6 class="alert-heading">Restricted Access</h6>
+                                    <p class="mb-0">These actions require supervisor privileges and may affect system availability.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-database-check fs-1 text-knec mb-3"></i>
+                                        <h6 class="card-title">Database Backup</h6>
+                                        <p class="card-text">Create backup of all examination data</p>
+                                        <button class="btn btn-knec-outline" data-bs-toggle="modal" data-bs-target="#backupModal" {% if not is_supervisor %}disabled{% endif %}>
+                                            <i class="bi bi-download me-1"></i> Backup Now
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-file-earmark-lock fs-1 text-knec mb-3"></i>
+                                        <h6 class="card-title">Paper Security</h6>
+                                        <p class="card-text">Manage exam paper encryption</p>
+                                        <a href="#" class="btn btn-knec-outline">
+                                            <i class="bi bi-shield-lock me-1"></i> Configure
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-people fs-1 text-knec mb-3"></i>
+                                        <h6 class="card-title">User Management</h6>
+                                        <p class="card-text">Manage KNEC official accounts</p>
+                                        <a href="#" class="btn btn-knec-outline">
+                                            <i class="bi bi-person-gear me-1"></i> Manage Users
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-knec-light">
+                    <small class="text-muted">
+                        <i class="bi bi-shield-lock me-1"></i>
+                        Last updated by {{ last_updated_by }} on {{ last_updated|date:"Y-m-d H:i" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Grading System Modal -->
+<div class="modal fade" id="gradingSystemModal" tabindex="-1" aria-labelledby="gradingSystemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-knec-dark text-white">
+                <h5 class="modal-title" id="gradingSystemModalLabel">Grading System for KCSE {{ current_year.year }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="bg-knec text-white">
+                            <tr>
+                                <th>Grade</th>
+                                <th>Points</th>
+                                <th>Minimum Marks</th>
+                                <th>Maximum Marks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grade, details in current_year.grading_system.items %}
+                            <tr>
+                                <td>{{ grade }}</td>
+                                <td>{{ details.points }}</td>
+                                <td>{{ details.min_score }}</td>
+                                <td>{{ details.max_score }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-knec" data-bs-toggle="modal" data-bs-target="#editGradingModal">
+                    <i class="bi bi-pencil me-1"></i> Edit Grading
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Modal -->
+<div class="modal fade" id="backupModal" tabindex="-1" aria-labelledby="backupModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-knec-dark text-white">
+                <h5 class="modal-title" id="backupModalLabel"><i class="bi bi-database me-2"></i>System Backup</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="#">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="backupType" class="form-label">Backup Type</label>
+                        <select class="form-select" id="backupType" name="backup_type" required>
+                            <option value="full">Full System Backup</option>
+                            <option value="results">Examination Results Only</option>
+                            <option value="registration">Registration Data Only</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="backupComment" class="form-label">Backup Description</label>
+                        <input type="text" class="form-control" id="backupComment" name="backup_comment" required>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="encryptBackup" name="encrypt_backup" checked>
+                        <label class="form-check-label" for="encryptBackup">Encrypt backup file</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-knec">
+                        <i class="bi bi-download me-1"></i> Create Backup
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-knec-dark {
+        background-color: #2c3e50;
+    }
+    .bg-knec {
+        background-color: #34495e;
+    }
+    .bg-knec-light {
+        background-color: rgba(52, 73, 94, 0.05);
+    }
+    .text-knec {
+        color: #34495e;
+    }
+    .btn-knec {
+        background-color: #34495e;
+        color: white;
+    }
+    .btn-knec:hover {
+        background-color: #2c3e50;
+        color: white;
+    }
+    .btn-knec-outline {
+        border-color: #34495e;
+        color: #34495e;
+    }
+    .btn-knec-outline:hover {
+        background-color: #34495e;
+        color: white;
+    }
+    .form-switch .form-check-input {
+        width: 3em;
+        height: 1.5em;
+    }
+    .card-header h6 {
+        font-weight: 600;
+    }
+</style>
+
+{% endblock %}

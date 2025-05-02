@@ -2140,3 +2140,135 @@ def school_registered_students(request, school_id):
         'students': students,
     }
     return render(request, 'reports/school_registered_students.html', context)
+
+
+def knec_official_support(request):
+    return render (request , 'settings/knec_support_help.html')
+
+
+def knec_system_configuration(request):
+    return render (request , 'settings/knec_system_configuration.html')
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
+
+from .models import School
+from .forms import SchoolForm  # You'll need to create this form
+
+def is_admin(user):
+    """Check if user is a school admin or KNEC official"""
+    return user.user_type in [2, 3]  # school_admin or knec_official
+
+@login_required
+@user_passes_test(is_admin)
+def school_list(request):
+    """View to list all schools with search and filter functionality"""
+    # Get all schools
+    schools = School.objects.all().order_by('name')
+    
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        schools = schools.filter(
+            Q(name__icontains=search_query) |
+            Q(knec_code__icontains=search_query) |
+            Q(county__icontains=search_query)
+        )
+    
+    # Filter by school type if provided
+    school_type = request.GET.get('school_type', '')
+    if school_type:
+        schools = schools.filter(school_type=school_type)
+        
+    # Pagination
+    paginator = Paginator(schools, 10)  # Show 10 schools per page
+    page = request.GET.get('page')
+    
+    try:
+        schools = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page
+        schools = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range, deliver last page of results
+        schools = paginator.page(paginator.num_pages)
+    
+    context = {
+        'schools': schools,
+        'search_query': search_query,
+        'school_type': school_type,
+        'school_types': School.SCHOOL_TYPE_CHOICES,
+    }
+    
+    return render(request, 'schools/school_list.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def school_detail(request, pk):
+    """View to show detailed information about a school"""
+    school = get_object_or_404(School, pk=pk)
+    
+    # Get associated data
+    admins = school.admins.all()
+    students_count = school.students.count()
+    
+    context = {
+        'school': school,
+        'admins': admins,
+        'students_count': students_count,
+    }
+    
+    return render(request, 'schools/school_detail.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def school_create_edit(request, pk=None):
+    """View to create a new school or edit an existing one"""
+    # If pk is provided, we're editing an existing school
+    if pk:
+        school = get_object_or_404(School, pk=pk)
+        form_title = f"Edit School: {school.name}"
+        success_message = f"School '{school.name}' has been updated successfully!"
+    else:
+        school = None
+        form_title = "Register New School"
+        success_message = "New school has been registered successfully!"
+    
+    if request.method == 'POST':
+        form = SchoolForm(request.POST, instance=school)
+        if form.is_valid():
+            school = form.save()
+            messages.success(request, success_message)
+            return redirect('school_detail', pk=school.pk)
+    else:
+        form = SchoolForm(instance=school)
+    
+    context = {
+        'form': form,
+        'school': school,
+        'form_title': form_title,
+    }
+    
+    return render(request, 'schools/school_form.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def school_delete(request, pk):
+    """View to delete a school"""
+    school = get_object_or_404(School, pk=pk)
+    
+    if request.method == 'POST':
+        school_name = school.name
+        school.delete()
+        messages.success(request, f"School '{school_name}' has been deleted successfully!")
+        return redirect('school_list')
+    
+    context = {
+        'school': school,
+    }
+    
+    return render(request, 'schools/school_confirm_delete.html', context)

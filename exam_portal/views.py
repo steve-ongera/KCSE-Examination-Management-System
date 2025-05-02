@@ -2832,3 +2832,38 @@ class ResourceAPIView(ListView):
         } for r in resources]
         
         return JsonResponse({'resources': data})
+    
+
+import json
+from django.shortcuts import render
+from django.db.models import Count
+from .models import ExamYear, School
+
+def exam_dashboard(request):
+    current_exam_year = ExamYear.objects.filter(is_current=True).first()
+    if not current_exam_year:
+        return render(request, 'exams/exam_dashboard.html', {
+            'total_students': 0,
+            'county_data': {},
+            'county_table': [],
+            'current_year': None,
+        })
+
+    # Aggregate student counts per county
+    county_counts = (
+        School.objects
+        .filter(students__registrations__exam_year=current_exam_year, students__registrations__is_active=True)
+        .values('county')
+        .annotate(student_count=Count('students__registrations'))
+        .order_by('-student_count')
+    )
+
+    # For the map: {county_name: student_count}
+    county_data = {item['county']: item['student_count'] for item in county_counts}
+
+    return render(request, 'exams/exam_dashboard.html', {
+        'total_students': sum(county_data.values()),
+        'county_data_json': json.dumps(county_data),  # For JS
+        'county_table': county_counts,
+        'current_year': current_exam_year.year,
+    })

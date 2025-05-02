@@ -96,6 +96,7 @@ urlpatterns = [
     # Resource list and detail
     path('resources/', views.resource_list, name='resource_list'),
     path('resources/<int:pk>/', views.resource_detail, name='resource_detail'),
+    path('exam_dashboard', views.exam_dashboard , name='exam-dashboard'),
     
     # Resource operations
     path('resources/add/', views.add_resource, name='add_resource'),

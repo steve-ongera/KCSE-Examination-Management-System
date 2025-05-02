@@ -1,0 +1,289 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="message-container" id="system-messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="pagetitle">
+    <h1><i class="bi bi-person-plus-fill me-2"></i>KCSE Exam Registration Dashboard</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item">Registration</li>
+            <li class="breadcrumb-item active">KCSE Dashboard</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-gray-600 text-white d-flex justify-content-between align-items-center">
+                    <h5 style="color:white;" class="card-title mb-0 fw-bold">
+                        <i class="bi bi-map-fill me-2"></i>KCSE {{ current_year.year }} Registration Overview
+                    </h5>
+                    <span class="badge bg-white text-gray-700 fw-bold">
+                        <i class="bi bi-calendar me-1"></i>Current Year: {{ current_year }}
+                    </span>
+                </div>
+                <div class="card-body bg-gray-50">
+                    <div class="row mb-4">
+                        <!-- Map -->
+                        <div class="col-md-8">
+                            <div class="card chart-card border-gray-400 h-100">
+                                <div class="card-header bg-gray-500 text-white">
+                                    <h6 class="card-title mb-0 fw-bold">
+                                        <i class="bi bi-geo-alt-fill me-2"></i>Registration Distribution by County
+                                    </h6>
+                                </div>
+                                <div class="card-body bg-white p-0">
+                                    <div id="kenya-map" style="height: 500px; width: 100%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- County Table -->
+                        <div class="col-md-4">
+                            <div class="card chart-card border-gray-400 h-100">
+                                <div class="card-header bg-gray-500 text-white">
+                                    <h6 class="card-title mb-0 fw-bold">
+                                        <i class="bi bi-table me-2"></i>County Registration Summary
+                                    </h6>
+                                </div>
+                                <div class="card-body bg-white p-0">
+                                    <div class="table-responsive" style="height: 500px;">
+                                        <table id="countyTable" class="table table-hover table-striped mb-0">
+                                            <thead class="bg-gray-500 text-white sticky-top">
+                                                <tr>
+                                                    <th>County</th>
+                                                    <th class="text-end">Students</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for county in county_table %}
+                                                    <tr>
+                                                        <td>{{ county.county }}</td>
+                                                        <td class="text-end">{{ county.student_count }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Leaflet CSS/JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- DataTables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    $('#countyTable').DataTable({
+        responsive: true,
+        pagingType: 'full_numbers',
+        pageLength: 10,
+        lengthMenu: [5, 10, 20, 50, 100],
+        order: [[1, 'desc']],
+        language: {
+            search: "_INPUT_",
+            searchPlaceholder: "Search counties...",
+            lengthMenu: "Show _MENU_ counties per page",
+            info: "Showing _START_ to _END_ of _TOTAL_ counties",
+            infoEmpty: "No counties found",
+            infoFiltered: "(filtered from _MAX_ total counties)",
+            paginate: {
+                first: '<i class="bi bi-chevron-double-left"></i>',
+                previous: '<i class="bi bi-chevron-left"></i>',
+                next: '<i class="bi bi-chevron-right"></i>',
+                last: '<i class="bi bi-chevron-double-right"></i>'
+            }
+        },
+        dom: '<"top"f>rt<"bottom"lip><"clear">'
+    });
+
+    // County data from Django
+    const countyData = {{ county_data_json|safe }};
+
+    // Color scale function
+    function getColor(d) {
+        return d > 1000 ? '#084081' :
+               d > 500  ? '#0868ac' :
+               d > 200  ? '#2b8cbe' :
+               d > 100  ? '#4eb3d3' :
+               d > 50   ? '#7bccc4' :
+               d > 20   ? '#a8ddb5' :
+               d > 0    ? '#ccebc5' :
+                          '#f7fcfd';
+    }
+
+    // Style for each county
+    function style(feature) {
+        const countyName = feature.properties.COUNTY || feature.properties.county || feature.properties.NAME_1;
+        const count = countyData[countyName] || 0;
+        return {
+            fillColor: getColor(count),
+            weight: 1,
+            opacity: 1,
+            color: 'white',
+            dashArray: '3',
+            fillOpacity: 0.7
+        };
+    }
+
+    // On each feature
+    function onEachFeature(feature, layer) {
+        const countyName = feature.properties.COUNTY || feature.properties.county || feature.properties.NAME_1;
+        const count = countyData[countyName] || 0;
+        layer.bindTooltip(`<strong>${countyName}</strong><br>Students: <b>${count}</b>`, {sticky: true});
+    }
+
+    // Initialize map
+    var map = L.map('kenya-map').setView([0.0236, 37.9062], 6);
+
+    // Add base layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Load GeoJSON
+    fetch("{% static 'geojson/kenya-counties.json' %}")
+        .then(response => response.json())
+        .then(geojsonData => {
+            L.geoJson(geojsonData, {
+                style: style,
+                onEachFeature: onEachFeature
+            }).addTo(map);
+        });
+});
+</script>
+
+<style>
+    /* Gray Theme Colors */
+    .bg-gray-50 { background-color: #f9fafb; }
+    .bg-gray-100 { background-color: #f3f4f6; }
+    .bg-gray-200 { background-color: #e5e7eb; }
+    .bg-gray-300 { background-color: #d1d5db; }
+    .bg-gray-400 { background-color: #9ca3af; }
+    .bg-gray-500 { background-color: #6b7280; }
+    .bg-gray-600 { background-color: #4b5563; }
+    .bg-gray-700 { background-color: #374151; }
+    
+    .border-gray-400 { border-color: #9ca3af; }
+    
+    .text-gray-700 { color: #374151; }
+    
+    .card {
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .table th {
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge {
+        font-weight: 700;
+        padding: 0.35em 0.65em;
+    }
+    
+    .fw-bold {
+        font-weight: 700 !important;
+    }
+    
+    body {
+        background-color: #f3f4f6;
+    }
+    
+    /* Fixed height chart containers */
+    .chart-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chart-container {
+        height: 300px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .table-container {
+        height: 300px;
+        overflow-y: auto;
+    }
+    
+    /* DataTable customization */
+    #countyTable_wrapper .row {
+        margin: 0;
+    }
+    
+    #countyTable_wrapper .dataTables_filter input {
+        border: 1px solid #d1d5db;
+        border-radius: 0.25rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    #countyTable_wrapper .dataTables_paginate .paginate_button {
+        padding: 0.25rem 0.5rem;
+        margin: 0 0.125rem;
+        border: 1px solid transparent;
+        border-radius: 0.25rem;
+    }
+    
+    #countyTable_wrapper .dataTables_paginate .paginate_button.current {
+        background: #6b7280;
+        color: white !important;
+        border: 1px solid #6b7280;
+    }
+    
+    /* Ensure consistent card heights in each row */
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    .row > [class*='col-'] {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 20px;
+    }
+    
+    /* Leaflet map tooltip styling */
+    .leaflet-tooltip {
+        background-color: rgba(255, 255, 255, 0.9);
+        border: 1px solid #6b7280;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        padding: 6px 10px;
+        font-size: 14px;
+    }
+    
+    .leaflet-tooltip b {
+        color: #4b5563;
+    }
+</style>
+{% endblock %}

@@ -393,7 +393,7 @@ def knec_dashboard(request):
     
     # Get school registration trends - database agnostic approach
     school_trends = School.objects.annotate(
-        year=ExtractYear('created_at')
+        year=ExtractYear('registration_date')
     ).values('year').annotate(
         count=Count('id')
     ).order_by('year')

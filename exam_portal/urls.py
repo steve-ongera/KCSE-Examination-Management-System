@@ -79,4 +79,15 @@ urlpatterns = [
     path('invigilators/<int:pk>/', views.invigilator_detail, name='invigilator-detail'),
 
 
+    path('knec_profile/', views.knec_profile, name='knec_profile'),
+    path('knec_profile/update/', views.update_knec_profile, name='update_knec_profile'),
+    path('knec_profile/update-settings/', views.update_knec_settings, name='update_knec_settings'),
+    path('knec_profile/update-picture/', views.update_knec_profile_picture, name='update_knec_profile_picture'),
+    path('knec_profile/change-password/', views.change_knec_password, name='change_knec_password'),
+    path('knec_profile/security-settings/', views.update_knec_security_settings, name='update_knec_security_settings'),
+    
+    # Activity Log URL
+    path('activity-log/', views.knec_activity_log, name='knec_activity_log'),
+
+
 ]

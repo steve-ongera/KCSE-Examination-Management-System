@@ -2272,3 +2272,227 @@ def school_delete(request, pk):
     }
     
     return render(request, 'schools/school_confirm_delete.html', context)
+
+
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+from django.utils import timezone
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from django.db.models import Count, Q
+
+from .models import KNECProfile, LoginAttempt, ActivityLog
+from .forms import (
+    KNECProfileUpdateForm, 
+    UserUpdateForm, 
+    ProfilePictureUpdateForm, 
+    KNECSettingsUpdateForm,
+    SecuritySettingsForm
+)
+
+@login_required
+def knec_profile(request):
+    """View for displaying KNEC official profile"""
+    # Get user profile or create if it doesn't exist
+    knec_profile, created = KNECProfile.objects.get_or_create(user=request.user)
+    
+    # Calculate recent failed login attempts (last 30 days)
+    thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
+    login_attempts = LoginAttempt.objects.filter(
+        user=request.user,
+        successful=False,
+        timestamp__gte=thirty_days_ago
+    ).count()
+    
+    context = {
+        'user': request.user,
+        'knec_profile': knec_profile,
+        'login_attempts': login_attempts,
+    }
+    
+    # Log activity
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='PROFILE_VIEW',
+        description='Viewed profile page',
+        ip_address=get_client_ip(request)
+    )
+    
+    return render(request, 'profiles/knec_official_profile.html', context)
+
+@login_required
+def update_knec_profile(request):
+    """View for updating KNEC official profile information"""
+    if request.method == 'POST':
+        user_form = UserUpdateForm(request.POST, instance=request.user)
+        profile_form = KNECProfileUpdateForm(request.POST, instance=request.user.knec_profile)
+        
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            
+            # Log activity
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='PROFILE_UPDATE',
+                description='Updated profile information',
+                ip_address=get_client_ip(request)
+            )
+            
+            messages.success(request, 'Your profile has been updated successfully.')
+            return redirect('knec_profile')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    
+    return redirect('knec_profile')
+
+@login_required
+def update_knec_settings(request):
+    """View for updating KNEC official interface preferences and notification settings"""
+    if request.method == 'POST':
+        settings_form = KNECSettingsUpdateForm(request.POST, instance=request.user.knec_profile)
+        
+        if settings_form.is_valid():
+            settings_form.save()
+            
+            # Log activity
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='SETTINGS_UPDATE',
+                description='Updated account settings and preferences',
+                ip_address=get_client_ip(request)
+            )
+            
+            messages.success(request, 'Your preferences have been saved successfully.')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    
+    return redirect('knec_profile')
+
+@login_required
+def update_knec_security_settings(request):
+    """View for updating security settings"""
+    if request.method == 'POST':
+        security_form = SecuritySettingsForm(request.POST, instance=request.user.knec_profile)
+        
+        if security_form.is_valid():
+            profile = security_form.save(commit=False)
+            
+            # Handle two-factor auth enabling/disabling
+            two_factor_auth = request.POST.get('two_factor_auth') == 'on'
+            if two_factor_auth and not profile.two_factor_enabled:
+                # Logic for enabling 2FA would go here
+                # For example, generating QR code and setup instructions
+                profile.two_factor_enabled = True
+            elif not two_factor_auth and profile.two_factor_enabled:
+                profile.two_factor_enabled = False
+                
+            profile.login_alerts = request.POST.get('login_alerts') == 'on'
+            profile.session_timeout = request.POST.get('session_timeout') == 'on'
+            profile.save()
+            
+            # Log activity
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='SECURITY_SETTINGS_UPDATE',
+                description='Updated security settings',
+                ip_address=get_client_ip(request)
+            )
+            
+            messages.success(request, 'Your security settings have been updated successfully.')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    
+    return redirect('knec_profile')
+
+@login_required
+def update_knec_profile_picture(request):
+    """View for updating profile picture"""
+    if request.method == 'POST':
+        form = ProfilePictureUpdateForm(request.POST, request.FILES, instance=request.user.knec_profile)
+        
+        if form.is_valid():
+            form.save()
+            
+            # Log activity
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='PROFILE_PICTURE_UPDATE',
+                description='Updated profile picture',
+                ip_address=get_client_ip(request)
+            )
+            
+            messages.success(request, 'Your profile picture has been updated successfully.')
+        else:
+            messages.error(request, 'Please upload a valid image file.')
+    
+    return redirect('knec_profile')
+
+@login_required
+def change_knec_password(request):
+    """View for changing password"""
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        
+        if form.is_valid():
+            user = form.save()
+            # This will prevent user from being logged out after password change
+            update_session_auth_hash(request, user)
+            
+            # Log activity
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='PASSWORD_CHANGE',
+                description='Changed account password',
+                ip_address=get_client_ip(request)
+            )
+            
+            messages.success(request, 'Your password has been updated successfully.')
+        else:
+            for error in form.errors.values():
+                messages.error(request, error)
+    
+    return redirect('knec_profile')
+
+@login_required
+def knec_activity_log(request):
+    """View for displaying user activity log"""
+    # Get user's activities
+    activities = ActivityLog.objects.filter(user=request.user).order_by('-timestamp')[:50]
+    
+    # Get recent login attempts
+    recent_logins = LoginAttempt.objects.filter(user=request.user).order_by('-timestamp')[:10]
+    
+    context = {
+        'activities': activities,
+        'recent_logins': recent_logins
+    }
+    
+    # Log this activity as well
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='ACTIVITY_LOG_VIEW',
+        description='Viewed activity log',
+        ip_address=get_client_ip(request)
+    )
+    
+    return render(request, 'knec/activity_log.html', context)
+
+@login_required
+def knec_dashboard(request):
+    """View for KNEC dashboard"""
+    # Placeholder view for the dashboard
+    return render(request, 'knec/dashboard.html')
+
+# Helper function to get client IP
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip

@@ -1,0 +1,528 @@
+{% extends 'base/base.html'%}
+{% load static %}
+
+{% block content %}
+<div class="message-container" id="system-messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        <i class="bi {% if message.tags == 'success' %}bi-check-circle{% else %}bi-exclamation-triangle{% endif %} me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="pagetitle">
+    <h1><i class="bi bi-person-badge me-2"></i>KNEC Official Profile</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'knec_dashboard' %}"><i class="bi bi-house-door"></i> Dashboard</a></li>
+            <li class="breadcrumb-item active">Profile</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+
+<section class="section profile">
+    <div class="row">
+        <!-- Profile Column -->
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body profile-card pt-4 d-flex flex-column align-items-center">
+                    <div class="profile-image-wrapper">
+                        <img src="{% if knec_profile.profile_picture %}{{ knec_profile.profile_picture.url }}{% else %}{% static 'assets/img/knec-profile.png' %}{% endif %}" 
+                             alt="Profile" class="rounded-circle shadow" style="border: 3px solid #6c757d;">
+                        <div class="profile-badge bg-secondary">
+                            <i class="bi bi-shield-check"></i> KNEC
+                        </div>
+                    </div>
+                    <h2 class="mt-3">{{ user.get_full_name|default:user.username }}</h2>
+                    <h3 class="text-muted">{{ knec_profile.designation|default:"KNEC Official" }}</h3>
+                    
+                    <div class="mt-4 w-100">
+                        <h5 class="section-title">Quick Actions</h5>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                                <i class="bi bi-key me-1"></i> Change Password
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#updateProfilePicModal">
+                                <i class="bi bi-camera me-1"></i> Update Photo
+                            </button>
+                            <a href="{% url 'knec_activity_log' %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-clock-history me-1"></i> View Activity Log
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Card -->
+            <div class="card mt-3 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-shield-check me-2"></i>Security Status</h5>
+                    <div class="security-item">
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        <span>Last Login: {{ user.last_login|date:"M d, Y H:i" }}</span>
+                    </div>
+                    <div class="security-item">
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        <span>Two-Factor Authentication: 
+                            {% if knec_profile.two_factor_enabled %}
+                                <span class="text-success">Enabled</span>
+                            {% else %}
+                                <span class="text-danger">Disabled</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="security-item">
+                        <i class="bi bi-{% if login_attempts < 3 %}check-circle-fill text-success{% else %}exclamation-triangle-fill text-warning{% endif %} me-2"></i>
+                        <span>Recent Failed Attempts: {{ login_attempts }}</span>
+                    </div>
+                    
+                    <hr>
+                    <div class="d-grid">
+                        <button class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#securitySettingsModal">
+                            <i class="bi bi-gear me-1"></i> Security Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Details Column -->
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body pt-3">
+                    <ul class="nav nav-tabs nav-tabs-bordered">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profile-overview">
+                                <i class="bi bi-person-lines-fill me-1"></i> Overview
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-edit">
+                                <i class="bi bi-pencil-square me-1"></i> Edit Profile
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-settings">
+                                <i class="bi bi-gear me-1"></i> Settings
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content pt-2">
+                        <!-- Overview Tab -->
+                        <div class="tab-pane fade show active" id="profile-overview">
+                            <h5 class="card-title">Profile Details</h5>
+                            
+                            <div class="row">
+                                <div class="col-lg-3 col-md-4 label">Full Name</div>
+                                <div class="col-lg-9 col-md-8">{{ user.get_full_name|default:"Not specified" }}</div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-lg-3 col-md-4 label">KNEC ID</div>
+                                <div class="col-lg-9 col-md-8">{{ knec_profile.knec_id|default:"Not specified" }}</div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-lg-3 col-md-4 label">Designation</div>
+                                <div class="col-lg-9 col-md-8">{{ knec_profile.designation|default:"Not specified" }}</div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-lg-3 col-md-4 label">Department</div>
+                                <div class="col-lg-9 col-md-8">{{ knec_profile.department|default:"Not specified" }}</div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-lg-3 col-md-4 label">Email</div>
+                                <div class="col-lg-9 col-md-8">{{ user.email }}</div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-lg-3 col-md-4 label">Official Phone</div>
+                                <div class="col-lg-9 col-md-8">{{ knec_profile.phone_number|default:"Not specified" }}</div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-lg-3 col-md-4 label">Office Location</div>
+                                <div class="col-lg-9 col-md-8">{{ knec_profile.office_location|default:"Not specified" }}</div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-lg-3 col-md-4 label">Last Updated</div>
+                                <div class="col-lg-9 col-md-8">{{ knec_profile.updated_at|date:"M d, Y H:i" }}</div>
+                            </div>
+                            
+                            <h5 class="card-title mt-4">Responsibilities</h5>
+                            <p class="small">{{ knec_profile.responsibilities|default:"No responsibilities specified" }}</p>
+                        </div>
+                        
+                        <!-- Edit Profile Tab -->
+                        <div class="tab-pane fade" id="profile-edit">
+                            <form method="post" action="{% url 'update_knec_profile' %}" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <h5 class="card-title">Official Information</h5>
+                                
+                                <div class="row mb-3">
+                                    <label for="firstName" class="col-md-4 col-lg-3 col-form-label">First Name</label>
+                                    <div class="col-md-8 col-lg-9">
+                                        <input name="first_name" type="text" class="form-control" id="firstName" 
+                                               value="{{ user.first_name }}">
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <label for="lastName" class="col-md-4 col-lg-3 col-form-label">Last Name</label>
+                                    <div class="col-md-8 col-lg-9">
+                                        <input name="last_name" type="text" class="form-control" id="lastName" 
+                                               value="{{ user.last_name }}">
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <label for="designation" class="col-md-4 col-lg-3 col-form-label">Designation</label>
+                                    <div class="col-md-8 col-lg-9">
+                                        <input name="designation" type="text" class="form-control" id="designation" 
+                                               value="{{ knec_profile.designation|default:'' }}">
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <label for="department" class="col-md-4 col-lg-3 col-form-label">Department</label>
+                                    <div class="col-md-8 col-lg-9">
+                                        <select name="department" class="form-select" id="department">
+                                            <option value="">Select Department</option>
+                                            <option value="Examinations" {% if knec_profile.department == 'Examinations' %}selected{% endif %}>Examinations</option>
+                                            <option value="Quality Assurance" {% if knec_profile.department == 'Quality Assurance' %}selected{% endif %}>Quality Assurance</option>
+                                            <option value="Research" {% if knec_profile.department == 'Research' %}selected{% endif %}>Research</option>
+                                            <option value="Administration" {% if knec_profile.department == 'Administration' %}selected{% endif %}>Administration</option>
+                                            <option value="ICT" {% if knec_profile.department == 'ICT' %}selected{% endif %}>ICT</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <label for="phone" class="col-md-4 col-lg-3 col-form-label">Official Phone</label>
+                                    <div class="col-md-8 col-lg-9">
+                                        <input name="phone" type="text" class="form-control" id="phone" 
+                                               value="{{ knec_profile.phone_number|default:'' }}">
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <label for="officeLocation" class="col-md-4 col-lg-3 col-form-label">Office Location</label>
+                                    <div class="col-md-8 col-lg-9">
+                                        <input name="office_location" type="text" class="form-control" id="officeLocation" 
+                                               value="{{ knec_profile.office_location|default:'' }}">
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <label for="responsibilities" class="col-md-4 col-lg-3 col-form-label">Responsibilities</label>
+                                    <div class="col-md-8 col-lg-9">
+                                        <textarea name="responsibilities" class="form-control" id="responsibilities" 
+                                                  style="height: 100px">{{ knec_profile.responsibilities|default:'' }}</textarea>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-dark">
+                                        <i class="bi bi-save me-1"></i> Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Settings Tab -->
+                        <div class="tab-pane fade" id="profile-settings">
+                            <h5 class="card-title">Account Settings</h5>
+                            
+                            <form method="post" action="{% url 'update_knec_settings' %}">
+                                {% csrf_token %}
+                                
+                                <div class="row mb-3">
+                                    <label class="col-md-4 col-lg-3 col-form-label">Email Notifications</label>
+                                    <div class="col-md-8 col-lg-9">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="systemNotifications" 
+                                                   name="system_notifications" {% if knec_profile.system_notifications %}checked{% endif %}>
+                                            <label class="form-check-label" for="systemNotifications">
+                                                System Notifications
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="securityAlerts" 
+                                                   name="security_alerts" {% if knec_profile.security_alerts %}checked{% endif %}>
+                                            <label class="form-check-label" for="securityAlerts">
+                                                Security Alerts
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="examUpdates" 
+                                                   name="exam_updates" {% if knec_profile.exam_updates %}checked{% endif %}>
+                                            <label class="form-check-label" for="examUpdates">
+                                                Examination Updates
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <label class="col-md-4 col-lg-3 col-form-label">Interface Preferences</label>
+                                    <div class="col-md-8 col-lg-9">
+                                        <div class="mb-3">
+                                            <label for="theme" class="form-label">Theme</label>
+                                            <select class="form-select" id="theme" name="theme">
+                                                <option value="light" {% if knec_profile.theme == 'light' %}selected{% endif %}>Light</option>
+                                                <option value="dark" {% if knec_profile.theme == 'dark' %}selected{% endif %}>Dark</option>
+                                                <option value="system" {% if knec_profile.theme == 'system' %}selected{% endif %}>System Default</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="resultsPerPage" class="form-label">Results Per Page</label>
+                                            <select class="form-select" id="resultsPerPage" name="results_per_page">
+                                                <option value="10" {% if knec_profile.results_per_page == 10 %}selected{% endif %}>10</option>
+                                                <option value="25" {% if knec_profile.results_per_page == 25 %}selected{% endif %}>25</option>
+                                                <option value="50" {% if knec_profile.results_per_page == 50 %}selected{% endif %}>50</option>
+                                                <option value="100" {% if knec_profile.results_per_page == 100 %}selected{% endif %}>100</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-dark">
+                                        <i class="bi bi-save me-1"></i> Save Preferences
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="changePasswordModalLabel"><i class="bi bi-key me-2"></i>Change Password</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'change_knec_password' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="currentPassword" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="currentPassword" name="current_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" name="new_password" required>
+                        <div class="form-text">Minimum 8 characters with at least one number and special character</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-dark">
+                        <i class="bi bi-check-circle me-1"></i> Update Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update Profile Picture Modal -->
+<div class="modal fade" id="updateProfilePicModal" tabindex="-1" aria-labelledby="updateProfilePicModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="updateProfilePicModalLabel"><i class="bi bi-camera me-2"></i>Update Profile Picture</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'update_knec_profile_picture' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <img id="profileImagePreview" 
+                             src="{% if knec_profile.profile_picture %}{{ knec_profile.profile_picture.url }}{% else %}{% static 'assets/img/knec-profile.png' %}{% endif %}" 
+                             class="rounded-circle shadow" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #6c757d;">
+                    </div>
+                    <div class="mb-3">
+                        <label for="profilePicture" class="form-label">Select new image</label>
+                        <input class="form-control" type="file" id="profilePicture" name="profile_picture" accept="image/*">
+                    </div>
+                    <div class="form-text">Recommended size: 300x300 pixels, JPG or PNG format</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-dark">
+                        <i class="bi bi-upload me-1"></i> Upload
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Security Settings Modal -->
+<div class="modal fade" id="securitySettingsModal" tabindex="-1" aria-labelledby="securitySettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="securitySettingsModalLabel"><i class="bi bi-shield-lock me-2"></i>Security Settings</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'update_knec_security_settings' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="twoFactorAuth" 
+                                   name="two_factor_auth" {% if knec_profile.two_factor_enabled %}checked{% endif %}>
+                            <label class="form-check-label" for="twoFactorAuth">Enable Two-Factor Authentication</label>
+                        </div>
+                        <div class="form-text">Add an extra layer of security to your account</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="loginAlerts" 
+                                   name="login_alerts" {% if knec_profile.login_alerts %}checked{% endif %}>
+                            <label class="form-check-label" for="loginAlerts">Email Login Alerts</label>
+                        </div>
+                        <div class="form-text">Get notified when someone logs into your account</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="sessionTimeout" 
+                                   name="session_timeout" {% if knec_profile.session_timeout %}checked{% endif %}>
+                            <label class="form-check-label" for="sessionTimeout">Auto-Logout After Inactivity</label>
+                        </div>
+                        <div class="form-text">Automatically log out after 30 minutes of inactivity</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-dark">
+                        <i class="bi bi-save me-1"></i> Save Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-image-wrapper {
+        position: relative;
+        width: 150px;
+        height: 150px;
+    }
+    
+    .profile-image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .profile-badge {
+        position: absolute;
+        bottom: -10px;
+        right: -10px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: #495057;
+        border-bottom: 3px solid #6c757d;
+    }
+    
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        font-weight: 500;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        color: #495057;
+    }
+    
+    .label {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .security-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .section-title {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        color: #6c757d;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.75rem;
+    }
+    
+    .card {
+        border-radius: 8px;
+    }
+    
+    .btn-dark {
+        background-color: #495057;
+        border-color: #495057;
+    }
+    
+    .btn-dark:hover {
+        background-color: #343a40;
+        border-color: #343a40;
+    }
+    
+    .btn-outline-secondary {
+        color: #6c757d;
+        border-color: #6c757d;
+    }
+    
+    .btn-outline-secondary:hover {
+        background-color: #6c757d;
+        color: white;
+    }
+</style>
+
+<script>
+    // Preview profile image before upload
+    document.getElementById('profilePicture').addEventListener('change', function(event) {
+        const [file] = event.target.files;
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('profileImagePreview').src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+
+{% endblock %}

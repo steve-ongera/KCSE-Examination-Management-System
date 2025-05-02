@@ -547,3 +547,100 @@ class OverallResult(models.Model):
         if self.average_grade and self.average_points is not None:
             return f"{self.registration}: {self.average_grade} ({self.average_points} points)"
         return f"{self.registration}: No results yet"
+    
+
+
+
+from django.utils import timezone
+from django.core.validators import RegexValidator
+
+class KNECProfile(models.Model):
+    """Model for KNEC official profile information"""
+    
+    DEPARTMENT_CHOICES = [
+        ('Examinations', 'Examinations'),
+        ('Quality Assurance', 'Quality Assurance'),
+        ('Research', 'Research'),
+        ('Administration', 'Administration'),
+        ('ICT', 'ICT'),
+    ]
+    
+    THEME_CHOICES = [
+        ('light', 'Light'),
+        ('dark', 'Dark'),
+        ('system', 'System Default'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='knec_profile')
+    knec_id = models.CharField(max_length=15, unique=True, blank=True, null=True)
+    designation = models.CharField(max_length=100, blank=True)
+    department = models.CharField(max_length=50, choices=DEPARTMENT_CHOICES, blank=True)
+    phone_number = models.CharField(
+        max_length=15, 
+        blank=True,
+        
+    )
+    office_location = models.CharField(max_length=100, blank=True)
+    responsibilities = models.TextField(blank=True)
+    profile_picture = models.ImageField(upload_to='knec_profile_pics/', blank=True, null=True)
+    
+    # Security settings
+    two_factor_enabled = models.BooleanField(default=False)
+    login_alerts = models.BooleanField(default=True)
+    session_timeout = models.BooleanField(default=True)
+    
+    # Notification preferences
+    system_notifications = models.BooleanField(default=True)
+    security_alerts = models.BooleanField(default=True)
+    exam_updates = models.BooleanField(default=True)
+    
+    # Interface preferences
+    theme = models.CharField(max_length=10, choices=THEME_CHOICES, default='light')
+    results_per_page = models.IntegerField(default=25)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.get_full_name() or self.user.username}'s KNEC Profile"
+    
+    def save(self, *args, **kwargs):
+        # Generate KNEC ID if not provided
+        if not self.knec_id:
+            # Format: KNEC-YYYY-XXXXX where XXXXX is the user ID padded with zeros
+            year = timezone.now().year
+            user_id_padded = str(self.user.id).zfill(5)
+            self.knec_id = f"KNEC-{year}-{user_id_padded}"
+        super().save(*args, **kwargs)
+
+
+class LoginAttempt(models.Model):
+    """Model to track login attempts for security monitoring"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='login_attempts')
+    timestamp = models.DateTimeField(auto_now_add=True)
+    successful = models.BooleanField(default=False)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        status = "Successful" if self.successful else "Failed"
+        return f"{status} login attempt by {self.user.username} at {self.timestamp}"
+
+
+class ActivityLog(models.Model):
+    """Model to log user activities within the system"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
+    activity_type = models.CharField(max_length=50)
+    description = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.activity_type} - {self.timestamp}"

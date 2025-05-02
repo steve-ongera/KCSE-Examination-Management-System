@@ -1,0 +1,276 @@
+{% extends 'base/base.html'%}
+{% load static %}
+
+{% block content %}
+<div class="message-container" id="system-messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        <i class="bi {% if message.tags == 'success' %}bi-check-circle{% else %}bi-exclamation-triangle{% endif %} me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="pagetitle">
+    <h1><i class="bi bi-clock-history me-2"></i>Activity Log</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'knec_dashboard' %}"><i class="bi bi-house-door"></i> Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'knec_profile' %}"><i class="bi bi-person-badge"></i> Profile</a></li>
+            <li class="breadcrumb-item active">Activity Log</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+
+<section class="section">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-shield-check me-2"></i>Your Recent Activities
+                        </h5>
+                        <div>
+                            <a href="{% url 'knec_profile' %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Back to Profile
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-container">
+                        {% if activities %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th scope="col" width="20%">Timestamp</th>
+                                            <th scope="col" width="15%">Activity Type</th>
+                                            <th scope="col" width="45%">Description</th>
+                                            <th scope="col" width="20%">IP Address</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for activity in activities %}
+                                            <tr>
+                                                <td>{{ activity.timestamp|date:"M d, Y H:i:s" }}</td>
+                                                <td>
+                                                    <span class="activity-badge 
+                                                        {% if 'LOGIN' in activity.activity_type %}bg-info
+                                                        {% elif 'FAILED' in activity.activity_type %}bg-danger
+                                                        {% elif 'PASSWORD' in activity.activity_type %}bg-warning
+                                                        {% elif 'PROFILE' in activity.activity_type %}bg-success
+                                                        {% elif 'SECURITY' in activity.activity_type %}bg-primary
+                                                        {% else %}bg-secondary{% endif %}">
+                                                        {% if activity.activity_type == 'LOGIN' %}
+                                                            <i class="bi bi-box-arrow-in-right"></i>
+                                                        {% elif activity.activity_type == 'LOGIN_FAILED' %}
+                                                            <i class="bi bi-x-circle"></i>
+                                                        {% elif activity.activity_type == 'PASSWORD_CHANGE' %}
+                                                            <i class="bi bi-key"></i>
+                                                        {% elif activity.activity_type == 'PROFILE_UPDATE' %}
+                                                            <i class="bi bi-pencil"></i>
+                                                        {% elif activity.activity_type == 'PROFILE_PICTURE_UPDATE' %}
+                                                            <i class="bi bi-camera"></i>
+                                                        {% elif activity.activity_type == 'SECURITY_SETTINGS_UPDATE' %}
+                                                            <i class="bi bi-shield"></i>
+                                                        {% elif activity.activity_type == 'SETTINGS_UPDATE' %}
+                                                            <i class="bi bi-gear"></i>
+                                                        {% elif activity.activity_type == 'PROFILE_VIEW' %}
+                                                            <i class="bi bi-eye"></i>
+                                                        {% elif activity.activity_type == 'ACTIVITY_LOG_VIEW' %}
+                                                            <i class="bi bi-list-check"></i>
+                                                        {% else %}
+                                                            <i class="bi bi-activity"></i>
+                                                        {% endif %}
+                                                    </span>
+                                                    {{ activity.activity_type|title }}
+                                                </td>
+                                                <td>{{ activity.description }}</td>
+                                                <td>
+                                                    {% if activity.ip_address %}
+                                                        <span class="ip-address">{{ activity.ip_address }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">Not available</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="activity-note mt-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <small class="text-muted">Showing your most recent 50 activities. Activities are logged for security and audit purposes.</small>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                No activities have been recorded yet.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Security Alert Card -->
+    <div class="row mt-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-shield-lock me-2"></i>Security Tips
+                    </h5>
+                    <div class="security-tips">
+                        <div class="security-tip-item">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Regularly review your activity log to detect unauthorized access.</span>
+                        </div>
+                        <div class="security-tip-item">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>If you notice any suspicious activities, change your password immediately.</span>
+                        </div>
+                        <div class="security-tip-item">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Enable two-factor authentication for enhanced security.</span>
+                        </div>
+                        <div class="security-tip-item">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Never share your login credentials with anyone.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <!-- Recent Login Attempts Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-door-open me-2"></i>Recent Login Attempts
+                    </h5>
+                    
+                    {% if recent_logins %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                        <th>IP Address</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for login in recent_logins %}
+                                        <tr>
+                                            <td>{{ login.timestamp|date:"M d, H:i" }}</td>
+                                            <td>
+                                                {% if login.successful %}
+                                                    <span class="badge bg-success">Successful</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Failed</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if login.ip_address %}
+                                                    {{ login.ip_address }}
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            No recent login attempts recorded.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .activity-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        color: white;
+        margin-right: 8px;
+    }
+    
+    .security-tip-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .security-tip-item:last-child {
+        border-bottom: none;
+    }
+    
+    .ip-address {
+        font-family: monospace;
+        font-size: 0.9rem;
+    }
+    
+    .activity-note {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .card {
+        border-radius: 8px;
+    }
+    
+    .btn-dark {
+        background-color: #495057;
+        border-color: #495057;
+    }
+    
+    .btn-dark:hover {
+        background-color: #343a40;
+        border-color: #343a40;
+    }
+    
+    .btn-outline-secondary {
+        color: #6c757d;
+        border-color: #6c757d;
+    }
+    
+    .btn-outline-secondary:hover {
+        background-color: #6c757d;
+        color: white;
+    }
+</style>
+
+<script>
+    // Custom filter to replace underscores with spaces
+    var template = document.getElementById('activity_log_template');
+    if (template) {
+        var originalContent = template.innerHTML;
+        
+        // Create a simple string replacement function
+        function replaceAll(str, find, replace) {
+            return str.replace(new RegExp(find, 'g'), replace);
+        }
+        
+        // Apply the replacement
+        template.innerHTML = replaceAll(originalContent, '_', ' ');
+    }
+</script>
+{% endblock %}

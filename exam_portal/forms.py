@@ -185,3 +185,90 @@ class SchoolForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'last_inspection_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }
+
+
+
+from django import forms
+from django.contrib.auth.models import User
+from .models import KNECProfile
+
+class UserUpdateForm(forms.ModelForm):
+    """Form for updating user basic information"""
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name']
+        
+    def __init__(self, *args, **kwargs):
+        super(UserUpdateForm, self).__init__(*args, **kwargs)
+        self.fields['first_name'].widget.attrs.update({'class': 'form-control'})
+        self.fields['last_name'].widget.attrs.update({'class': 'form-control'})
+
+
+class KNECProfileUpdateForm(forms.ModelForm):
+    """Form for updating KNEC profile information"""
+    class Meta:
+        model = KNECProfile
+        fields = ['designation', 'department', 'phone_number', 'office_location', 'responsibilities']
+        
+    def __init__(self, *args, **kwargs):
+        super(KNECProfileUpdateForm, self).__init__(*args, **kwargs)
+        self.fields['designation'].widget.attrs.update({'class': 'form-control'})
+        self.fields['department'].widget.attrs.update({'class': 'form-select'})
+        self.fields['phone_number'].widget.attrs.update({'class': 'form-control'})
+        self.fields['office_location'].widget.attrs.update({'class': 'form-control'})
+        self.fields['responsibilities'].widget.attrs.update({'class': 'form-control'})
+
+
+class ProfilePictureUpdateForm(forms.ModelForm):
+    """Form for updating profile picture"""
+    class Meta:
+        model = KNECProfile
+        fields = ['profile_picture']
+        
+    def clean_profile_picture(self):
+        profile_picture = self.cleaned_data.get('profile_picture')
+        if profile_picture:
+            if profile_picture.size > 5 * 1024 * 1024:  # 5MB limit
+                raise forms.ValidationError("Image file size must be less than 5MB")
+            
+            valid_extensions = ['jpg', 'jpeg', 'png']
+            ext = profile_picture.name.split('.')[-1].lower()
+            if ext not in valid_extensions:
+                raise forms.ValidationError("Only JPG, JPEG, and PNG files are allowed")
+        
+        return profile_picture
+
+
+class KNECSettingsUpdateForm(forms.ModelForm):
+    """Form for updating KNEC profile settings and preferences"""
+    class Meta:
+        model = KNECProfile
+        fields = ['system_notifications', 'security_alerts', 'exam_updates', 'theme', 'results_per_page']
+        
+    def __init__(self, *args, **kwargs):
+        super(KNECSettingsUpdateForm, self).__init__(*args, **kwargs)
+        # Display checkboxes for notification settings
+        self.fields['system_notifications'].widget = forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        self.fields['security_alerts'].widget = forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        self.fields['exam_updates'].widget = forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        
+        # Display select dropdown for theme and results per page
+        self.fields['theme'].widget = forms.Select(attrs={'class': 'form-select'}, choices=KNECProfile.THEME_CHOICES)
+        self.fields['results_per_page'].widget = forms.Select(
+            attrs={'class': 'form-select'},
+            choices=[(10, '10'), (25, '25'), (50, '50'), (100, '100')]
+        )
+
+
+class SecuritySettingsForm(forms.ModelForm):
+    """Form for updating security settings"""
+    class Meta:
+        model = KNECProfile
+        fields = ['two_factor_enabled', 'login_alerts', 'session_timeout']
+        
+    def __init__(self, *args, **kwargs):
+        super(SecuritySettingsForm, self).__init__(*args, **kwargs)
+        # Use switch-style checkboxes
+        self.fields['two_factor_enabled'].widget = forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        self.fields['login_alerts'].widget = forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        self.fields['session_timeout'].widget = forms.CheckboxInput(attrs={'class': 'form-check-input'})

@@ -444,4 +444,64 @@ admin.site.unregister(ExamTimetable)  # Unregister to re-register with inline
 class ExamTimetableWithSessionsAdmin(ExamTimetableAdmin):
     inlines = [ExamSessionInline]
 
+
+from django.contrib import admin
+from .models import KNECProfile, LoginAttempt, ActivityLog
+
+@admin.register(KNECProfile)
+class KNECProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'knec_id', 'designation', 'department', 'phone_number', 'updated_at')
+    list_filter = ('department', 'two_factor_enabled', 'created_at')
+    search_fields = ('user__username', 'user__email', 'knec_id', 'designation', 'phone_number')
+    readonly_fields = ('knec_id', 'created_at', 'updated_at')
+    fieldsets = (
+        ('User Information', {
+            'fields': ('user', 'knec_id', 'profile_picture')
+        }),
+        ('Professional Details', {
+            'fields': ('designation', 'department', 'phone_number', 'office_location', 'responsibilities')
+        }),
+        ('Security Settings', {
+            'fields': ('two_factor_enabled', 'login_alerts', 'session_timeout')
+        }),
+        ('Notification Preferences', {
+            'fields': ('system_notifications', 'security_alerts', 'exam_updates')
+        }),
+        ('Interface Preferences', {
+            'fields': ('theme', 'results_per_page')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+@admin.register(LoginAttempt)
+class LoginAttemptAdmin(admin.ModelAdmin):
+    list_display = ('user', 'timestamp', 'successful', 'ip_address')
+    list_filter = ('successful', 'timestamp')
+    search_fields = ('user__username', 'ip_address')
+    readonly_fields = ('user', 'timestamp', 'successful', 'ip_address', 'user_agent')
+    
+    def has_add_permission(self, request):
+        # Prevent manual addition of login attempts
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        # Prevent editing of login attempts
+        return False
+
+@admin.register(ActivityLog)
+class ActivityLogAdmin(admin.ModelAdmin):
+    list_display = ('user', 'activity_type', 'timestamp', 'ip_address')
+    list_filter = ('activity_type', 'timestamp')
+    search_fields = ('user__username', 'description', 'ip_address')
+    readonly_fields = ('user', 'activity_type', 'description', 'timestamp', 'ip_address')
+    
+    def has_add_permission(self, request):
+        # Prevent manual addition of activity logs
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        # Prevent editing of activity logs
+        return False
     

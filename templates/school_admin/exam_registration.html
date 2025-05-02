@@ -27,8 +27,13 @@
     <div class="row">
         <div class="col-lg-12">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light text-dark">
+                <div class="card-header bg-light text-dark d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0"><i class="bi bi-person-vcard me-2"></i>Register Student for Exams</h5>
+                    {% if student %}
+                    <a href="{% url 'register-student-exam' %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-repeat me-1"></i> New Search
+                    </a>
+                    {% endif %}
                 </div>
                 <div class="card-body">
                     <form method="POST">
@@ -50,13 +55,78 @@
                         </div>
 
                         {% else %}
+                        <!-- Enhanced Student Information Section -->
                         <div class="row mb-4">
                             <div class="col-md-12">
-                                <h4 class="text-secondary">
-                                    <i class="bi bi-person-circle me-2"></i>
-                                    {{ student.first_name }} {{ student.last_name }} 
-                                    <small class="text-muted">({{ student.index_number }})</small>
-                                </h4>
+                                <div class="card mb-4">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-person-badge me-2"></i>
+                                            Student Information
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3 text-center mb-3">
+                                                <div class="profile-image-wrapper" style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; margin: 0 auto; border: 3px solid #e0e0e0;">
+                                                    <img src="{% if student.passport_photo %}{{ student.passport_photo.url }}{% else %}{% static 'assets/img/user.png' %}{% endif %}" 
+                                                         alt="Profile" 
+                                                         style="width: 100%; height: 100%; object-fit: cover;">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-9">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <h4>{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</h4>
+                                                            <p class="text-muted mb-1">
+                                                                <i class="bi bi-person me-2"></i> {{ student.get_gender_display }} | {{ student.nationality }}
+                                                            </p>
+                                                            <p class="text-muted mb-1">
+                                                                <i class="bi bi-calendar me-2"></i> DOB: {{ student.birth_date|date:"d/m/Y" }}
+                                                            </p>
+                                                            <p class="text-muted mb-1">
+                                                                <i class="bi bi-geo-alt me-2"></i> {{ student.county_of_origin }} County
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <p class="mb-1">
+                                                                <strong>Index Number:</strong> {{ student.index_number }}
+                                                            </p>
+                                                            <p class="mb-1">
+                                                                <strong>Admission Number:</strong> {{ student.admision_number|default:"N/A" }}
+                                                            </p>
+                                                            <p class="mb-1">
+                                                                <strong>Current Class:</strong> {{ student.current_class }}
+                                                            </p>
+                                                            <p class="mb-1">
+                                                                <strong>School:</strong> {{ student.school.name }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-md-12">
+                                                        <div class="alert alert-info py-2 mb-0">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="bi bi-info-circle-fill me-2"></i>
+                                                                <div>
+                                                                    {% if has_previous_registrations %}
+                                                                        <strong>Exam History:</strong> This student has been registered for exams in previous years
+                                                                    {% else %}
+                                                                        <strong>Exam History:</strong> No previous exam registrations found
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <input type="hidden" name="index_number" value="{{ student.index_number }}">
                             </div>
                         </div>
@@ -109,17 +179,15 @@
                                         </h6>
                                     </div>
                                     <div class="card-body">
-                                        <div class="row">
+                                        <div class="subject-columns">
                                             {% for subject in optional_subjects %}
-                                            <div class="col-md-6 col-lg-4 mb-2">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" 
-                                                           name="optional_subjects" value="{{ subject.id }}" 
-                                                           id="subject_{{ subject.id }}">
-                                                    <label class="form-check-label small" for="subject_{{ subject.id }}">
-                                                        {{ subject.name }}
-                                                    </label>
-                                                </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       name="optional_subjects" value="{{ subject.id }}" 
+                                                       id="subject_{{ subject.id }}">
+                                                <label class="form-check-label" for="subject_{{ subject.id }}">
+                                                    {{ subject.name }} <small class="text-muted">({{ subject.get_category_display }})</small>
+                                                </label>
                                             </div>
                                             {% endfor %}
                                         </div>
@@ -128,24 +196,31 @@
                             </div>
                         </div>
 
-                        <div class="mt-4">
-                            <button type="submit" name="register_subjects" class="btn btn-primary">
-                                <i class="bi bi-save-fill me-2"></i> Complete Registration
-                            </button>
+                        <div class="mt-4 d-flex justify-content-between">
                             <a href="{% url 'register-student-exam' %}" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left me-2"></i> Back to Search
                             </a>
+                            <button type="submit" name="register_subjects" class="btn btn-primary">
+                                <i class="bi bi-save-fill me-2"></i> Complete Registration
+                            </button>
                         </div>
                         {% endif %}
                         {% endif %}
                     </form>
                 </div>
-                <div class="card-footer bg-light text-muted small">
-                    <i class="bi bi-info-circle me-2"></i>
-                    {% if current_year %}
-                        Current Exam Year: {{ current_year.year }}
-                    {% else %}
-                        No active exam year configured
+                <div class="card-footer bg-light text-muted small d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-info-circle me-2"></i>
+                        {% if current_year %}
+                            Current Exam Year: {{ current_year.year }}
+                        {% else %}
+                            No active exam year configured
+                        {% endif %}
+                    </div>
+                    {% if student %}
+                    <div class="text-end">
+                        <small>Last updated: {{ student.updated_at|date:"d/m/Y H:i" }}</small>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -170,18 +245,21 @@
         border-color: #6c757d;
     }
     .subject-columns {
-        column-count: 3;
+        column-count: 2;
         column-gap: 2rem;
-    }
-    @media (max-width: 992px) {
-        .subject-columns {
-            column-count: 2;
-        }
     }
     @media (max-width: 768px) {
         .subject-columns {
             column-count: 1;
         }
+    }
+    .profile-image-wrapper {
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .alert-info {
+        background-color: #e7f5ff;
+        border-color: #d0ebff;
+        color: #1864ab;
     }
 </style>
 
@@ -205,10 +283,6 @@
         const form = document.querySelector('form');
         if (form) {
             form.addEventListener('submit', function(e) {
-                if (!form.querySelector('input[name="index_number"]') && !form.querySelector('input[name="register_subjects"]')) {
-                    return;
-                }
-                
                 if (form.querySelector('input[name="register_subjects"]')) {
                     const checked = document.querySelectorAll('input[name="optional_subjects"]:checked').length;
                     if (checked !== 4) {

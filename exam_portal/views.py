@@ -456,12 +456,23 @@ def knec_dashboard(request):
     return render(request, 'dashboards/knec_dashboard.html', context)
 
 
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Student, Subject, ExamYear, ExamRegistration, SubjectRegistration
+from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db import transaction
+from .models import Student, Subject, ExamYear, ExamRegistration, SubjectRegistration, SchoolAdminProfile
 
 def register_student_exam(request):
+    # Authentication and authorization check
+    if not request.user.is_authenticated or request.user.user_type != 2:
+        return redirect('login')
+    
+    try:
+        # Get the SchoolAdminProfile using the special_code which matches the username
+        admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
+        school = admin_profile.school
+    except SchoolAdminProfile.DoesNotExist:
+        return redirect('login')
+
     student = None
     optional_categories = ['SCIENCE', 'HUMANITIES', 'TECHNICAL', 'LANGUAGES']
     optional_subjects = Subject.objects.filter(category__in=optional_categories, is_active=True)
@@ -470,10 +481,15 @@ def register_student_exam(request):
 
     if request.method == 'POST':
         index_number = request.POST.get('index_number')
-        student = Student.objects.filter(index_number=index_number).first()
+        
+        # Get student only if they belong to the admin's school
+        student = Student.objects.filter(
+            index_number=index_number,
+            school=school
+        ).first()
 
         if not student:
-            messages.error(request, "Student with that index number not found.")
+            messages.error(request, "Student not found in your school or invalid index number.")
         elif 'register_subjects' in request.POST:
             selected_subject_ids = request.POST.getlist('optional_subjects')
             
@@ -484,6 +500,11 @@ def register_student_exam(request):
             else:
                 try:
                     with transaction.atomic():
+                        # Check if student has any previous exam registrations
+                        if ExamRegistration.objects.filter(student=student).exists():
+                            messages.error(request, "This student has already been registered for exams in previous years.")
+                            return redirect('register-student-exam')
+
                         # Check if student is already registered for current year
                         if ExamRegistration.objects.filter(student=student, exam_year=current_year).exists():
                             messages.error(request, "This student is already registered for this exam year.")
@@ -518,12 +539,17 @@ def register_student_exam(request):
                 except Exception as e:
                     messages.error(request, f"An error occurred: {str(e)}")
 
-    # Check if student is already registered (for template context)
+    # Check registration status for template context
     is_registered = False
-    if student and current_year:
-        is_registered = ExamRegistration.objects.filter(
-            student=student, 
-            exam_year=current_year
+    has_previous_registrations = False
+    if student:
+        if current_year:
+            is_registered = ExamRegistration.objects.filter(
+                student=student, 
+                exam_year=current_year
+            ).exists()
+        has_previous_registrations = ExamRegistration.objects.filter(
+            student=student
         ).exists()
 
     return render(request, 'school_admin/exam_registration.html', {
@@ -531,7 +557,9 @@ def register_student_exam(request):
         'core_subjects': core_subjects,
         'optional_subjects': optional_subjects,
         'is_registered': is_registered,
+        'has_previous_registrations': has_previous_registrations,
         'current_year': current_year,
+        'school': school,  # Pass school to template if needed
     })
 
 

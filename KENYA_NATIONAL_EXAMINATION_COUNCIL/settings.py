@@ -31,6 +31,11 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = 'exam_portal.User'
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://3ffa-2c0f-fe38-2201-a140-8c5-5904-e2f-e8eb.ngrok-free.app',
+]
+
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -96,7 +101,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Nairobi'
 
 USE_I18N = True
 

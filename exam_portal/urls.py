@@ -18,6 +18,10 @@ urlpatterns = [
      path('subject-analysis' , views.subject_analysis_view , name='subject-analysis'),
 
 
+     #school 
+     path('school_performance_analysis/', views.school_performance_analysis, name='school_performance_analysis'),
+
+
     #admin/ student crud opertaions 
     path('student/', views.student_list, name='student_list'),
     path('student/add/', views.student_create, name='student_create'),

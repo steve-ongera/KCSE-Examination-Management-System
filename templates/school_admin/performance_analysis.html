@@ -1,0 +1,401 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<!-- Load Chart.js from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="pagetitle">
+    <h1><i class="bi bi-graph-up me-2"></i>School Performance Analysis</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item">Examinations</li>
+            <li class="breadcrumb-item active">Performance Analysis</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light text-dark d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0"><i class="bi bi-trophy me-2"></i>{{ current_year.year }} Performance Report</h5>
+                    <div class="d-flex">
+                        <select class="form-select form-select-sm me-2" style="width: 150px;" id="class-filter">
+                            <option value="">All Classes</option>
+                            <option value="Form 1" {% if class_filter == "Form 1" %}selected{% endif %}>Form 1</option>
+                            <option value="Form 2" {% if class_filter == "Form 2" %}selected{% endif %}>Form 2</option>
+                            <option value="Form 3" {% if class_filter == "Form 3" %}selected{% endif %}>Form 3</option>
+                            <option value="Form 4" {% if class_filter == "Form 4" %}selected{% endif %}>Form 4</option>
+                        </select>
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-download me-1"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Summary Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card border-primary">
+                                <div class="card-body">
+                                    <h6 class="card-title text-primary">Mean Points</h6>
+                                    <h2 class="mb-0">{{ school_mean_points|floatformat:2 }}</h2>
+                                    <small class="text-muted">National: 5.42</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-success">
+                                <div class="card-body">
+                                    <h6 class="card-title text-success">Mean Grade</h6>
+                                    <h2 class="mb-0">{{ school_mean_grade }}</h2>
+                                    <small class="text-muted">National: C+</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-info">
+                                <div class="card-body">
+                                    <h6 class="card-title text-info">Students Registered</h6>
+                                    <h2 class="mb-0">{{ total_students }}</h2>
+                                    <small class="text-muted">100% completion</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-warning">
+                                <div class="card-body">
+                                    <h6 class="card-title text-warning">University Qualifiers</h6>
+                                    <h2 class="mb-0">{{ university_qualifiers }}</h2>
+                                    <small class="text-muted">{{ university_qualifiers_percentage|floatformat:1 }}% of class</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Student Results Table -->
+                        <div class="col-lg-8">
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-people-fill me-2"></i>Student Performance</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover" id="student-performance-table">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Student Name</th>
+                                                    <th>Index No.</th>
+                                                    <th>Class</th>
+                                                    <th class="text-end">Total Marks</th>
+                                                    <th class="text-end">Points</th>
+                                                    <th class="text-end">Grade</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for student in students %}
+                                                <tr>
+                                                    <td>{{ forloop.counter0|add:students.start_index }}</td>
+                                                    <td>
+                                                        <a href="#">
+                                                            {{ student.first_name }} {{ student.last_name }}
+                                                        </a>
+                                                    </td>
+                                                    <td>{{ student.index_number }}</td>
+                                                    <td>{{ student.current_class }}</td>
+                                                    <td class="text-end">{{ student.total_marks|floatformat:2 }}</td>
+                                                    <td class="text-end">{{ student.total_points|floatformat:2 }}</td>
+                                                    <td class="text-end">
+                                                        <span class="badge bg-{{ student.grade_color }}">{{ student.grade }}</span>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <!-- Pagination -->
+                                    <nav aria-label="Page navigation">
+                                        <ul class="pagination justify-content-center">
+                                            {% if students.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page=1{% if class_filter %}&class={{ class_filter }}{% endif %}" aria-label="First">
+                                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ students.previous_page_number }}{% if class_filter %}&class={{ class_filter }}{% endif %}" aria-label="Previous">
+                                                    <span aria-hidden="true">&laquo;</span>
+                                                </a>
+                                            </li>
+                                            {% endif %}
+                                            
+                                            {% for num in students.paginator.page_range %}
+                                                {% if students.number == num %}
+                                                <li class="page-item active"><a class="page-link" href="?page={{ num }}{% if class_filter %}&class={{ class_filter }}{% endif %}">{{ num }}</a></li>
+                                                {% elif num > students.number|add:'-3' and num < students.number|add:'3' %}
+                                                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if class_filter %}&class={{ class_filter }}{% endif %}">{{ num }}</a></li>
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                            {% if students.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ students.next_page_number }}{% if class_filter %}&class={{ class_filter }}{% endif %}" aria-label="Next">
+                                                    <span aria-hidden="true">&raquo;</span>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ students.paginator.num_pages }}{% if class_filter %}&class={{ class_filter }}{% endif %}" aria-label="Last">
+                                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                                </a>
+                                            </li>
+                                            {% endif %}
+                                        </ul>
+                                    </nav>
+                                    <div class="text-muted text-center">
+                                        Showing {{ students.start_index }} to {{ students.end_index }} of {{ students.paginator.count }} students
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grade Distribution and Subject Performance -->
+                        <div class="col-lg-4">
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Grade Distribution</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container" style="position: relative; height:250px; width:100%">
+                                        <canvas id="gradeDistributionChart"></canvas>
+                                    </div>
+                                    <div class="table-responsive mt-3">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Grade</th>
+                                                    <th class="text-end">Count</th>
+                                                    <th class="text-end">%</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for grade in grade_distribution %}
+                                                <tr>
+                                                    <td>{{ grade.grade }}</td>
+                                                    <td class="text-end">{{ grade.count }}</td>
+                                                    <td class="text-end">{{ grade.percentage|floatformat:1 }}%</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-book me-2"></i>Subject Performance</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container" style="position: relative; height:250px; width:100%">
+                                        <canvas id="subjectPerformanceChart"></canvas>
+                                    </div>
+                                    <div class="mt-3">
+                                        <h6 class="mb-2">Top Performing Subjects</h6>
+                                        <ol class="list-group list-group-numbered">
+                                            {% for subject in top_subjects %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                                <div class="ms-2 me-auto">
+                                                    <div class="fw-bold">{{ subject.name }}</div>
+                                                    <small class="text-muted">{{ subject.code }}</small>
+                                                </div>
+                                                <span class="badge bg-primary rounded-pill">{{ subject.mean_points|floatformat:2 }}</span>
+                                            </li>
+                                            {% endfor %}
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light text-muted small d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-info-circle me-2"></i>
+                        Report generated on {% now "jS F Y H:i" %}
+                    </div>
+                    <div class="text-end">
+                        <small>{{ school.name }} - {{ current_year.year }} Analysis</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Grade Distribution Chart
+    const gradeCtx = document.getElementById('gradeDistributionChart');
+    if (gradeCtx) {
+        const gradeData = {
+            labels: [
+                {% for grade in grade_distribution %}
+                '{{ grade.grade }}'{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for grade in grade_distribution %}
+                    {{ grade.count }}{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    '#2ecc71', '#27ae60', '#f1c40f', '#f39c12',
+                    '#e67e22', '#d35400', '#e74c3c', '#c0392b'
+                ],
+                borderWidth: 1
+            }]
+        };
+
+        new Chart(gradeCtx, {
+            type: 'doughnut',
+            data: gradeData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Subject Performance Chart
+    const subjectCtx = document.getElementById('subjectPerformanceChart');
+    if (subjectCtx) {
+        const subjectData = {
+            labels: [
+                {% for subject in top_subjects %}
+                '{{ subject.code }}'{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Mean Points',
+                data: [
+                    {% for subject in top_subjects %}
+                    {{ subject.mean_points|floatformat:2 }}{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                backgroundColor: '#3498db',
+                borderColor: '#2980b9',
+                borderWidth: 1
+            }]
+        };
+
+        new Chart(subjectCtx, {
+            type: 'bar',
+            data: subjectData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 12,
+                        title: {
+                            display: true,
+                            text: 'Mean Points'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw}`;
+                            },
+                            afterLabel: function(context) {
+                                const subject = {
+                                    name: '{{ top_subjects.0.name }}', // Simplified for example
+                                    mean_grade: '{{ top_subjects.0.mean_grade }}'
+                                };
+                                return `${subject.name}\nMean Grade: ${subject.mean_grade}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Class filter functionality
+    const classFilter = document.getElementById('class-filter');
+    if (classFilter) {
+        classFilter.addEventListener('change', function() {
+            const selectedClass = this.value;
+            const url = new URL(window.location.href);
+            if (selectedClass) {
+                url.searchParams.set('class', selectedClass);
+            } else {
+                url.searchParams.delete('class');
+            }
+            url.searchParams.delete('page'); // Reset to first page
+            window.location.href = url.toString();
+        });
+    }
+});
+</script>
+
+<style>
+    .card {
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+    .badge {
+        font-weight: 500;
+        min-width: 40px;
+    }
+    .bg-A { background-color: #2ecc71 !important; }
+    .bg-A- { background-color: #27ae60 !important; }
+    .bg-B+ { background-color: #f1c40f !important; color: #000; }
+    .bg-B { background-color: #f39c12 !important; color: #000; }
+    .bg-B- { background-color: #e67e22 !important; }
+    .bg-C+ { background-color: #d35400 !important; }
+    .bg-C { background-color: #e74c3c !important; }
+    .bg-C- { background-color: #c0392b !important; }
+    .bg-D+ { background-color: #9b59b6 !important; }
+    .bg-D { background-color: #8e44ad !important; }
+    .bg-D- { background-color: #7d3c98 !important; }
+    .bg-E { background-color: #34495e !important; }
+</style>
+
+{% endblock %}

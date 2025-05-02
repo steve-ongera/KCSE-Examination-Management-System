@@ -2927,3 +2927,137 @@ def exam_dashboard(request):
         'county_table': county_counts,
         'current_year': current_exam_year.year,
     })
+
+
+
+from django.shortcuts import render, get_object_or_404
+from django.core.paginator import Paginator
+from django.db.models import Avg, Count, Q , Max
+from .models import School, Student, ExamRegistration, ExamResult, Subject, ExamYear
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+
+@login_required
+def school_performance_analysis(request):
+    # Verify user is a school admin and get their school
+    if not request.user.is_authenticated or request.user.user_type != 2:
+        return redirect('login')
+    
+    try:
+        admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
+        school = admin_profile.school
+    except SchoolAdminProfile.DoesNotExist:
+        return redirect('login')
+
+    # Get current exam year
+    current_year = get_object_or_404(ExamYear, is_current=True)
+    
+    # Get class filter from request
+    class_filter = request.GET.get('class', '')
+    
+    # Base queryset for students in this school registered for current exam
+    students = Student.objects.filter(
+        school=school,
+        registrations__exam_year=current_year
+    ).select_related('school').prefetch_related('registrations')
+    
+    # Apply class filter if specified
+    if class_filter:
+        students = students.filter(current_class=class_filter)
+    
+    # Annotate students with their performance data
+    students = students.annotate(
+        total_marks=Sum('registrations__subjects__result__marks'),
+        total_points=Sum('registrations__subjects__result__points'),
+        grade=Max('registrations__subjects__result__grade')
+    ).order_by('-total_points')
+    
+    # Paginate students (10 per page)
+    paginator = Paginator(students, 30)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Calculate school mean points and grade
+    school_mean_points = students.aggregate(avg_points=Avg('total_points'))['avg_points'] or 0
+    school_mean_grade = calculate_mean_grade(school_mean_points)
+    
+    # Calculate grade distribution
+    grade_distribution = students.values('grade').annotate(
+        count=Count('id'),
+    ).order_by('grade')
+    
+    total_students = students.count()
+    
+    # Calculate percentages for grade distribution
+    for grade in grade_distribution:
+        grade['percentage'] = (grade['count'] / total_students) * 100 if total_students else 0
+    
+    # Get university qualifiers (students with C+ and above)
+    university_qualifiers = students.filter(
+        Q(grade__in=['A', 'A-', 'B+', 'B', 'B-', 'C+'])
+    ).count()
+    university_qualifiers_percentage = (university_qualifiers / total_students * 100) if total_students else 0
+    
+    # Get subject performance data
+    subject_performance = Subject.objects.filter(
+        subjectregistration__registration__exam_year=current_year,
+        subjectregistration__registration__student__school=school
+    ).annotate(
+        mean_points=Avg('subjectregistration__result__points'),
+        mean_grade=Max('subjectregistration__result__grade'),
+        student_count=Count('subjectregistration__registration__student', distinct=True)
+    ).filter(
+        student_count__gt=0  # Only include subjects with registered students
+    ).order_by('-mean_points')[:10]  # Top 10 subjects
+    
+    # Add color coding for grades
+    for student in page_obj:
+        student.grade_color = get_grade_color(student.grade)
+    
+    context = {
+        'school': school,
+        'current_year': current_year,
+        'students': page_obj,
+        'school_mean_points': school_mean_points,
+        'school_mean_grade': school_mean_grade,
+        'total_students': total_students,
+        'university_qualifiers': university_qualifiers,
+        'university_qualifiers_percentage': university_qualifiers_percentage,
+        'grade_distribution': grade_distribution,
+        'top_subjects': subject_performance,
+        'class_filter': class_filter,
+    }
+    
+    return render(request, 'school_admin/performance_analysis.html', context)
+
+def calculate_mean_grade(mean_points):
+    """Convert mean points to letter grade"""
+    if mean_points >= 11: return 'A'
+    elif mean_points >= 10: return 'A-'
+    elif mean_points >= 9: return 'B+'
+    elif mean_points >= 8: return 'B'
+    elif mean_points >= 7: return 'B-'
+    elif mean_points >= 6: return 'C+'
+    elif mean_points >= 5: return 'C'
+    elif mean_points >= 4: return 'C-'
+    elif mean_points >= 3: return 'D+'
+    elif mean_points >= 2: return 'D'
+    elif mean_points >= 1: return 'D-'
+    else: return 'E'
+
+def get_grade_color(grade):
+    """Get Bootstrap color class for each grade"""
+    if not grade: return 'secondary'
+    grade = grade.upper()
+    if grade == 'A': return 'A'
+    elif grade == 'A-': return 'A-'
+    elif grade == 'B+': return 'B+'
+    elif grade == 'B': return 'B'
+    elif grade == 'B-': return 'B-'
+    elif grade == 'C+': return 'C+'
+    elif grade == 'C': return 'C'
+    elif grade == 'C-': return 'C-'
+    elif grade == 'D+': return 'D+'
+    elif grade == 'D': return 'D'
+    elif grade == 'D-': return 'D-'
+    else: return 'E'

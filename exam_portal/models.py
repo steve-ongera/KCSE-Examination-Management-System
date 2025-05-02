@@ -633,7 +633,8 @@ class LoginAttempt(models.Model):
 
 class ActivityLog(models.Model):
     """Model to log user activities within the system"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities' , null=True,
+        blank=True  )
     activity_type = models.CharField(max_length=50)
     description = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -643,7 +644,9 @@ class ActivityLog(models.Model):
         ordering = ['-timestamp']
     
     def __str__(self):
-        return f"{self.user.username} - {self.activity_type} - {self.timestamp}"
+        if self.user:
+            return f"{self.activity_type} by {self.user.username}"
+        return f"{self.activity_type} (no user)"
     
 
 # models.py - Django models for KNEC Resources

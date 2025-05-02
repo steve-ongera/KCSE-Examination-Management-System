@@ -31,6 +31,11 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = 'exam_portal.User'
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    # any other backends you're using
+]
+
 CSRF_TRUSTED_ORIGINS = [
     'https://3ffa-2c0f-fe38-2201-a140-8c5-5904-e2f-e8eb.ngrok-free.app',
 ]

@@ -29,18 +29,35 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 import os
 from django.contrib.auth import authenticate, login , logout
+from django.contrib.auth import authenticate, login, get_user_model
+from django.shortcuts import render, redirect
+from django.contrib import messages
 
-from django.contrib.auth import get_user_model
+User = get_user_model()
+
+from django.contrib.auth import authenticate, login, get_user_model
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist
+
 User = get_user_model()
 
 def custom_login(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '').strip()
+        
+        # Input validation
+        if not username or not password:
+            messages.error(request, 'Both username and password are required')
+            return render(request, 'registration/login.html')
+        
+        # Authenticate user
         user = authenticate(request, username=username, password=password)
         
         if user is not None:
             login(request, user)
+            messages.success(request, f'Welcome back, {user.username}!')
             
             # Redirect based on user_type
             if user.user_type == 1:  # Student
@@ -50,9 +67,21 @@ def custom_login(request):
             elif user.user_type == 3:  # KNEC Official
                 return redirect('knec_dashboard')
             else:
-                return redirect('home')  # Fallback
+                return redirect('home')
         else:
-            messages.error(request, 'Invalid username or password')
+            # Check if username exists
+            try:
+                # Using filter() instead of get() to avoid exceptions
+                user_exists = User.objects.filter(username=username).exists()
+                if user_exists:
+                    messages.error(request, 'Incorrect password. Please try again.')
+                else:
+                    messages.error(request, 'Username not found. Please check your credentials.')
+            except Exception as e:
+                # Generic error message if something unexpected happens
+                messages.error(request, 'Login failed. Please try again.')
+                # You might want to log this error for debugging
+                print(f"Login error: {str(e)}")
     
     return render(request, 'registration/login.html')
 

@@ -1981,3 +1981,74 @@ def invigilator_detail(request, pk):
         'invigilator': invigilator,
         'assignments': assignments,
     })
+
+
+
+# views.py
+# views.py
+from django.shortcuts import render
+from django.db.models import Count, Avg
+from .models import ExamYear, Student, ExamRegistration, ExamResult, Subject
+import json
+from django.utils import timezone
+
+def academic_performance_report(request):
+    # Get current exam year or most recent if none marked as current
+    current_year = ExamYear.objects.filter(is_current=True).first()
+    if not current_year:
+        current_year = ExamYear.objects.order_by('-year').first()
+
+    # Performance by gender (using SubjectRegistration -> ExamResult)
+    gender_data = (
+        ExamRegistration.objects
+        .filter(exam_year=current_year)
+        .values('student__gender')
+        .annotate(
+            count=Count('id'),
+            avg_points=Avg('subjects__result__points')
+        )
+        .order_by('student__gender')
+    )
+
+    # Performance by subject (directly from ExamResult)
+    subject_data = (
+        ExamResult.objects
+        .filter(subject_registration__registration__exam_year=current_year)
+        .values('subject_registration__subject__name')
+        .annotate(
+            avg_marks=Avg('marks'),
+            avg_points=Avg('points')
+        )
+        .order_by('-avg_points')[:10]  # Top 10 subjects
+    )
+
+    # Grade distribution
+    grade_distribution = (
+        ExamResult.objects
+        .filter(subject_registration__registration__exam_year=current_year)
+        .values('grade')
+        .annotate(count=Count('id'))
+        .order_by('grade')
+    )
+
+    # School performance (top 10 schools)
+    school_performance = (
+        ExamRegistration.objects
+        .filter(exam_year=current_year)
+        .values('student__school__name')
+        .annotate(
+            avg_points=Avg('subjects__result__points'),
+            count=Count('id')
+        )
+        .order_by('-avg_points')[:10]
+    )
+
+    context = {
+        'current_year': current_year,
+        'gender_data': json.dumps(list(gender_data)),
+        'subject_data': json.dumps(list(subject_data)),
+        'grade_distribution': json.dumps(list(grade_distribution)),
+        'school_performance': school_performance,
+        'report_date': timezone.now().strftime("%B %d, %Y"),
+    }
+    return render(request, 'reports/academic_performance.html', context)

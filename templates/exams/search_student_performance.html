@@ -1,181 +1,277 @@
-{% extends 'base/base.html' %}
+{% extends "base/base.html" %}
+{% load static %}
 
 {% block title %}Student Performance Report{% endblock %}
 
 {% block content %}
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<div class="message-container" id="system-messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
 
+<div class="pagetitle">
+    <h1><i class="bi bi-graph-up me-2"></i>Student Performance Report</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item">Reports</li>
+            <li class="breadcrumb-item active">Student Performance</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
 
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light-gray text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-search me-2"></i>Search Student</h5>
+                    <button id="refreshPage" class="btn btn-light btn-sm" title="New Search">
+                        <i class="bi bi-arrow-repeat me-1"></i> Refresh
+                    </button>
+                </div>
+                <div class="card-body bg-white">
+                    <form method="get" action="{% url 'search_student_performance' %}" class="mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="index_number" class="form-label fw-bold">Student Index Number</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light-gray text-white"><i class="bi bi-123"></i></span>
+                                        <input type="text" class="form-control" id="index_number" name="index_number" 
+                                            value="{{ request.GET.index_number|default:'' }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="exam_year" class="form-label fw-bold">Exam Year</label>
+                                    <select class="form-select" id="exam_year" name="exam_year">
+                                        <option value="">All Years</option>
+                                        {% for year in exam_years %}
+                                        <option value="{{ year.id }}" {% if request.GET.exam_year == year.id|stringformat:"i" %}selected{% endif %}>
+                                            {{ year.year }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-light-gray text-white w-100 fw-bold">
+                                    <i class="bi bi-search me-2"></i>Search
+                                </button>
+                            </div>
+                        </div>
+                    </form>
 
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header bg-primary text-white">
-            <h2 class="mb-0">Student Performance Report</h2>
-        </div>
-        <div class="card-body">
-            <form method="get" action="{% url 'search_student_performance' %}" class="mb-4">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="index_number">Student Index Number:</label>
-                            <input type="text" class="form-control" id="index_number" name="index_number" 
-                                value="{{ request.GET.index_number|default:'' }}" required>
+                    {% if student %}
+                    <div class="card mb-4 border-light-gray">
+                        <div class="card-header bg-light-gray text-white">
+                            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-person me-2"></i>Student Information</h5>
+                        </div>
+                        <div class="card-body bg-white">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Name:</strong> {{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</p>
+                                    <p><strong>Index Number:</strong> <span class="badge bg-light-gray text-white">{{ student.index_number }}</span></p>
+                                    <p><strong>School:</strong> {{ student.school.name }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Gender:</strong> {{ student.get_gender_display }}</p>
+                                    <p><strong>Admission Number:</strong> {{ student.admision_number }}</p>
+                                    <p><strong>Nationality:</strong> {{ student.nationality }}</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label for="exam_year">Exam Year:</label>
-                            <select class="form-control" id="exam_year" name="exam_year">
-                                <option value="">All Years</option>
-                                {% for year in exam_years %}
-                                <option value="{{ year.id }}" {% if request.GET.exam_year == year.id|stringformat:"i" %}selected{% endif %}>
-                                    {{ year.year }}
-                                </option>
-                                {% endfor %}
-                            </select>
+
+                    {% if registration %}
+                    <div class="card mb-4 border-light-gray">
+                        <div class="card-header bg-light-gray text-white">
+                            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-journal-text me-2"></i>Exam Information</h5>
+                        </div>
+                        <div class="card-body bg-white">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Exam Year:</strong> {{ exam_year.year }}</p>
+                                    <p><strong>Registration Date:</strong> {{ registration.registration_date|date:"d M Y" }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    {% if overall_result %}
+                                        <p><strong>Mean Grade:</strong> <span class="badge bg-light-gray text-white fw-bold">{{ overall_result.average_grade }}</span></p>
+                                        <p><strong>Division:</strong> <span class="badge bg-light-gray text-white fw-bold">{{ overall_result.division }}</span></p>
+                                    {% elif mean_grade %}
+                                        <p><strong>Mean Grade:</strong> <span class="badge bg-light-gray text-white fw-bold">{{ mean_grade }}</span></p>
+                                        <p><strong>Division:</strong> <span class="badge bg-light-gray text-white fw-bold">{{ division }}</span></p>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary btn-block">Search</button>
-                    </div>
-                </div>
-            </form>
 
-            {% if messages %}
-            <div class="messages">
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
+                    <div class="card mb-4 border-light-gray">
+                        <div class="card-header bg-light-gray text-white">
+                            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-book me-2"></i>Subject Performance</h5>
+                        </div>
+                        <div class="card-body bg-white">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead class="bg-light-gray text-white">
+                                        <tr>
+                                            <th class="fw-bold"><i class="bi bi-code me-1"></i> Code</th>
+                                            <th class="fw-bold"><i class="bi bi-book me-1"></i> Subject</th>
+                                            <th class="text-center fw-bold"><i class="bi bi-percent me-1"></i> Marks</th>
+                                            <th class="text-center fw-bold"><i class="bi bi-award me-1"></i> Grade</th>
+                                            <th class="text-center fw-bold"><i class="bi bi-graph-up me-1"></i> Points</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for result in subject_results %}
+                                        <tr>
+                                            <td>{{ result.code }}</td>
+                                            <td>{{ result.subject }}</td>
+                                            <td class="text-center">{{ result.marks|default:"-" }}</td>
+                                            <td class="text-center">
+                                                {% if result.grade %}
+                                                <span class="badge fw-bold
+                                                    {% if result.grade == 'A' %}bg-success
+                                                    {% elif result.grade == 'A-' %}bg-success bg-opacity-75
+                                                    {% elif result.grade == 'B+' %}bg-info bg-opacity-90
+                                                    {% elif result.grade == 'B' %}bg-info
+                                                    {% elif result.grade == 'B-' %}bg-info bg-opacity-75
+                                                    {% elif result.grade == 'C+' %}bg-primary bg-opacity-90
+                                                    {% elif result.grade == 'C' %}bg-primary
+                                                    {% elif result.grade == 'C-' %}bg-primary bg-opacity-75
+                                                    {% elif result.grade == 'D+' %}bg-warning bg-opacity-90
+                                                    {% elif result.grade == 'D' %}bg-warning
+                                                    {% elif result.grade == 'D-' %}bg-warning bg-opacity-75
+                                                    {% else %}bg-danger{% endif %}">
+                                                    {{ result.grade }}
+                                                </span>
+                                                {% else %}-{% endif %}
+                                            </td>
+                                            <td class="text-center">{{ result.points|default:"-" }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center">No subjects registered</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot class="bg-light">
+                                        <tr>
+                                            <th colspan="2" class="text-end fw-bold">Total:</th>
+                                            <td class="text-center fw-bold">{{ total_marks|default:"-" }}</td>
+                                            <td class="text-center fw-bold">{{ overall_result.average_grade|default:mean_grade|default:"-" }}</td>
+                                            <td class="text-center fw-bold">{{ total_points|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="2" class="text-end fw-bold">Average:</th>
+                                            <td class="text-center fw-bold">{{ avg_marks|default:"-" }}</td>
+                                            <td class="text-center fw-bold">{{ overall_result.average_grade|default:mean_grade|default:"-" }}</td>
+                                            <td class="text-center fw-bold">{{ avg_points|default:"-" }}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if overall_result or mean_grade %}
+                    <div class="card border-light-gray">
+                        <div class="card-header bg-light-gray text-white">
+                            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-bar-chart me-2"></i>Overall Performance</h5>
+                        </div>
+                        <div class="card-body bg-white">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Total Marks:</strong> {{ total_marks|default:"-" }}</p>
+                                    <p><strong>Average Marks:</strong> {{ avg_marks|default:"-" }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Total Points:</strong> {{ total_points|default:"-" }}</p>
+                                    <p><strong>Average Points:</strong> {{ avg_points|default:"-" }}</p>
+                                    <p><strong>Mean Grade:</strong> <span class="badge bg-light-gray text-white fw-bold">{{ overall_result.average_grade|default:mean_grade|default:"-" }}</span></p>
+                                    <p><strong>Division:</strong> <span class="badge bg-light-gray text-white fw-bold">{{ overall_result.division|default:division|default:"-" }}</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        No exam registration found for this student for the selected year.
+                    </div>
+                    {% endif %}
+                    {% endif %}
                 </div>
-                {% endfor %}
             </div>
-            {% endif %}
-
-            {% if student %}
-            <div class="card mb-4">
-                <div class="card-header bg-info text-white">
-                    <h3 class="mb-0">Student Information</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Name:</strong> {{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</p>
-                            <p><strong>Index Number:</strong> {{ student.index_number }}</p>
-                            <p><strong>School:</strong> {{ student.school.name }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Gender:</strong> {{ student.get_gender_display }}</p>
-                            <p><strong>Admission Number:</strong> {{ student.admision_number }}</p>
-                            <p><strong>Nationality:</strong> {{ student.nationality }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {% if registration %}
-            <div class="card mb-4">
-                <div class="card-header bg-success text-white">
-                    <h3 class="mb-0">Exam Information</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Exam Year:</strong> {{ exam_year.year }}</p>
-                            <p><strong>Registration Date:</strong> {{ registration.registration_date }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            {% if overall_result %}
-                                <p><strong>Mean Grade:</strong> {{ overall_result.average_grade }}</p>
-                                <p><strong>Division:</strong> {{ overall_result.division }}</p>
-                            {% elif mean_grade %}
-                                <p><strong>Mean Grade:</strong> {{ mean_grade }}</p>
-                                <p><strong>Division:</strong> {{ division }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card mb-4">
-                <div class="card-header bg-warning text-dark">
-                    <h3 class="mb-0">Subject Performance</h3>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <th>Subject Code</th>
-                                    <th>Subject Name</th>
-                                    <th>Marks (%)</th>
-                                    <th>Grade</th>
-                                    <th>Points</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for result in subject_results %}
-                                <tr>
-                                    <td>{{ result.code }}</td>
-                                    <td>{{ result.subject }}</td>
-                                    <td>{{ result.marks|default:"-" }}</td>
-                                    <td>{{ result.grade|default:"-" }}</td>
-                                    <td>{{ result.points|default:"-" }}</td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="5" class="text-center">No subjects registered</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot class="bg-light">
-                                <tr>
-                                    <th colspan="2" class="text-right">Total:</th>
-                                    <td>{{ total_marks|default:"-" }}</td>
-                                    <td>{{ overall_result.average_grade|default:mean_grade|default:"-" }}</td>
-                                    <td>{{ total_points|default:"-" }}</td>
-                                </tr>
-                                <tr>
-                                    <th colspan="2" class="text-right">Average:</th>
-                                    <td>{{ avg_marks|default:"-" }}</td>
-                                    <td>{{ overall_result.average_grade|default:mean_grade|default:"-" }}</td>
-                                    <td>{{ avg_points|default:"-" }}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            {% if overall_result or mean_grade %}
-            <div class="card">
-                <div class="card-header bg-secondary text-white">
-                    <h3 class="mb-0">Overall Performance</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Total Marks:</strong> {{ total_marks|default:"-" }}</p>
-                            <p><strong>Average Marks:</strong> {{ avg_marks|default:"-" }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Total Points:</strong> {{ total_points|default:"-" }}</p>
-                            <p><strong>Average Points:</strong> {{ avg_points|default:"-" }}</p>
-                            <p><strong>Mean Grade:</strong> {{ overall_result.average_grade|default:mean_grade|default:"-" }}</p>
-                            <p><strong>Division:</strong> {{ overall_result.division|default:division|default:"-" }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            {% else %}
-            <div class="alert alert-warning">
-                No exam registration found for this student for the selected year.
-            </div>
-            {% endif %}
-            {% endif %}
         </div>
     </div>
-</div>
+</section>
+
+<style>
+    .bg-light-gray { 
+        background-color: #d1d5db;  /* Slightly darker gray */
+        color: #1f2937;            /* Dark gray text for better contrast */
+    }
+    .bg-light { 
+        background-color: #f3f4f6; /* Slightly darker off-white */
+    }
+    .border-light-gray { 
+        border-color: #9ca3af;     /* Medium gray border */
+    }
+    .btn-light-gray { 
+        background-color: #d1d5db;
+        color: #1f2937;
+        border-color: #9ca3af;
+        font-weight: 600;
+    }
+    .btn-light-gray:hover {
+        background-color: #9ca3af;
+        border-color: #6b7280;
+        color: white;
+    }
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        background-color: #d1d5db;  /* Matching header background */
+        color: #1f2937;
+    }
+    .badge {
+        font-weight: 600;          /* Bolder badges */
+        padding: 0.5em 0.75em;
+    }
+    .bg-opacity-75 {
+        opacity: 0.75;
+    }
+    .bg-opacity-90 {
+        opacity: 0.9;
+    }
+    .fw-bold {
+        font-weight: 700 !important; /* Even bolder text */
+    }
+    .card-header {
+        border-bottom: 1px solid #9ca3af; /* Added border for separation */
+    }
+    .table-hover tbody tr:hover {
+        background-color: #e5e7eb; /* Hover color for table rows */
+    }
+</style>
+
+<script>
+    document.getElementById('refreshPage').addEventListener('click', function() {
+        window.location.href = "{% url 'search_student_performance' %}";
+    });
+</script>
+
 {% endblock %}

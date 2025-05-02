@@ -1,110 +1,167 @@
-{% extends 'base/base.html' %}
+{% extends "base/base.html" %}
 {% load static %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Enter Student Marks</h4>
-            <button id="refreshPage" class="btn btn-light btn-sm" title="Search Another Student">
-                <i class="fas fa-sync-alt"></i> New Search
-            </button>
-        </div>
-        <div class="card-body">
-            <form method="get" class="mb-4" id="searchForm">
-                <div class="row align-items-end">
-                    <div class="col-md-8">
-                        <div class="form-group">
-                            <label for="index_number" class="form-label fw-bold">Student Index Number</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-id-card"></i></span>
-                                <input type="text" class="form-control" id="index_number" name="index_number" 
-                                       value="{{ request.GET.index_number }}" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-search me-2"></i>Fetch Student Data
+
+<div class="message-container" id="system-messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="pagetitle">
+    <h1><i class="bi bi-journal-plus me-2"></i>Enter Student Marks</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item">Examination</li>
+            <li class="breadcrumb-item active">Marks Entry</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light text-dark">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0"><i class="bi bi-search me-2"></i>Find Student</h5>
+                        <button id="refreshPage" class="btn btn-outline-secondary btn-sm" title="Search Another Student">
+                            <i class="bi bi-arrow-repeat me-1"></i> New Search
                         </button>
                     </div>
                 </div>
-            </form>
+                
+                <div class="card-body">
+                    <form method="get" class="mb-4" id="searchForm">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="index_number" class="form-label fw-bold">Student Index Number</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-123"></i></span>
+                                        <input type="text" class="form-control" id="index_number" name="index_number" 
+                                               value="{{ request.GET.index_number }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-search me-2"></i>Fetch Student Data
+                                </button>
+                            </div>
+                        </div>
+                    </form>
 
-            {% if student %}
-            <div class="card mb-4 border-primary">
-                <div class="card-header bg-light d-flex justify-content-between">
-                    <div>
-                        <strong><i class="fas fa-user-graduate me-2"></i>Student:</strong> {{ student.first_name }} {{ student.last_name }} 
+                    {% if student %}
+                    <div class="card mb-4 border-primary">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-person me-2"></i><strong>Student:</strong> 
+                                {{ student.first_name }} {{ student.last_name }} 
+                                <span class="badge bg-primary ms-2">{{ student.index_number }}</span>
+                            </div>
+                            <div>
+                                <i class="bi bi-building me-2"></i><strong>School:</strong> 
+                                {{ student.school.name }}
+                                <span class="badge bg-secondary ms-2">{{ student.school.knec_code }}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <strong><i class="fas fa-school me-2"></i>School:</strong> {{ student.school.name }}
-                    </div>
+
+                    <form method="post" id="marksForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="index_number" value="{{ student.index_number }}">
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="30%"><i class="bi bi-book me-1"></i> Subject</th>
+                                        <th width="15%"><i class="bi bi-code me-1"></i> Code</th>
+                                        <th width="15%"><i class="bi bi-tag me-1"></i> Category</th>
+                                        <th width="20%"><i class="bi bi-percent me-1"></i> Marks (0-100)</th>
+                                        <th width="10%"><i class="bi bi-award me-1"></i> Grade</th>
+                                        <th width="10%"><i class="bi bi-graph-up me-1"></i> Points</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sub_reg in subject_registrations %}
+                                    <tr>
+                                        <td>{{ sub_reg.subject.name }}</td>
+                                        <td>{{ sub_reg.subject.code }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if sub_reg.subject.category == 'CORE' %}bg-primary
+                                                {% elif sub_reg.subject.category == 'SCIENCE' %}bg-info
+                                                {% elif sub_reg.subject.category == 'HUMANITIES' %}bg-success
+                                                {% elif sub_reg.subject.category == 'TECHNICAL' %}bg-warning
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ sub_reg.subject.get_category_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="mark_{{ sub_reg.id }}" 
+                                                   class="form-control mark-input" min="0" max="100"
+                                                   value="{{ sub_reg.result.marks|default_if_none:'' }}"
+                                                   data-subject-id="{{ sub_reg.id }}">
+                                        </td>
+                                        <td class="grade-cell text-center fw-bold" id="grade_{{ sub_reg.id }}">
+                                            {% if sub_reg.result.grade %}
+                                            <span class="badge 
+                                                {% if sub_reg.result.grade == 'A' %}bg-success
+                                                {% elif sub_reg.result.grade == 'A-' %}bg-success bg-opacity-75
+                                                {% elif sub_reg.result.grade == 'B+' %}bg-info bg-opacity-90
+                                                {% elif sub_reg.result.grade == 'B' %}bg-info
+                                                {% elif sub_reg.result.grade == 'B-' %}bg-info bg-opacity-75
+                                                {% elif sub_reg.result.grade == 'C+' %}bg-primary bg-opacity-90
+                                                {% elif sub_reg.result.grade == 'C' %}bg-primary
+                                                {% elif sub_reg.result.grade == 'C-' %}bg-primary bg-opacity-75
+                                                {% elif sub_reg.result.grade == 'D+' %}bg-warning bg-opacity-90
+                                                {% elif sub_reg.result.grade == 'D' %}bg-warning
+                                                {% elif sub_reg.result.grade == 'D-' %}bg-warning bg-opacity-75
+                                                {% else %}bg-danger{% endif %}">
+                                                {{ sub_reg.result.grade }}
+                                            </span>
+                                            {% else %}-{% endif %}
+                                        </td>
+                                        <td class="points-cell text-center fw-bold" id="points_{{ sub_reg.id }}">
+                                            {{ sub_reg.result.points|default_if_none:'-' }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="text-end mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-save me-2"></i>Save All Marks
+                            </button>
+                        </div>
+                    </form>
+                    {% endif %}
                 </div>
             </div>
-
-            <form method="post" id="marksForm">
-                {% csrf_token %}
-                <input type="hidden" name="index_number" value="{{ student.index_number }}">
-                
-                <div class="table-responsive">
-                    <table class="table table-striped table-bordered">
-                        <thead class="table-dark">
-                            <tr>
-                                <th width="30%">Subject</th>
-                                <th width="15%">Code</th>
-                                <th width="15%">Category</th>
-                                <th width="20%">Marks (0-100)</th>
-                                <th width="10%">Grade</th>
-                                <th width="10%">Points</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for sub_reg in subject_registrations %}
-                            <tr>
-                                <td>{{ sub_reg.subject.name }}</td>
-                                <td>{{ sub_reg.subject.code }}</td>
-                                <td>{{ sub_reg.subject.get_category_display }}</td>
-                                <td>
-                                    <input type="number" name="mark_{{ sub_reg.id }}" 
-                                           class="form-control mark-input" min="0" max="100"
-                                           value="{{ sub_reg.result.marks|default_if_none:'' }}"
-                                           data-subject-id="{{ sub_reg.id }}">
-                                </td>
-                                <td class="grade-cell text-center fw-bold" id="grade_{{ sub_reg.id }}">
-                                    {{ sub_reg.result.grade|default_if_none:'-' }}
-                                </td>
-                                <td class="points-cell text-center fw-bold" id="points_{{ sub_reg.id }}">
-                                    {{ sub_reg.result.points|default_if_none:'-' }}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="text-end mt-4">
-                    <button type="submit" class="btn btn-success btn-lg">
-                        <i class="fas fa-save me-2"></i>Save All Marks
-                    </button>
-                </div>
-            </form>
-            {% endif %}
         </div>
     </div>
-</div>
+</section>
 
 <!-- Success Modal -->
 <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Success</h5>
+                <h5 class="modal-title"><i class="bi bi-check-circle me-2"></i>Success</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center py-4">
                 <div class="mb-4">
-                    <i class="fas fa-check-circle text-success" style="font-size: 64px;"></i>
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
                 </div>
                 <h4>Marks Saved Successfully!</h4>
                 <p class="text-muted">All student marks have been updated in the system.</p>
@@ -112,7 +169,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" id="searchNewStudent">
-                    <i class="fas fa-search me-2"></i>Search New Student
+                    <i class="bi bi-search me-2"></i>Search New Student
                 </button>
             </div>
         </div>
@@ -150,6 +207,30 @@
     });
 </script>
 {% endblock %}
+
+<style>
+    .mark-input {
+        max-width: 100px;
+        margin: 0 auto;
+    }
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+    .badge {
+        font-weight: 500;
+        padding: 0.5em 0.75em;
+    }
+    .bg-opacity-75 {
+        opacity: 0.75;
+    }
+    .bg-opacity-90 {
+        opacity: 0.9;
+    }
+</style>
+
 {% endblock %}
 
 {% comment %}

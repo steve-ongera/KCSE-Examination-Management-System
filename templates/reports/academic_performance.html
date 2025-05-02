@@ -1,0 +1,366 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="message-container" id="system-messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="pagetitle">
+    <h1><i class="bi bi-graph-up me-2"></i>Academic Performance Report</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item">Reports</li>
+            <li class="breadcrumb-item active">Academic Performance</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-gray-600 text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="bi bi-calendar me-2"></i>KCSE {{ current_year.year }} Performance Analysis
+                    </h5>
+                    <span class="badge bg-white text-gray-700 fw-bold">
+                        <i class="bi bi-clock me-1"></i>Generated: {{ report_date }}
+                    </span>
+                </div>
+                <div class="card-body bg-gray-50">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card chart-card border-gray-400">
+                                <div class="card-header bg-gray-500 text-white">
+                                    <h6 class="card-title mb-0 fw-bold">
+                                        <i class="bi bi-gender-ambiguous me-2"></i>Performance by Gender
+                                    </h6>
+                                </div>
+                                <div class="card-body bg-white chart-container">
+                                    <canvas id="genderChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card chart-card border-gray-400">
+                                <div class="card-header bg-gray-500 text-white">
+                                    <h6 class="card-title mb-0 fw-bold">
+                                        <i class="bi bi-book me-2"></i>Top Performing Subjects
+                                    </h6>
+                                </div>
+                                <div class="card-body bg-white chart-container">
+                                    <canvas id="subjectChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card chart-card border-gray-400">
+                                <div class="card-header bg-gray-500 text-white">
+                                    <h6 class="card-title mb-0 fw-bold">
+                                        <i class="bi bi-award me-2"></i>Grade Distribution
+                                    </h6>
+                                </div>
+                                <div class="card-body bg-white chart-container">
+                                    <canvas id="gradeChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card chart-card border-gray-400">
+                                <div class="card-header bg-gray-500 text-white">
+                                    <h6 class="card-title mb-0 fw-bold">
+                                        <i class="bi bi-building me-2"></i>Top Performing Schools
+                                    </h6>
+                                </div>
+                                <div class="card-body bg-white table-container">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="bg-gray-500 text-white">
+                                                <tr>
+                                                    <th>Rank</th>
+                                                    <th>School</th>
+                                                    <th class="text-end">Avg Points</th>
+                                                    <th class="text-end">Students</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for school in school_performance %}
+                                                <tr>
+                                                    <td class="fw-bold">{{ forloop.counter }}</td>
+                                                    <td>{{ school.student__school__name|truncatechars:30 }}</td>
+                                                    <td class="text-end fw-bold">{{ school.avg_points|floatformat:2 }}</td>
+                                                    <td class="text-end">{{ school.count }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gender Performance Chart
+    const genderCtx = document.getElementById('genderChart').getContext('2d');
+    const genderData = JSON.parse('{{ gender_data|escapejs }}');
+    
+    // Check if data exists and has values
+    if (genderData && genderData.length > 0) {
+        new Chart(genderCtx, {
+            type: 'bar',
+            data: {
+                labels: genderData.map(item => 
+                    item.student__gender === 'M' ? 'Male' : 'Female'),
+                datasets: [{
+                    label: 'Average Points',
+                    data: genderData.map(item => item.avg_points || 0),
+                    backgroundColor: ['#6b7280', '#9ca3af'],
+                    borderColor: ['#4b5563', '#6b7280'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Avg: ${(context.raw || 0).toFixed(2)} points`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 12,
+                        title: {
+                            display: true,
+                            text: 'Average Points',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            color: '#e5e7eb'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        genderCtx.fillText('No gender data available', 10, 50);
+    }
+
+    // Subject Performance Chart
+    const subjectCtx = document.getElementById('subjectChart').getContext('2d');
+    const subjectData = JSON.parse('{{ subject_data|escapejs }}');
+    
+    if (subjectData && subjectData.length > 0) {
+        new Chart(subjectCtx, {
+            type: 'bar',
+            data: {
+                labels: subjectData.map(item => item.subject_registration__subject__name),
+                datasets: [{
+                    label: 'Average Marks',
+                    data: subjectData.map(item => item.avg_marks || 0),
+                    backgroundColor: '#9ca3af',
+                    borderColor: '#6b7280',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Avg: ${(context.raw || 0).toFixed(1)}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Average Marks (%)',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            color: '#e5e7eb'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        subjectCtx.fillText('No subject data available', 10, 50);
+    }
+
+    // Grade Distribution Chart
+    const gradeCtx = document.getElementById('gradeChart').getContext('2d');
+    const gradeData = JSON.parse('{{ grade_distribution|escapejs }}');
+    
+    if (gradeData && gradeData.length > 0) {
+        new Chart(gradeCtx, {
+            type: 'pie',
+            data: {
+                labels: gradeData.map(item => `Grade ${item.grade}`),
+                datasets: [{
+                    data: gradeData.map(item => item.count || 0),
+                    backgroundColor: [
+                        '#6b7280', '#9ca3af', '#d1d5db', '#e5e7eb', '#f3f4f6',
+                        '#f59e0b', '#fbbf24', '#fcd34d',
+                        '#ef4444', '#f87171', '#fca5a5'
+                    ],
+                    borderWidth: 1,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round(((context.raw || 0) / total) * 100);
+                                return `${context.label}: ${context.raw} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        gradeCtx.fillText('No grade data available', 10, 50);
+    }
+    
+    // Ensure charts resize properly when window size changes
+    window.addEventListener('resize', function() {
+        Chart.instances.forEach(chart => {
+            chart.resize();
+        });
+    });
+});
+</script>
+
+<style>
+    /* Gray Theme Colors */
+    .bg-gray-50 { background-color: #f9fafb; }
+    .bg-gray-100 { background-color: #f3f4f6; }
+    .bg-gray-200 { background-color: #e5e7eb; }
+    .bg-gray-300 { background-color: #d1d5db; }
+    .bg-gray-400 { background-color: #9ca3af; }
+    .bg-gray-500 { background-color: #6b7280; }
+    .bg-gray-600 { background-color: #4b5563; }
+    .bg-gray-700 { background-color: #374151; }
+    
+    .border-gray-400 { border-color: #9ca3af; }
+    
+    .text-gray-700 { color: #374151; }
+    
+    .card {
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .table th {
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge {
+        font-weight: 700;
+        padding: 0.35em 0.65em;
+    }
+    
+    .fw-bold {
+        font-weight: 700 !important;
+    }
+    
+    body {
+        background-color: #f3f4f6;
+    }
+    
+    /* Fixed height chart containers */
+    .chart-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chart-container {
+        height: 300px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .table-container {
+        height: 300px;
+        overflow-y: auto;
+    }
+    
+    /* Ensure consistent card heights in each row */
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    .row > [class*='col-'] {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}    

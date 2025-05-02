@@ -41,6 +41,7 @@ urlpatterns = [
     path('student/<int:student_id>/performance/', views.student_performance_view, name='student_performance'),
     path('performance/current/', views.current_year_performance, name='current_year_performance'),
     path('school-ranking/', views.school_ranking , name="school_ranking"),
+    path('academic_performance_report/', views.academic_performance_report , name="academic_performance_report"),
 
 
     path('papers/', views.paper_archive_list, name='paper-archive-list'),

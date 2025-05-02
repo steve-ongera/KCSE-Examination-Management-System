@@ -2073,7 +2073,7 @@ def school_registration_report(request):
         filter=models.Q(students__registrations__exam_year=current_year))
     ).filter(registration_count__gt=0).order_by('-registration_count')
     
-    paginator = Paginator(school_list, 20)  # Show 20 schools per page
+    paginator = Paginator(school_list, 21)  # Show 10 schools per page
     page_number = request.GET.get('page')
     schools = paginator.get_page(page_number)
     

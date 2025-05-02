@@ -14,9 +14,9 @@
 }
 
 body {
-  font-family: "Open Sans", sans-serif;
-  background: #f6f9ff;
-  color: #444444;
+  font-family: "Roboto", sans-serif; /* More professional & bold than Open Sans */
+  background: #f5f5f5; /* Light gray background */
+  color: #2a2a2a; /* Near-black for better readability */
 }
 
 a {
@@ -29,13 +29,10 @@ a:hover {
   text-decoration: none;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: "Nunito", sans-serif;
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Montserrat", sans-serif; /* Stronger than Nunito */
+  font-weight: 700; /* Bold weight for impact */
+  color: #1a1a1a; /* Almost black for contrast */
 }
 
 /*--------------------------------------------------------------
@@ -63,8 +60,8 @@ h6 {
 .pagetitle h1 {
   font-size: 24px;
   margin-bottom: 0;
-  font-weight: 600;
-  color: #012970;
+  font-weight: 700; /* Bolder weight (600 → 700) */
+  color: #1a1a1a; /* Dark near-black instead of blue (#012970) */
 }
 
 /*--------------------------------------------------------------
@@ -77,21 +74,22 @@ h6 {
   right: 15px;
   bottom: 15px;
   z-index: 99999;
-  background: #4154f1;
+  background: #333333; /* Dark gray instead of blue (#4154f1) */
   width: 40px;
   height: 40px;
   border-radius: 4px;
   transition: all 0.4s;
 }
 
+
 .back-to-top i {
   font-size: 24px;
-  color: #fff;
+  color: #fff; /* Keeps white icon for contrast */
   line-height: 0;
 }
 
 .back-to-top:hover {
-  background: #6776f4;
+  background: #555555; /* Medium gray hover (replaced blue #6776f4) */
   color: #fff;
 }
 
@@ -111,7 +109,9 @@ h6 {
   animation-duration: 0.2s;
   animation-fill-mode: both;
   border: 0;
-  box-shadow: 0 5px 30px 0 rgba(82, 63, 105, 0.2);
+  box-shadow: 0 5px 30px 0 rgba(68, 68, 68, 0.2); /* Changed to gray shadow */
+  background-color: #f8f9fa; /* Light gray background */
+  border: 1px solid #e0e0e0; /* Gray border */
 }
 
 .dropdown-menu .dropdown-header,
@@ -119,6 +119,7 @@ h6 {
   text-align: center;
   font-size: 15px;
   padding: 10px 25px;
+  color: #333333; /* Dark gray text */
 }
 
 .dropdown-menu .dropdown-footer a {
@@ -128,10 +129,11 @@ h6 {
 
 .dropdown-menu .dropdown-footer a:hover {
   text-decoration: none;
+  color: #1a1a1a; /* Darker gray on hover */
 }
 
 .dropdown-menu .dropdown-divider {
-  color: #a5c5fe;
+  border-color: #e0e0e0; /* Gray divider */
   margin: 0;
 }
 
@@ -139,16 +141,19 @@ h6 {
   font-size: 14px;
   padding: 10px 15px;
   transition: 0.3s;
+  color: #333333; /* Dark gray text */
 }
 
 .dropdown-menu .dropdown-item i {
   margin-right: 10px;
   font-size: 18px;
   line-height: 0;
+  color: #555555; /* Medium gray icons */
 }
 
 .dropdown-menu .dropdown-item:hover {
-  background-color: #f6f9ff;
+  background-color: #e9ecef; /* Light gray hover */
+  color: #1a1a1a; /* Darker text on hover */
 }
 
 @media (min-width: 768px) {
@@ -156,13 +161,13 @@ h6 {
     content: "";
     width: 13px;
     height: 13px;
-    background: #fff;
+    background: #f8f9fa; /* Matches dropdown bg */
     position: absolute;
     top: -7px;
     right: 20px;
     transform: rotate(45deg);
-    border-top: 1px solid #eaedf1;
-    border-left: 1px solid #eaedf1;
+    border-top: 1px solid #e0e0e0; /* Gray border */
+    border-left: 1px solid #e0e0e0; /* Gray border */
   }
 }
 
@@ -180,40 +185,40 @@ h6 {
   }
 }
 
-/* Light Backgrounds */
+/* Light Backgrounds - Gray Theme */
 .bg-primary-light {
-  background-color: #cfe2ff;
-  border-color: #cfe2ff;
+  background-color: #e0e0e0;
+  border-color: #e0e0e0;
 }
 
 .bg-secondary-light {
-  background-color: #e2e3e5;
-  border-color: #e2e3e5;
+  background-color: #d6d6d6;
+  border-color: #d6d6d6;
 }
 
 .bg-success-light {
-  background-color: #d1e7dd;
-  border-color: #d1e7dd;
+  background-color: #d1d1d1;
+  border-color: #d1d1d1;
 }
 
 .bg-danger-light {
-  background-color: #f8d7da;
-  border-color: #f8d7da;
+  background-color: #e6e6e6;
+  border-color: #e6e6e6;
 }
 
 .bg-warning-light {
-  background-color: #fff3cd;
-  border-color: #fff3cd;
+  background-color: #ececec;
+  border-color: #ececec;
 }
 
 .bg-info-light {
-  background-color: #cff4fc;
-  border-color: #cff4fc;
+  background-color: #e3e3e3;
+  border-color: #e3e3e3;
 }
 
 .bg-dark-light {
-  background-color: #d3d3d4;
-  border-color: #d3d3d4;
+  background-color: #c4c4c4;
+  border-color: #c4c4c4;
 }
 
 /* Card */
@@ -221,49 +226,53 @@ h6 {
   margin-bottom: 30px;
   border: none;
   border-radius: 5px;
-  box-shadow: 0px 0 30px rgba(1, 41, 112, 0.1);
+  box-shadow: 0px 0 30px rgba(0, 0, 0, 0.1); /* Changed to black shadow */
+  background-color: #ffffff; /* White card background */
 }
 
 .card-header,
 .card-footer {
-  border-color: #ebeef4;
-  background-color: #fff;
-  color: #798eb3;
+  border-color: #e0e0e0; /* Gray border */
+  background-color: #f8f9fa; /* Light gray background */
+  color: #555555; /* Dark gray text */
   padding: 15px;
 }
 
 .card-title {
   padding: 20px 0 15px 0;
   font-size: 18px;
-  font-weight: 500;
-  color: #012970;
-  font-family: "Poppins", sans-serif;
+  font-weight: 600; /* Increased weight for better hierarchy */
+  color: #1a1a1a; /* Near-black title */
+  font-family: "Montserrat", sans-serif; /* More professional font */
 }
 
 .card-title span {
-  color: #899bbd;
+  color: #777777; /* Medium gray subtitle */
   font-size: 14px;
   font-weight: 400;
 }
 
 .card-body {
   padding: 0 20px 20px 20px;
+  background-color: #ffffff; /* White body */
 }
 
 .card-img-overlay {
-  background-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.85); /* More opaque white overlay */
 }
 
 /* Alerts */
 .alert-heading {
-  font-weight: 500;
-  font-family: "Poppins", sans-serif;
+  font-weight: 600; /* Increased weight */
+  font-family: "Montserrat", sans-serif; /* More professional font */
   font-size: 20px;
+  color: #1a1a1a; /* Dark gray text */
 }
 
 /* Close Button */
 .btn-close {
   background-size: 25%;
+  opacity: 0.8;
 }
 
 .btn-close:focus {
@@ -273,7 +282,8 @@ h6 {
 
 /* Accordion */
 .accordion-item {
-  border: 1px solid #ebeef4;
+  border: 1px solid #e0e0e0; /* Gray border */
+  background-color: #f8f9fa; /* Light gray background */
 }
 
 .accordion-button:focus {
@@ -282,73 +292,75 @@ h6 {
 }
 
 .accordion-button:not(.collapsed) {
-  color: #012970;
-  background-color: #f6f9ff;
+  color: #1a1a1a; /* Dark gray text */
+  background-color: #f0f0f0; /* Slightly darker gray background */
 }
 
 .accordion-flush .accordion-button {
   padding: 15px 0;
   background: none;
   border: 0;
+  color: #333333; /* Medium gray text */
 }
 
 .accordion-flush .accordion-button:not(.collapsed) {
   box-shadow: none;
-  color: #4154f1;
+  color: #1a1a1a; /* Dark gray text */
 }
 
 .accordion-flush .accordion-body {
   padding: 0 0 15px 0;
-  color: #3e4f6f;
+  color: #555555; /* Medium gray text */
   font-size: 15px;
 }
 
 /* Breadcrumbs */
 .breadcrumb {
   font-size: 14px;
-  font-family: "Nunito", sans-serif;
-  color: #899bbd;
-  font-weight: 600;
+  font-family: "Roboto", sans-serif; /* Cleaner font */
+  color: #777777; /* Medium gray */
+  font-weight: 500;
 }
 
 .breadcrumb a {
-  color: #899bbd;
+  color: #777777; /* Medium gray */
   transition: 0.3s;
 }
 
 .breadcrumb a:hover {
-  color: #51678f;
+  color: #333333; /* Dark gray on hover */
 }
 
 .breadcrumb .breadcrumb-item::before {
-  color: #899bbd;
+  color: #999999; /* Lighter gray separator */
 }
 
 .breadcrumb .active {
-  color: #51678f;
+  color: #333333; /* Dark gray for active */
   font-weight: 600;
 }
 
 /* Bordered Tabs */
 .nav-tabs-bordered {
-  border-bottom: 2px solid #ebeef4;
+  border-bottom: 2px solid #e0e0e0; /* Gray border */
 }
 
 .nav-tabs-bordered .nav-link {
   margin-bottom: -2px;
   border: none;
-  color: #2c384e;
+  color: #555555; /* Medium gray text */
+  font-weight: 500;
 }
 
 .nav-tabs-bordered .nav-link:hover,
 .nav-tabs-bordered .nav-link:focus {
-  color: #4154f1;
+  color: #1a1a1a; /* Dark gray on hover/focus */
 }
 
 .nav-tabs-bordered .nav-link.active {
-  background-color: #fff;
-  color: #4154f1;
-  border-bottom: 2px solid #4154f1;
+  background-color: #ffffff; /* White background */
+  color: #1a1a1a; /* Dark gray text */
+  border-bottom: 2px solid #333333; /* Dark gray bottom border */
 }
 
 /*--------------------------------------------------------------
@@ -372,26 +384,24 @@ h6 {
 .logo span {
   font-size: 26px;
   font-weight: 700;
-  color: #012970;
-  font-family: "Nunito", sans-serif;
+  color: #1a1a1a; /* Dark gray instead of blue */
+  font-family: "Montserrat", sans-serif; /* More professional font */
 }
 
 .header {
   transition: all 0.5s;
   z-index: 997;
   height: 60px;
-  box-shadow: 0px 2px 20px rgba(1, 41, 112, 0.1);
-  background-color: #fff;
+  box-shadow: 0px 2px 20px rgba(0, 0, 0, 0.1); /* Black shadow with lower opacity */
+  background-color: #ffffff; /* White background */
   padding-left: 20px;
-  /* Toggle Sidebar Button */
-  /* Search Bar */
 }
 
 .header .toggle-sidebar-btn {
   font-size: 32px;
   padding-left: 10px;
   cursor: pointer;
-  color: #012970;
+  color: #333333; /* Dark gray instead of blue */
 }
 
 .header .search-bar {
@@ -406,7 +416,7 @@ h6 {
     left: 0;
     right: 0;
     padding: 20px;
-    box-shadow: 0px 0px 15px 0px rgba(1, 41, 112, 0.1);
+    box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.1); /* Black shadow */
     background: white;
     z-index: 9999;
     transition: 0.3s;
@@ -428,8 +438,8 @@ h6 {
 .header .search-form input {
   border: 0;
   font-size: 14px;
-  color: #012970;
-  border: 1px solid rgba(1, 41, 112, 0.2);
+  color: #333333; /* Dark gray text */
+  border: 1px solid rgba(0, 0, 0, 0.1); /* Gray border */
   padding: 7px 38px 7px 8px;
   border-radius: 3px;
   transition: 0.3s;
@@ -439,8 +449,8 @@ h6 {
 .header .search-form input:focus,
 .header .search-form input:hover {
   outline: none;
-  box-shadow: 0 0 10px 0 rgba(1, 41, 112, 0.15);
-  border: 1px solid rgba(1, 41, 112, 0.3);
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1); /* Gray shadow */
+  border: 1px solid rgba(0, 0, 0, 0.2); /* Slightly darker border */
 }
 
 .header .search-form button {
@@ -451,7 +461,7 @@ h6 {
 }
 
 .header .search-form button i {
-  color: #012970;
+  color: #333333; /* Dark gray icon */
 }
 
 /*--------------------------------------------------------------
@@ -468,13 +478,13 @@ h6 {
 
 .header-nav .nav-icon {
   font-size: 22px;
-  color: #012970;
+  color: #333333; /* Dark gray */
   margin-right: 25px;
   position: relative;
 }
 
 .header-nav .nav-profile {
-  color: #012970;
+  color: #333333; /* Dark gray */
 }
 
 .header-nav .nav-profile img {
@@ -492,6 +502,8 @@ h6 {
   font-weight: normal;
   font-size: 12px;
   padding: 3px 6px;
+  background-color: #555555; /* Medium gray badge */
+  color: white;
 }
 
 .header-nav .notifications {
@@ -508,22 +520,24 @@ h6 {
 .header-nav .notifications .notification-item i {
   margin: 0 20px 0 10px;
   font-size: 24px;
+  color: #555555; /* Medium gray icon */
 }
 
 .header-nav .notifications .notification-item h4 {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 5px;
+  color: #333333; /* Dark gray text */
 }
 
 .header-nav .notifications .notification-item p {
   font-size: 13px;
   margin-bottom: 3px;
-  color: #919191;
+  color: #777777; /* Medium gray text */
 }
 
 .header-nav .notifications .notification-item:hover {
-  background-color: #f6f9ff;
+  background-color: #f0f0f0; /* Light gray hover */
 }
 
 .header-nav .messages {
@@ -548,17 +562,17 @@ h6 {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 5px;
-  color: #444444;
+  color: #333333; /* Dark gray text */
 }
 
 .header-nav .messages .message-item p {
   font-size: 13px;
   margin-bottom: 3px;
-  color: #919191;
+  color: #777777; /* Medium gray text */
 }
 
 .header-nav .messages .message-item:hover {
-  background-color: #f6f9ff;
+  background-color: #f0f0f0; /* Light gray hover */
 }
 
 .header-nav .profile {
@@ -571,27 +585,31 @@ h6 {
   font-size: 18px;
   margin-bottom: 0;
   font-weight: 600;
-  color: #444444;
+  color: #333333; /* Dark gray text */
 }
 
 .header-nav .profile .dropdown-header span {
   font-size: 14px;
+  color: #777777; /* Medium gray text */
 }
 
 .header-nav .profile .dropdown-item {
   font-size: 14px;
   padding: 10px 15px;
   transition: 0.3s;
+  color: #555555; /* Medium gray text */
 }
 
 .header-nav .profile .dropdown-item i {
   margin-right: 10px;
   font-size: 18px;
   line-height: 0;
+  color: #555555; /* Medium gray icon */
 }
 
 .header-nav .profile .dropdown-item:hover {
-  background-color: #f6f9ff;
+  background-color: #f0f0f0; /* Light gray hover */
+  color: #1a1a1a; /* Darker text on hover */
 }
 
 /*--------------------------------------------------------------
@@ -608,9 +626,9 @@ h6 {
   padding: 20px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #aab7cf transparent;
-  box-shadow: 0px 0px 20px rgba(1, 41, 112, 0.1);
-  background-color: #fff;
+  scrollbar-color: #d1d1d1 transparent;
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
 }
 
 @media (max-width: 1199px) {
@@ -622,37 +640,11 @@ h6 {
 .sidebar::-webkit-scrollbar {
   width: 5px;
   height: 8px;
-  background-color: #fff;
+  background-color: #f5f5f5;
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-  background-color: #aab7cf;
-}
-
-@media (min-width: 1200px) {
-
-  #main,
-  #footer {
-    margin-left: 300px;
-  }
-}
-
-@media (max-width: 1199px) {
-  .toggle-sidebar .sidebar {
-    left: 0;
-  }
-}
-
-@media (min-width: 1200px) {
-
-  .toggle-sidebar #main,
-  .toggle-sidebar #footer {
-    margin-left: 0;
-  }
-
-  .toggle-sidebar .sidebar {
-    left: -300px;
-  }
+  background-color: #d1d1d1;
 }
 
 .sidebar-nav {
@@ -674,7 +666,7 @@ h6 {
 .sidebar-nav .nav-heading {
   font-size: 11px;
   text-transform: uppercase;
-  color: #899bbd;
+  color: #777777;
   font-weight: 600;
   margin: 10px 0 5px 15px;
 }
@@ -684,9 +676,9 @@ h6 {
   align-items: center;
   font-size: 15px;
   font-weight: 600;
-  color: #4154f1;
-  transition: 0.3;
-  background: #f6f9ff;
+  color: #333333;
+  transition: 0.3s;
+  background: #f5f5f5;
   padding: 10px 15px;
   border-radius: 4px;
 }
@@ -694,30 +686,31 @@ h6 {
 .sidebar-nav .nav-link i {
   font-size: 16px;
   margin-right: 10px;
-  color: #4154f1;
+  color: #555555;
 }
 
 .sidebar-nav .nav-link.collapsed {
-  color: #012970;
-  background: #fff;
+  color: #333333;
+  background: #ffffff;
 }
 
 .sidebar-nav .nav-link.collapsed i {
-  color: #899bbd;
+  color: #777777;
 }
 
 .sidebar-nav .nav-link:hover {
-  color: #4154f1;
-  background: #f6f9ff;
+  color: #1a1a1a;
+  background: #e9e9e9;
 }
 
 .sidebar-nav .nav-link:hover i {
-  color: #4154f1;
+  color: #333333;
 }
 
 .sidebar-nav .nav-link .bi-chevron-down {
   margin-right: 0;
   transition: transform 0.2s ease-in-out;
+  color: #555555;
 }
 
 .sidebar-nav .nav-link:not(.collapsed) .bi-chevron-down {
@@ -735,10 +728,9 @@ h6 {
   align-items: center;
   font-size: 14px;
   font-weight: 600;
-  color: #012970;
-  transition: 0.3;
-  padding: 10px 0 10px 40px;
+  color: #444444;
   transition: 0.3s;
+  padding: 10px 0 10px 40px;
 }
 
 .sidebar-nav .nav-content a i {
@@ -746,15 +738,39 @@ h6 {
   margin-right: 8px;
   line-height: 0;
   border-radius: 50%;
+  background-color: #999999;
 }
 
 .sidebar-nav .nav-content a:hover,
 .sidebar-nav .nav-content a.active {
-  color: #4154f1;
+  color: #1a1a1a;
 }
 
 .sidebar-nav .nav-content a.active i {
-  background-color: #4154f1;
+  background-color: #333333;
+}
+
+/* Responsive adjustments remain the same */
+@media (min-width: 1200px) {
+  #main, #footer {
+    margin-left: 300px;
+  }
+}
+
+@media (max-width: 1199px) {
+  .toggle-sidebar .sidebar {
+    left: 0;
+  }
+}
+
+@media (min-width: 1200px) {
+  .toggle-sidebar #main,
+  .toggle-sidebar #footer {
+    margin-left: 0;
+  }
+  .toggle-sidebar .sidebar {
+    left: -300px;
+  }
 }
 
 /*--------------------------------------------------------------
@@ -1217,19 +1233,19 @@ h6 {
   padding: 20px 0;
   font-size: 14px;
   transition: all 0.3s;
-  border-top: 1px solid #cddfff;
+  border-top: 1px solid #e0e0e0; /* Light gray border */
+  background-color: #ffffff; /* White background */
 }
 
 .footer .copyright {
   text-align: center;
-  color: #012970;
+  color: #333333; /* Dark gray text */
+  font-weight: 500;
 }
 
 .footer .credits {
   padding-top: 5px;
   text-align: center;
   font-size: 13px;
-  color: #012970;
+  color: #777777; /* Medium gray text */
 }
-
-

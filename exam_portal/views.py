@@ -2482,11 +2482,6 @@ def knec_activity_log(request):
     
     return render(request, 'knec/activity_log.html', context)
 
-@login_required
-def knec_dashboard(request):
-    """View for KNEC dashboard"""
-    # Placeholder view for the dashboard
-    return render(request, 'knec/dashboard.html')
 
 # Helper function to get client IP
 def get_client_ip(request):
@@ -2496,3 +2491,344 @@ def get_client_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR')
     return ip
+
+
+
+# views.py - Django views for KNEC Resources
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, JsonResponse
+from django.contrib import messages
+from django.db.models import Q, Count, Sum
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+from django.utils import timezone
+from django.core.paginator import Paginator
+
+from .models import Resource, ResourceType, Category, ResourceDownloadLog
+from .forms import ResourceForm, ResourceFilterForm
+
+@login_required
+def resources_dashboard(request):
+    """Display resource dashboard with resource statistics"""
+    
+    # Resource statistics
+    total_resources = Resource.objects.count()
+    published_resources = Resource.objects.filter(status='published').count()
+    draft_resources = Resource.objects.filter(status='draft').count()
+    archived_resources = Resource.objects.filter(status='archived').count()
+    
+    # Calculate percentage
+    published_percentage = (published_resources / total_resources * 100) if total_resources > 0 else 0
+    
+    # Download statistics
+    total_downloads = ResourceDownloadLog.objects.count()
+    last_month = timezone.now() - timezone.timedelta(days=30)
+    monthly_downloads = ResourceDownloadLog.objects.filter(downloaded_at__gte=last_month).count()
+    
+    # Recent resources
+    recent_resources = Resource.objects.order_by('-created_at')[:5]
+    
+    # Popular resources
+    popular_resources = Resource.objects.order_by('-download_count')[:5]
+    
+    context = {
+        'total_resources': total_resources,
+        'published_resources': published_resources,
+        'published_percentage': round(published_percentage),
+        'draft_resources': draft_resources,
+        'total_downloads': total_downloads,
+        'monthly_downloads': monthly_downloads,
+        'recent_resources': recent_resources,
+        'popular_resources': popular_resources,
+    }
+    
+    return render(request, 'resources/dashboard.html', context)
+
+@login_required
+def resource_list(request):
+    """Display list of resources with filtering options"""
+    
+    # Get all resources
+    resources = Resource.objects.all().order_by('-created_at')
+    
+    # Initialize filter form
+    filter_form = ResourceFilterForm(request.GET)
+    
+    # Apply filters if form is valid
+    if filter_form.is_valid():
+        # Filter by resource type
+        resource_type = filter_form.cleaned_data.get('resource_type')
+        if resource_type:
+            resources = resources.filter(resource_type=resource_type)
+        
+        # Filter by category
+        category = filter_form.cleaned_data.get('category')
+        if category:
+            resources = resources.filter(category=category)
+        
+        # Filter by status
+        status = filter_form.cleaned_data.get('status')
+        if status:
+            resources = resources.filter(status=status)
+        
+        # Search by title or description
+        search_query = filter_form.cleaned_data.get('search')
+        if search_query:
+            resources = resources.filter(
+                Q(title__icontains=search_query) | 
+                Q(description__icontains=search_query)
+            )
+    
+    # Pagination
+    paginator = Paginator(resources, 10)  # 10 resources per page
+    page_number = request.GET.get('page', 1)
+    resources_page = paginator.get_page(page_number)
+    
+    # Resource types and categories for sidebar
+    resource_types = ResourceType.objects.annotate(count=Count('resource'))
+    categories = Category.objects.annotate(count=Count('resource'))
+    
+    context = {
+        'resources': resources_page,
+        'filter_form': filter_form,
+        'resource_types': resource_types,
+        'categories': categories,
+        'total_count': paginator.count,
+    }
+    
+    return render(request, 'resources/resource_list.html', context)
+
+@login_required
+def resource_detail(request, pk):
+    """Display resource details"""
+    
+    resource = get_object_or_404(Resource, pk=pk)
+    
+    # Get related resources
+    related_resources = Resource.objects.filter(
+        category=resource.category
+    ).exclude(pk=resource.pk)[:4]
+    
+    context = {
+        'resource': resource,
+        'related_resources': related_resources,
+    }
+    
+    return render(request, 'resources/resource_detail.html', context)
+
+@login_required
+def resource_download(request, pk):
+    """Handle resource download and log the download"""
+    
+    resource = get_object_or_404(Resource, pk=pk)
+    
+    # Log the download
+    download_log = ResourceDownloadLog(
+        resource=resource,
+        user=request.user,
+        ip_address=request.META.get('REMOTE_ADDR'),
+        user_agent=request.META.get('HTTP_USER_AGENT')
+    )
+    download_log.save()
+    
+    # Increment download count
+    resource.download_count += 1
+    resource.save()
+    
+    # Serve the file
+    response = HttpResponse(resource.file, content_type='application/force-download')
+    response['Content-Disposition'] = f'attachment; filename="{resource.file.name.split("/")[-1]}"'
+    return response
+
+@login_required
+def add_resource(request):
+    """Add a new resource"""
+    
+    if request.method == 'POST':
+        form = ResourceForm(request.POST, request.FILES)
+        if form.is_valid():
+            resource = form.save(commit=False)
+            resource.created_by = request.user
+            
+            # Set file size if a file was uploaded
+            if resource.file:
+                resource.file_size = resource.file.size // 1024  # Convert bytes to KB
+                
+            resource.save()
+            messages.success(request, 'Resource added successfully.')
+            return redirect('resource_detail', pk=resource.pk)
+    else:
+        form = ResourceForm()
+    
+    context = {
+        'form': form,
+        'title': 'Add New Resource',
+    }
+    
+    return render(request, 'resources/resource_form.html', context)
+
+@login_required
+def edit_resource(request, pk):
+    """Edit an existing resource"""
+    
+    resource = get_object_or_404(Resource, pk=pk)
+    
+    if request.method == 'POST':
+        form = ResourceForm(request.POST, request.FILES, instance=resource)
+        if form.is_valid():
+            updated_resource = form.save(commit=False)
+            updated_resource.updated_by = request.user
+            
+            # Update file size if a new file was uploaded
+            if 'file' in request.FILES:
+                updated_resource.file_size = request.FILES['file'].size // 1024  # Convert bytes to KB
+                
+            updated_resource.save()
+            messages.success(request, 'Resource updated successfully.')
+            return redirect('resource_detail', pk=resource.pk)
+    else:
+        form = ResourceForm(instance=resource)
+    
+    context = {
+        'form': form,
+        'resource': resource,
+        'title': 'Edit Resource',
+    }
+    
+    return render(request, 'resources/resource_form.html', context)
+
+@login_required
+def delete_resource(request, pk):
+    """Delete a resource"""
+    
+    resource = get_object_or_404(Resource, pk=pk)
+    
+    if request.method == 'POST':
+        resource.delete()
+        messages.success(request, 'Resource deleted successfully.')
+        return redirect('resource_list')
+    
+    context = {
+        'resource': resource,
+    }
+    
+    return render(request, 'resources/resource_confirm_delete.html', context)
+
+@login_required
+def change_resource_status(request, pk, status):
+    """Change the status of a resource"""
+    
+    if request.method == 'POST':
+        resource = get_object_or_404(Resource, pk=pk)
+        
+        if status in [choice[0] for choice in Resource.STATUS_CHOICES]:
+            resource.status = status
+            resource.updated_by = request.user
+            resource.save()
+            
+            messages.success(request, f'Resource status changed to {status}.')
+        else:
+            messages.error(request, 'Invalid status.')
+            
+        return redirect('resource_detail', pk=resource.pk)
+    
+    # If not POST, redirect to resource detail
+    return redirect('resource_detail', pk=pk)
+
+@login_required
+def resource_statistics(request):
+    """Display resource statistics"""
+    
+    # Resource counts by type
+    type_stats = ResourceType.objects.annotate(count=Count('resource'))
+    
+    # Resource counts by category
+    category_stats = Category.objects.annotate(count=Count('resource'))
+    
+    # Resource counts by status
+    status_stats = {
+        'published': Resource.objects.filter(status='published').count(),
+        'draft': Resource.objects.filter(status='draft').count(),
+        'archived': Resource.objects.filter(status='archived').count(),
+    }
+    
+    # Download statistics by month (last 6 months)
+    six_months_ago = timezone.now() - timezone.timedelta(days=180)
+    monthly_downloads = (
+        ResourceDownloadLog.objects
+        .filter(downloaded_at__gte=six_months_ago)
+        .extra({'month': "to_char(downloaded_at, 'YYYY-MM')"})
+        .values('month')
+        .annotate(count=Count('id'))
+        .order_by('month')
+    )
+    
+    # Top downloaded resources
+    top_resources = Resource.objects.order_by('-download_count')[:10]
+    
+    context = {
+        'type_stats': type_stats,
+        'category_stats': category_stats,
+        'status_stats': status_stats,
+        'monthly_downloads': monthly_downloads,
+        'top_resources': top_resources,
+    }
+    
+    return render(request, 'resources/resource_statistics.html', context)
+
+@login_required
+def import_resources(request):
+    """Import resources from CSV or Excel file"""
+    
+    if request.method == 'POST' and request.FILES.get('import_file'):
+        # Handle file import logic here
+        messages.success(request, 'Resources imported successfully.')
+        return redirect('resource_list')
+    
+    return render(request, 'resources/import_resources.html')
+
+# Class-based views for API if needed
+class ResourceAPIView(ListView):
+    model = Resource
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Apply filters from GET parameters
+        resource_type = self.request.GET.get('type')
+        if resource_type:
+            queryset = queryset.filter(resource_type__name=resource_type)
+            
+        category = self.request.GET.get('category')
+        if category:
+            queryset = queryset.filter(category__name=category)
+            
+        status = self.request.GET.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
+            
+        search = self.request.GET.get('q')
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search) | 
+                Q(description__icontains=search)
+            )
+            
+        return queryset
+    
+    def render_to_response(self, context):
+        resources = self.get_queryset()
+        data = [{
+            'id': r.id,
+            'title': r.title,
+            'description': r.description,
+            'type': r.resource_type.name,
+            'category': r.category.name,
+            'status': r.status,
+            'download_count': r.download_count,
+            'created_at': r.created_at,
+        } for r in resources]
+        
+        return JsonResponse({'resources': data})

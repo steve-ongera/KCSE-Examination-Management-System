@@ -272,3 +272,85 @@ class SecuritySettingsForm(forms.ModelForm):
         self.fields['two_factor_enabled'].widget = forms.CheckboxInput(attrs={'class': 'form-check-input'})
         self.fields['login_alerts'].widget = forms.CheckboxInput(attrs={'class': 'form-check-input'})
         self.fields['session_timeout'].widget = forms.CheckboxInput(attrs={'class': 'form-check-input'})
+
+
+# forms.py - Django forms for KNEC Resources
+
+from django import forms
+from .models import Resource, ResourceType, Category
+
+class ResourceForm(forms.ModelForm):
+    """Form for creating and updating resources"""
+    
+    class Meta:
+        model = Resource
+        fields = [
+            'title', 'description', 'file', 'thumbnail',
+            'resource_type', 'category', 'status'
+        ]
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'file': forms.FileInput(attrs={'class': 'form-control'}),
+            'thumbnail': forms.FileInput(attrs={'class': 'form-control'}),
+            'resource_type': forms.Select(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+class ResourceFilterForm(forms.Form):
+    """Form for filtering resources"""
+    
+    search = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'search-input',
+            'placeholder': 'Search resources...'
+        })
+    )
+    
+    resource_type = forms.ModelChoiceField(
+        queryset=ResourceType.objects.all(),
+        required=False,
+        empty_label="All Types",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
+    category = forms.ModelChoiceField(
+        queryset=Category.objects.all(),
+        required=False,
+        empty_label="All Categories",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
+    STATUS_CHOICES = [
+        ('', 'All Statuses'),
+        ('published', 'Published'),
+        ('draft', 'Draft'),
+        ('archived', 'Archived'),
+    ]
+    
+    status = forms.ChoiceField(
+        choices=STATUS_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+class ImportResourceForm(forms.Form):
+    """Form for importing resources from a file"""
+    
+    import_file = forms.FileField(
+        widget=forms.FileInput(attrs={'class': 'form-control'}),
+        help_text="Upload a CSV or Excel file with resource information."
+    )
+    
+    FILE_TYPE_CHOICES = [
+        ('csv', 'CSV File'),
+        ('excel', 'Excel File'),
+    ]
+    
+    file_type = forms.ChoiceField(
+        choices=FILE_TYPE_CHOICES,
+        widget=forms.RadioSelect(),
+        initial='csv',
+    )

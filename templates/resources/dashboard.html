@@ -1,0 +1,259 @@
+{% extends 'base/base.html'%}
+{% load custom_filters %}
+{% load static %}
+
+{% block content %}
+<div class="message-container" id="system-messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        <i class="bi {% if message.tags == 'success' %}bi-check-circle{% else %}bi-exclamation-triangle{% endif %} me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="pagetitle">
+    <h1><i class="bi bi-archive me-2"></i>KNEC Resources Dashboard</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item active">Resources Dashboard</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+
+<section class="section dashboard">
+    <div class="row">
+        <!-- Resource Statistics Cards -->
+        <div class="col-12">
+            <div class="row">
+                <!-- Total Resources Card -->
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-university-light">
+                                    <i class="bi bi-archive-fill text-university-primary"></i>
+                                </div>
+                                <div class="ps-3">
+                                    <h6>Total Resources</h6>
+                                    <h2 class="text-university mb-0">{{ total_resources }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Published Resources Card -->
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-success-light">
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                </div>
+                                <div class="ps-3">
+                                    <h6>Published</h6>
+                                    <h2 class="text-success mb-0">{{ published_resources }}</h2>
+                                    <span class="text-muted small pt-1">{{ published_percentage }}% of total</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Draft Resources Card -->
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-warning-light">
+                                    <i class="bi bi-pencil-square text-warning"></i>
+                                </div>
+                                <div class="ps-3">
+                                    <h6>Draft Resources</h6>
+                                    <h2 class="text-warning mb-0">{{ draft_resources }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Downloads Card -->
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-info-light">
+                                    <i class="bi bi-download text-info"></i>
+                                </div>
+                                <div class="ps-3">
+                                    <h6>Total Downloads</h6>
+                                    <h2 class="text-info mb-0">{{ total_downloads }}</h2>
+                                    <span class="text-muted small pt-1">{{ monthly_downloads }} this month</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <!-- Recent Resources -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-university-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0"><i class="bi bi-clock-history me-2"></i>Recent Resources</h5>
+                    <a href="{% url 'resource_list' %}" class="btn btn-sm btn-outline-light">
+                        <i class="bi bi-list me-1"></i> View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="bg-university-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for resource in recent_resources %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'resource_detail' resource.pk %}" class="text-university fw-bold">
+                                            {{ resource.title }}
+                                        </a>
+                                    </td>
+                                    <td>{{ resource.resource_type.name }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if resource.status == 'published' %}success{% elif resource.status == 'draft' %}warning{% else %}secondary{% endif %}">
+                                            {{ resource.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ resource.created_at|date:"M d, Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-3">No resources available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Popular Resources -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-university-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0"><i class="bi bi-star-fill me-2"></i>Popular Resources</h5>
+                    <a href="{% url 'resource_statistics' %}" class="btn btn-sm btn-outline-light">
+                        <i class="bi bi-bar-chart me-1"></i> View Stats
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="bg-university-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Downloads</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for resource in popular_resources %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'resource_detail' resource.pk %}" class="text-university fw-bold">
+                                            {{ resource.title }}
+                                        </a>
+                                    </td>
+                                    <td>{{ resource.resource_type.name }}</td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            <i class="bi bi-download me-1"></i> {{ resource.download_count }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-3">No resources available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-university-light">
+                    <h5 class="card-title mb-0"><i class="bi bi-lightning-charge me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <a href="{% url 'add_resource' %}" class="card h-100 border-0 shadow-sm text-decoration-none">
+                                <div class="card-body text-center">
+                                    <div class="rounded-circle mx-auto mb-3 bg-success-light d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                        <i class="bi bi-plus-circle-fill text-success fs-3"></i>
+                                    </div>
+                                    <h5>Add Resource</h5>
+                                    <p class="text-muted">Upload new resources to the system</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'resource_list' %}" class="card h-100 border-0 shadow-sm text-decoration-none">
+                                <div class="card-body text-center">
+                                    <div class="rounded-circle mx-auto mb-3 bg-primary-light d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                        <i class="bi bi-list-ul text-primary fs-3"></i>
+                                    </div>
+                                    <h5>Manage Resources</h5>
+                                    <p class="text-muted">View and manage all resources</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'resource_statistics' %}" class="card h-100 border-0 shadow-sm text-decoration-none">
+                                <div class="card-body text-center">
+                                    <div class="rounded-circle mx-auto mb-3 bg-info-light d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                        <i class="bi bi-bar-chart-fill text-info fs-3"></i>
+                                    </div>
+                                    <h5>View Statistics</h5>
+                                    <p class="text-muted">Analyze resource usage data</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'import_resources' %}" class="card h-100 border-0 shadow-sm text-decoration-none">
+                                <div class="card-body text-center">
+                                    <div class="rounded-circle mx-auto mb-3 bg-warning-light d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                        <i class="bi bi-upload text-warning fs-3"></i>
+                                    </div>
+                                    <h5>Import Resources</h5>
+                                    <p class="text-muted">Bulk import from CSV/Excel</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -505,3 +505,65 @@ class ActivityLogAdmin(admin.ModelAdmin):
         # Prevent editing of activity logs
         return False
     
+
+
+
+# admin.py - Admin configuration for KNEC Resources
+
+from django.contrib import admin
+from .models import Resource, ResourceType, Category, ResourceDownloadLog, UserProfile
+
+@admin.register(ResourceType)
+class ResourceTypeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'css_class')
+    search_fields = ('name', 'description')
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'created_at')
+    search_fields = ('name', 'description')
+    list_filter = ('created_at',)
+
+@admin.register(Resource)
+class ResourceAdmin(admin.ModelAdmin):
+    list_display = ('title', 'resource_type', 'category', 'status', 'download_count', 'created_by', 'created_at')
+    list_filter = ('status', 'resource_type', 'category', 'created_at')
+    search_fields = ('title', 'description')
+    date_hierarchy = 'created_at'
+    raw_id_fields = ('created_by', 'updated_by')
+    readonly_fields = ('file_size', 'download_count', 'published_at')
+    
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'description')
+        }),
+        ('File Details', {
+            'fields': ('file', 'file_size', 'thumbnail')
+        }),
+        ('Classification', {
+            'fields': ('resource_type', 'category')
+        }),
+        ('Status', {
+            'fields': ('status', 'published_at')
+        }),
+        ('Statistics', {
+            'fields': ('download_count',)
+        }),
+        ('User Info', {
+            'fields': ('created_by', 'updated_by')
+        }),
+    )
+
+@admin.register(ResourceDownloadLog)
+class ResourceDownloadLogAdmin(admin.ModelAdmin):
+    list_display = ('resource', 'user', 'downloaded_at', 'ip_address')
+    list_filter = ('downloaded_at',)
+    date_hierarchy = 'downloaded_at'
+    raw_id_fields = ('resource', 'user')
+    readonly_fields = ('ip_address', 'user_agent')
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'role', 'department', 'phone_number')
+    search_fields = ('user__username', 'user__email', 'role', 'department')
+    list_filter = ('role', 'department')

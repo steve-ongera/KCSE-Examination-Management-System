@@ -90,4 +90,28 @@ urlpatterns = [
     path('activity-log/', views.knec_activity_log, name='knec_activity_log'),
 
 
+    # Dashboard
+    path('resources_dashboard', views.resources_dashboard, name='resources_dashboard'),
+    
+    # Resource list and detail
+    path('resources/', views.resource_list, name='resource_list'),
+    path('resources/<int:pk>/', views.resource_detail, name='resource_detail'),
+    
+    # Resource operations
+    path('resources/add/', views.add_resource, name='add_resource'),
+    path('resources/<int:pk>/edit/', views.edit_resource, name='edit_resource'),
+    path('resources/<int:pk>/delete/', views.delete_resource, name='delete_resource'),
+    path('resources/<int:pk>/download/', views.resource_download, name='resource_download'),
+    path('resources/<int:pk>/status/<str:status>/', views.change_resource_status, name='change_resource_status'),
+    
+    # Statistics and reporting
+    path('statistics/', views.resource_statistics, name='resource_statistics'),
+    
+    # Import resources
+    path('import/', views.import_resources, name='import_resources'),
+    
+    # API endpoint
+    path('api/resources/', views.ResourceAPIView.as_view(), name='api_resources'),
+
+
 ]

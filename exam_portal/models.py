@@ -644,3 +644,87 @@ class ActivityLog(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.activity_type} - {self.timestamp}"
+    
+
+# models.py - Django models for KNEC Resources
+
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "Categories"
+
+class ResourceType(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    icon = models.CharField(max_length=50, blank=True, null=True)
+    css_class = models.CharField(max_length=50, blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+class Resource(models.Model):
+    STATUS_CHOICES = (
+        ('draft', 'Draft'),
+        ('published', 'Published'),
+        ('archived', 'Archived'),
+    )
+    
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    file = models.FileField(upload_to='resources/')
+    file_size = models.PositiveIntegerField(blank=True, null=True)  # Size in KB
+    thumbnail = models.ImageField(upload_to='resources/thumbnails/', blank=True, null=True)
+    
+    resource_type = models.ForeignKey(ResourceType, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    download_count = models.PositiveIntegerField(default=0)
+    
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_resources')
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_resources')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    published_at = models.DateTimeField(blank=True, null=True)
+    
+    def __str__(self):
+        return self.title
+    
+    def save(self, *args, **kwargs):
+        # If status is being changed to published, set published_at
+        if self.pk:
+            old_instance = Resource.objects.get(pk=self.pk)
+            if old_instance.status != 'published' and self.status == 'published':
+                self.published_at = timezone.now()
+        elif self.status == 'published':
+            self.published_at = timezone.now()
+            
+        super().save(*args, **kwargs)
+
+class ResourceDownloadLog(models.Model):
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    downloaded_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return f"{self.user.username} downloaded {self.resource.title}"
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    role = models.CharField(max_length=100, blank=True, null=True)
+    department = models.CharField(max_length=100, blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
+    
+    def __str__(self):
+        return self.user.username

@@ -37,27 +37,57 @@
                 <div class="card-body">
                     <!-- School Summary -->
                     <div class="row mb-4">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="card border-primary">
                                 <div class="card-body">
                                     <h6 class="card-title text-primary">Mean Points</h6>
-                                    <h2 class="mb-0">{{ school_stats.avg_points|floatformat:2 }}</h2>
+                                    <h2 class="mb-0">{{ school_stats.avg_points }}</h2>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="card border-success">
                                 <div class="card-body">
-                                    <h6 class="card-title text-success">Mean Marks</h6>
-                                    <h2 class="mb-0">{{ school_stats.avg_marks|floatformat:2 }}</h2>
+                                    <h6 class="card-title text-success">Mean Grade</h6>
+                                    <h2 class="mb-0">{{ school_stats.letter_grade }}</h2>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <div class="card border-warning">
+                                <div class="card-body">
+                                    <h6 class="card-title text-warning">University Qualifiers</h6>
+                                    <h2 class="mb-0">{{ university_qualifiers }} <small class="text-muted fs-6">({{ university_percentage }}%)</small></h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
                             <div class="card border-info">
                                 <div class="card-body">
-                                    <h6 class="card-title text-info">Students</h6>
+                                    <h6 class="card-title text-info">Total Students</h6>
                                     <h2 class="mb-0">{{ school_stats.total_students }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grade Distribution -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h6 class="card-title mb-0">Grade Distribution</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        {% for grade in grade_distribution %}
+                                        <div class="text-center mx-1">
+                                            <div class="badge bg-{{ grade.letter_grade|default:'secondary' }} mb-1 px-2 py-1">{{ grade.letter_grade }}</div>
+                                            <div class="small">{{ grade.count }}</div>
+                                            <div class="small text-muted">{{ grade.percentage }}%</div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -72,7 +102,8 @@
                                     <th>Student Name</th>
                                     <th>Index No.</th>
                                     <th>Class</th>
-                                    <th class="text-end">Total Marks</th>
+                                    <th class="text-end">Total Points</th>
+                                    <th class="text-end">Subjects</th>
                                     <th class="text-end">Mean Points</th>
                                     <th class="text-end">Grade</th>
                                 </tr>
@@ -82,14 +113,15 @@
                                 <tr>
                                     <td>{{ forloop.counter0|add:students.start_index }}</td>
                                     <td>
-                                        <a href="{% url 'student-exam-detail' student.id selected_year %}">
+                                        <a href="#">
                                             {{ student.first_name }} {{ student.last_name }}
                                         </a>
                                     </td>
                                     <td>{{ student.index_number }}</td>
                                     <td>{{ student.current_class }}</td>
-                                    <td class="text-end">{{ student.total_marks|floatformat:2 }}</td>
-                                    <td class="text-end">{{ student.mean_grade|floatformat:2 }}</td>
+                                    <td class="text-end">{{ student.total_points }}</td>
+                                    <td class="text-end">{{ student.subject_count }}</td>
+                                    <td class="text-end">{{ student.mean_points|floatformat:2 }}</td>
                                     <td class="text-end">
                                         <span class="badge bg-{{ student.grade_color }}">
                                             {{ student.letter_grade }}
@@ -167,7 +199,18 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = url.toString();
     });
 
-    // Class filter would work similarly if implemented
+    // Export button handler
+    document.getElementById('export-btn').addEventListener('click', function() {
+        // Create export URL with current filters
+        const year = document.getElementById('year-filter').value;
+        let exportUrl = `/export/exam-results/?year=${year}`;
+        
+        if (new URLSearchParams(window.location.search).has('class')) {
+            exportUrl += `&class=${new URLSearchParams(window.location.search).get('class')}`;
+        }
+        
+        window.location.href = exportUrl;
+    });
 });
 </script>
 
@@ -190,18 +233,12 @@ document.addEventListener('DOMContentLoaded', function() {
         font-weight: 500;
         min-width: 40px;
     }
-    .bg-A { background-color: #2ecc71 !important; }
-    .bg-A- { background-color: #27ae60 !important; }
-    .bg-B+ { background-color: #f1c40f !important; color: #000; }
-    .bg-B { background-color: #f39c12 !important; color: #000; }
-    .bg-B- { background-color: #e67e22 !important; }
-    .bg-C+ { background-color: #d35400 !important; }
-    .bg-C { background-color: #e74c3c !important; }
-    .bg-C- { background-color: #c0392b !important; }
-    .bg-D+ { background-color: #9b59b6 !important; }
-    .bg-D { background-color: #8e44ad !important; }
-    .bg-D- { background-color: #7d3c98 !important; }
-    .bg-E { background-color: #34495e !important; }
+    /* Grade badge styling - using Bootstrap colors */
+    .bg-success { background-color: #28a745 !important; }  /* A, A- */
+    .bg-info { background-color: #17a2b8 !important; }     /* B+, B, B- */
+    .bg-primary { background-color: #007bff !important; }  /* C+, C, C- */
+    .bg-warning { background-color: #ffc107 !important; color: #212529 !important; } /* D+, D, D- */
+    .bg-danger { background-color: #dc3545 !important; }   /* E */
 </style>
 
 {% endblock %}

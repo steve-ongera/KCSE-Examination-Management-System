@@ -3107,5 +3107,179 @@ def get_grade_color(grade):
     }
     return grade_colors.get(grade, 'secondary')
 
+from django.shortcuts import render, get_object_or_404, redirect
+from django.core.paginator import Paginator
+from django.db.models import Avg, Sum, Count, Q
+from django.contrib.auth.decorators import login_required
+from .models import School, Student, ExamRegistration, ExamYear, ExamResult, SchoolAdminProfile
 
+@login_required
+def school_exam_performance(request):
+    # Verify user is a school admin and get their school
+    if not request.user.is_authenticated or request.user.user_type != 2:
+        return redirect('login')
+    
+    try:
+        admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
+        school = admin_profile.school
+    except SchoolAdminProfile.DoesNotExist:
+        return redirect('login')
 
+    # Get available exam years for filter dropdown
+    exam_years = ExamYear.objects.filter(
+        examregistration__student__school=school
+    ).distinct().order_by('-year')
+
+    # Get selected year from request (default to current year if available)
+    selected_year = request.GET.get('year')
+    if not selected_year:
+        current_year = ExamYear.objects.filter(is_current=True).first()
+        selected_year = current_year.year if current_year else (exam_years.first().year if exam_years.exists() else None)
+
+    if not selected_year:
+        # No year data available
+        context = {
+            'school': school,
+            'exam_years': [],
+            'selected_year': None,
+            'students': [],
+            'school_stats': {'avg_points': 0, 'total_students': 0},
+            'grade_distribution': [],
+        }
+        return render(request, 'school_admin/school_exam_performance.html', context)
+
+    # Base queryset for students who sat exams in this school
+    students = Student.objects.filter(
+        school=school,
+        registrations__exam_year__year=selected_year
+    ).distinct()
+
+    # Annotate with performance data
+    students = students.annotate(
+        total_points=Sum('registrations__subjects__result__points'),
+        subject_count=Count('registrations__subjects__result', distinct=True)
+    ).filter(subject_count__gt=0)  # Only students with actual exam results
+
+    # Apply additional filters if needed
+    class_filter = request.GET.get('class')
+    if class_filter:
+        students = students.filter(current_class=class_filter)
+
+    # Calculate mean points and letter grade for each student
+    for student in students:
+        if student.subject_count > 0:
+            student.mean_points = student.total_points / student.subject_count
+            student.letter_grade = calculate_letter_grade(student.mean_points)
+        else:
+            student.mean_points = 0
+            student.letter_grade = 'E'
+        student.grade_color = get_grade_color(student.letter_grade)
+
+    # Sort students by mean points (descending)
+    students = sorted(students, key=lambda x: x.mean_points, reverse=True)
+
+    # Calculate school statistics for the selected year
+    total_students = len(students)
+    if total_students > 0:
+        total_mean_points = sum(student.mean_points for student in students)
+        school_avg_points = total_mean_points / total_students
+        school_letter_grade = calculate_letter_grade(school_avg_points)
+    else:
+        school_avg_points = 0
+        school_letter_grade = 'E'
+
+    school_stats = {
+        'avg_points': round(school_avg_points, 2),
+        'letter_grade': school_letter_grade,
+        'total_students': total_students
+    }
+
+    # Get grade distribution
+    grade_distribution = {}
+    for grade in ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E']:
+        grade_distribution[grade] = 0
+    
+    for student in students:
+        grade_distribution[student.letter_grade] += 1
+
+    # Convert to list format for template
+    formatted_grade_distribution = []
+    for grade, count in grade_distribution.items():
+        percentage = (count / total_students * 100) if total_students > 0 else 0
+        formatted_grade_distribution.append({
+            'letter_grade': grade,
+            'count': count,
+            'percentage': round(percentage, 1)
+        })
+
+    # Calculate university qualifiers (C+ and above)
+    university_grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+']
+    university_qualifiers = sum(1 for student in students if student.letter_grade in university_grades)
+    university_percentage = (university_qualifiers / total_students * 100) if total_students > 0 else 0
+
+    # Pagination
+    paginator = Paginator(students, 25)  # 25 students per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'school': school,
+        'exam_years': exam_years,
+        'selected_year': selected_year,
+        'students': page_obj,
+        'school_stats': school_stats,
+        'grade_distribution': formatted_grade_distribution,
+        'class_filter': class_filter,
+        'university_qualifiers': university_qualifiers,
+        'university_percentage': round(university_percentage, 1)
+    }
+
+    return render(request, 'school_admin/school_exam_performance.html', context)
+
+def marks_to_grade_points(marks):
+    """Convert raw marks to grade points according to KCSE system"""
+    if marks >= 80: return 12, 'A'
+    elif marks >= 75: return 11, 'A-'
+    elif marks >= 70: return 10, 'B+'  
+    elif marks >= 65: return 9, 'B'
+    elif marks >= 60: return 8, 'B-'
+    elif marks >= 55: return 7, 'C+'
+    elif marks >= 50: return 6, 'C'
+    elif marks >= 45: return 5, 'C-'
+    elif marks >= 40: return 4, 'D+'
+    elif marks >= 35: return 3, 'D'
+    elif marks >= 30: return 2, 'D-'
+    else: return 1, 'E'
+
+def calculate_letter_grade(mean_points):
+    """Convert mean points to letter grade according to KCSE system"""
+    if mean_points >= 11.5: return 'A'
+    elif mean_points >= 10.5: return 'A-'
+    elif mean_points >= 9.5: return 'B+'
+    elif mean_points >= 8.5: return 'B'
+    elif mean_points >= 7.5: return 'B-'
+    elif mean_points >= 6.5: return 'C+'
+    elif mean_points >= 5.5: return 'C'
+    elif mean_points >= 4.5: return 'C-'
+    elif mean_points >= 3.5: return 'D+'
+    elif mean_points >= 2.5: return 'D'
+    elif mean_points >= 1.5: return 'D-'
+    else: return 'E'
+
+def get_grade_color(grade):
+    """Get appropriate color class for each grade"""
+    grade_colors = {
+        'A': 'success',
+        'A-': 'success',
+        'B+': 'info',
+        'B': 'info',
+        'B-': 'info',
+        'C+': 'primary',
+        'C': 'primary',
+        'C-': 'primary',
+        'D+': 'warning',
+        'D': 'warning',
+        'D-': 'warning',
+        'E': 'danger'
+    }
+    return grade_colors.get(grade, 'secondary')

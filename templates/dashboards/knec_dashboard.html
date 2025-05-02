@@ -31,13 +31,35 @@
 </style>
 
 <div class="pagetitle">
-    <h1>KNEC Admin Dashboard</h1>
-    <nav>
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item active">Dashboard</li>
-      </ol>
-    </nav>
+  <h1><i class="bi bi-speedometer2"></i> Kenya National Examination Council (KNEC) </h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item active"><i class="bi bi-house-door"></i> Admin Dashboard</li>
+    </ol>
+  </nav>
+  <div class="float-end" style="margin-top: -40px;">
+      <span class="badge bg-secondary">
+          <i class="bi bi-clock"></i> <span id="live-clock">11:13:34</span>
+      </span>
+  </div>
 </div>
+
+<!-- Add this just before closing body tag -->
+<script>
+// Live Clock
+function updateClock() {
+  const now = new Date();
+  const timeString = now.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false 
+  }).replace(/:/g, '.');
+  document.getElementById('live-clock').textContent = timeString;
+}
+setInterval(updateClock, 1000);
+updateClock(); // Initialize immediately
+</script>
 
 <section class="section dashboard">
     <div class="row">
@@ -91,7 +113,7 @@
                   </div>
                   <div class="ps-3">
                     <h6>{{ total_schools }}</h6>
-                    <span class="text-muted small">All KNEC-registered schools</span>
+                    <span class="text-muted small">Registered schools</span>
                   </div>
                 </div>
               </div>

@@ -2056,41 +2056,36 @@ def academic_performance_report(request):
 
 
 # views.py
-from django.shortcuts import render
+from django.core.paginator import Paginator
+from django.shortcuts import render, get_object_or_404
 from django.db.models import Count
-from .models import ExamYear, School, ExamRegistration
+from .models import ExamYear, School, ExamRegistration, SubjectRegistration
 
 def school_registration_report(request):
-    # Get current exam year
-    current_year = ExamYear.objects.filter(is_current=True).first()
-    if not current_year:
-        current_year = ExamYear.objects.order_by('-year').first()
-
-    # Total students registered for current year
-    total_registered = ExamRegistration.objects.filter(
-        exam_year=current_year
-    ).count()
-
-    # Schools with registration counts
-    schools = School.objects.annotate(
-        registration_count=Count(
-            'students__registrations',
-            filter=models.Q(students__registrations__exam_year=current_year)
-        )
+    current_year = ExamYear.objects.filter(is_current=True).first() or ExamYear.objects.order_by('-year').first()
+    
+    # Total students registered
+    total_registered = ExamRegistration.objects.filter(exam_year=current_year).count()
+    
+    # Paginated schools
+    school_list = School.objects.annotate(
+        registration_count=Count('students__registrations',
+        filter=models.Q(students__registrations__exam_year=current_year))
     ).filter(registration_count__gt=0).order_by('-registration_count')
-
-    # Subject registration counts
+    
+    paginator = Paginator(school_list, 20)  # Show 20 schools per page
+    page_number = request.GET.get('page')
+    schools = paginator.get_page(page_number)
+    
+    # Subject registrations
     subject_registrations = (
         ExamRegistration.objects
         .filter(exam_year=current_year)
-        .values(
-            'subjects__subject__name',
-            'subjects__subject__code'
-        )
+        .values('subjects__subject__name', 'subjects__subject__code')
         .annotate(count=Count('id'))
         .order_by('-count')
     )
-
+    
     context = {
         'current_year': current_year,
         'total_registered': total_registered,
@@ -2099,3 +2094,49 @@ def school_registration_report(request):
         'report_date': timezone.now().strftime("%B %d, %Y"),
     }
     return render(request, 'reports/school_registration.html', context)
+
+def school_registration_detail(request, school_id):
+    current_year = ExamYear.objects.filter(is_current=True).first() or ExamYear.objects.order_by('-year').first()
+    school = get_object_or_404(School, pk=school_id)
+    
+    # Subject registration counts for this school
+    subject_registrations = (
+        SubjectRegistration.objects
+        .filter(registration__exam_year=current_year,
+                registration__student__school=school)
+        .values('subject__name', 'subject__code')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    
+    # Total students registered from this school
+    total_students = ExamRegistration.objects.filter(
+        exam_year=current_year,
+        student__school=school
+    ).count()
+    
+    context = {
+        'school': school,
+        'current_year': current_year,
+        'subject_registrations': subject_registrations,
+        'total_students': total_students,
+    }
+    return render(request, 'reports/school_registration_detail.html', context)
+
+def school_registered_students(request, school_id):
+    current_year = ExamYear.objects.filter(is_current=True).first() or ExamYear.objects.order_by('-year').first()
+    school = get_object_or_404(School, pk=school_id)
+    
+    students = (
+        ExamRegistration.objects
+        .filter(exam_year=current_year, student__school=school)
+        .select_related('student')
+        .order_by('student__last_name')
+    )
+    
+    context = {
+        'school': school,
+        'current_year': current_year,
+        'students': students,
+    }
+    return render(request, 'reports/school_registered_students.html', context)

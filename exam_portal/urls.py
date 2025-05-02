@@ -43,6 +43,8 @@ urlpatterns = [
     path('school-ranking/', views.school_ranking , name="school_ranking"),
     path('academic_performance_report/', views.academic_performance_report , name="academic_performance_report"),
     path('school_registration_report/', views.school_registration_report , name="school_registration_report"),
+    path('school_registration_detail/<int:school_id>/', views.school_registration_detail, name='school_registration_detail'),
+    path('school_registered_students/<int:school_id>/', views.school_registered_students, name='school_registered_students'),
 
 
     path('papers/', views.paper_archive_list, name='paper-archive-list'),

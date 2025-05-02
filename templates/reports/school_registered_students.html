@@ -1,0 +1,62 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="pagetitle">
+    <h1><i class="bi bi-people-fill me-2"></i>{{ school.name }} Registered Students</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'school_registration_report' %}">Registration Report</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'school_registration_detail' school.id %}">{{ school.name }}</a></li>
+            <li class="breadcrumb-item active">Students</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-gray-600 text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="bi bi-calendar me-2"></i>KCSE {{ current_year.year }} Registered Students
+                    </h5>
+                    <span class="badge bg-white text-gray-700 fw-bold">
+                        Total: {{ students|length }}
+                    </span>
+                </div>
+                <div class="card-body bg-gray-50">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="bg-gray-500 text-white">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Student Name</th>
+                                    <th>Index Number</th>
+                                    <th>Admission No.</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for registration in students %}
+                                <tr>
+                                    <td class="fw-bold">{{ forloop.counter }}</td>
+                                    <td>{{ registration.student.first_name }} {{ registration.student.last_name }}</td>
+                                    <td>{{ registration.student.index_number }}</td>
+                                    <td>{{ registration.student.admision_number }}</td>
+                                    <td class="text-center">
+                                        <a href="#" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

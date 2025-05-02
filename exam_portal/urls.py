@@ -42,6 +42,7 @@ urlpatterns = [
     path('performance/current/', views.current_year_performance, name='current_year_performance'),
     path('school-ranking/', views.school_ranking , name="school_ranking"),
     path('academic_performance_report/', views.academic_performance_report , name="academic_performance_report"),
+    path('school_registration_report/', views.school_registration_report , name="school_registration_report"),
 
 
     path('papers/', views.paper_archive_list, name='paper-archive-list'),

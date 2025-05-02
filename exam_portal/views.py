@@ -2052,3 +2052,50 @@ def academic_performance_report(request):
         'report_date': timezone.now().strftime("%B %d, %Y"),
     }
     return render(request, 'reports/academic_performance.html', context)
+
+
+
+# views.py
+from django.shortcuts import render
+from django.db.models import Count
+from .models import ExamYear, School, ExamRegistration
+
+def school_registration_report(request):
+    # Get current exam year
+    current_year = ExamYear.objects.filter(is_current=True).first()
+    if not current_year:
+        current_year = ExamYear.objects.order_by('-year').first()
+
+    # Total students registered for current year
+    total_registered = ExamRegistration.objects.filter(
+        exam_year=current_year
+    ).count()
+
+    # Schools with registration counts
+    schools = School.objects.annotate(
+        registration_count=Count(
+            'students__registrations',
+            filter=models.Q(students__registrations__exam_year=current_year)
+        )
+    ).filter(registration_count__gt=0).order_by('-registration_count')
+
+    # Subject registration counts
+    subject_registrations = (
+        ExamRegistration.objects
+        .filter(exam_year=current_year)
+        .values(
+            'subjects__subject__name',
+            'subjects__subject__code'
+        )
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+
+    context = {
+        'current_year': current_year,
+        'total_registered': total_registered,
+        'schools': schools,
+        'subject_registrations': subject_registrations,
+        'report_date': timezone.now().strftime("%B %d, %Y"),
+    }
+    return render(request, 'reports/school_registration.html', context)

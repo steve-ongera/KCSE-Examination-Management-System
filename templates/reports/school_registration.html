@@ -1,0 +1,173 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="message-container" id="system-messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="pagetitle">
+    <h1><i class="bi bi-clipboard-data me-2"></i>School Registration Report</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item">Reports</li>
+            <li class="breadcrumb-item active">School Registrations</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-gray-600 text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="bi bi-calendar me-2"></i>KCSE {{ current_year.year }} Registration Summary
+                    </h5>
+                    <span class="badge bg-white text-gray-700 fw-bold">
+                        <i class="bi bi-clock me-1"></i>Generated: {{ report_date }}
+                    </span>
+                </div>
+                <div class="card-body bg-gray-50">
+                    <!-- Summary Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card border-gray-400 h-100">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted mb-2">Total Schools Registered</h6>
+                                    <h3 class="fw-bold text-gray-700">{{ schools|length }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-gray-400 h-100">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted mb-2">Total Students Registered</h6>
+                                    <h3 class="fw-bold text-gray-700">{{ total_registered }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-gray-400 h-100">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted mb-2">Subjects Offered</h6>
+                                    <h3 class="fw-bold text-gray-700">{{ subject_registrations|length }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- School Registration Table -->
+                    <div class="card mb-4 border-gray-400">
+                        <div class="card-header bg-gray-500 text-white">
+                            <h6 class="card-title mb-0 fw-bold">
+                                <i class="bi bi-building me-2"></i>Schools Registration Summary
+                            </h6>
+                        </div>
+                        <div class="card-body bg-white">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="bg-gray-500 text-white">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>School Name</th>
+                                            <th>KNEC Code</th>
+                                            <th class="text-end">Students Registered</th>
+                                            <th class="text-end">% of Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for school in schools %}
+                                        <tr>
+                                            <td class="fw-bold">{{ forloop.counter }}</td>
+                                            <td>{{ school.name }}</td>
+                                            <td>{{ school.knec_code }}</td>
+                                            <td class="text-end fw-bold">{{ school.registration_count }}</td>
+                                            <td class="text-end">
+                                                {{ school.registration_count|floatformat:2 }}%
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subject Registration Table -->
+                    <div class="card border-gray-400">
+                        <div class="card-header bg-gray-500 text-white">
+                            <h6 class="card-title mb-0 fw-bold">
+                                <i class="bi bi-book me-2"></i>Subject Registration Summary
+                            </h6>
+                        </div>
+                        <div class="card-body bg-white">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="bg-gray-500 text-white">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Subject Code</th>
+                                            <th>Subject Name</th>
+                                            <th class="text-end">Students Registered</th>
+                                            <th class="text-end">% of Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for subject in subject_registrations %}
+                                        <tr>
+                                            <td class="fw-bold">{{ forloop.counter }}</td>
+                                            <td>{{ subject.subjects__subject__code }}</td>
+                                            <td>{{ subject.subjects__subject__name }}</td>
+                                            <td class="text-end fw-bold">{{ subject.count }}</td>
+                                            <td class="text-end">
+                                                {{ subject.count|floatformat:2 }}%
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .bg-gray-50 { background-color: #f9fafb; }
+    .bg-gray-500 { background-color: #6b7280; }
+    .bg-gray-600 { background-color: #4b5563; }
+    .border-gray-400 { border-color: #9ca3af; }
+    .text-gray-700 { color: #374151; }
+    
+    .card {
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .table th {
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge {
+        font-weight: 700;
+        padding: 0.35em 0.65em;
+    }
+    
+    .fw-bold {
+        font-weight: 700 !important;
+    }
+</style>
+{% endblock %}

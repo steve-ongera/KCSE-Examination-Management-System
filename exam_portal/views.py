@@ -3283,3 +3283,319 @@ def get_grade_color(grade):
         'E': 'danger'
     }
     return grade_colors.get(grade, 'secondary')
+
+
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.core.paginator import Paginator
+from django.db.models import Avg, Sum, Count, Q
+from django.contrib.auth.decorators import login_required
+from .models import School, Student, ExamRegistration, ExamYear, ExamResult, SchoolAdminProfile
+
+@login_required
+def student_result_search(request):
+    # Verify user is a school admin and get their school
+    if not request.user.is_authenticated or request.user.user_type != 2:
+        return redirect('login')
+    
+    try:
+        admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
+        school = admin_profile.school
+    except SchoolAdminProfile.DoesNotExist:
+        return redirect('login')
+
+    # Get available exam years for filter dropdown
+    exam_years = ExamYear.objects.filter(
+        examregistration__student__school=school
+    ).distinct().order_by('-year')
+
+    # Get selected year from request (default to current year if available)
+    selected_year = request.GET.get('year')
+    if not selected_year:
+        current_year = ExamYear.objects.filter(is_current=True).first()
+        selected_year = current_year.year if current_year else (exam_years.first().year if exam_years.exists() else None)
+
+    # Initialize empty queryset for students
+    students = Student.objects.none()
+    
+    # Get search parameters
+    search_performed = False
+    search_query = request.GET.get('q', '')
+    class_filter = request.GET.get('class', '')
+    
+    if search_query or class_filter:
+        search_performed = True
+        # Base queryset for students in this school with exam results
+        students = Student.objects.filter(
+            school=school,
+            registrations__exam_year__year=selected_year
+        ).distinct()
+        
+        # Apply search query if provided
+        if search_query:
+            students = students.filter(
+                Q(first_name__icontains=search_query) | 
+                Q(last_name__icontains=search_query) | 
+                Q(index_number__icontains=search_query) |
+                Q(admision_number__icontains=search_query)
+            )
+        
+        # Apply class filter if provided
+        if class_filter:
+            students = students.filter(current_class=class_filter)
+            
+        # Annotate with performance data
+        students = students.annotate(
+            total_points=Sum('registrations__subjects__result__points'),
+            subject_count=Count('registrations__subjects__result', distinct=True)
+        ).filter(subject_count__gt=0)  # Only students with actual exam results
+
+        # Calculate mean points and letter grade for each student
+        for student in students:
+            if student.subject_count > 0:
+                student.mean_points = student.total_points / student.subject_count
+                student.letter_grade = calculate_letter_grade(student.mean_points)
+            else:
+                student.mean_points = 0
+                student.letter_grade = 'E'
+            student.grade_color = get_grade_color(student.letter_grade)
+
+        # Sort students by name by default
+        students = sorted(students, key=lambda x: (x.first_name, x.last_name))
+    
+    # Get unique classes for filter dropdown
+    class_options = Student.objects.filter(
+        school=school
+    ).values_list('current_class', flat=True).distinct().order_by('current_class')
+    
+    # Pagination
+    paginator = Paginator(students, 15)  # 15 students per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'school': school,
+        'exam_years': exam_years,
+        'selected_year': selected_year,
+        'students': page_obj,
+        'search_query': search_query,
+        'class_filter': class_filter,
+        'class_options': class_options,
+        'search_performed': search_performed,
+    }
+
+    return render(request, 'school_admin/student_result_search.html', context)
+
+def calculate_letter_grade(mean_points):
+    """Convert mean points to letter grade according to KCSE system"""
+    if mean_points >= 11.5: return 'A'
+    elif mean_points >= 10.5: return 'A-'
+    elif mean_points >= 9.5: return 'B+'
+    elif mean_points >= 8.5: return 'B'
+    elif mean_points >= 7.5: return 'B-'
+    elif mean_points >= 6.5: return 'C+'
+    elif mean_points >= 5.5: return 'C'
+    elif mean_points >= 4.5: return 'C-'
+    elif mean_points >= 3.5: return 'D+'
+    elif mean_points >= 2.5: return 'D'
+    elif mean_points >= 1.5: return 'D-'
+    else: return 'E'
+
+def get_grade_color(grade):
+    """Get appropriate color class for each grade"""
+    grade_colors = {
+        'A': 'success',
+        'A-': 'success',
+        'B+': 'info',
+        'B': 'info',
+        'B-': 'info',
+        'C+': 'primary',
+        'C': 'primary',
+        'C-': 'primary',
+        'D+': 'warning',
+        'D': 'warning',
+        'D-': 'warning',
+        'E': 'danger'
+    }
+    return grade_colors.get(grade, 'secondary')
+
+
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.db.models import Avg, Sum, Count
+from django.contrib.auth.decorators import login_required
+from .models import School, Student, ExamRegistration, ExamYear, ExamResult, SchoolAdminProfile, Subject
+
+@login_required
+def student_result_detail(request, student_id):
+    # Verify user is a school admin and get their school
+    if not request.user.is_authenticated or request.user.user_type != 2:
+        return redirect('login')
+    
+    try:
+        admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
+        school = admin_profile.school
+    except SchoolAdminProfile.DoesNotExist:
+        return redirect('login')
+
+    # Get student and verify they belong to this school
+    student = get_object_or_404(Student, id=student_id, school=school)
+    
+    # Get selected exam year
+    selected_year = request.GET.get('year')
+    if not selected_year:
+        current_year = ExamYear.objects.filter(is_current=True).first()
+        selected_year = current_year.year if current_year else None
+    
+    if not selected_year:
+        # Handle case where no exam year is available
+        return render(request, 'school_admin/student_result_detail.html', {
+            'student': student,
+            'has_results': False,
+            'message': 'No exam results are available for this student.'
+        })
+    
+    # Get exam registration for the selected year
+    registration = ExamRegistration.objects.filter(
+        student=student,
+        exam_year__year=selected_year
+    ).first()
+    
+    if not registration:
+        # Handle case where student wasn't registered for selected year
+        return render(request, 'school_admin/student_result_detail.html', {
+            'student': student,
+            'selected_year': selected_year,
+            'has_results': False,
+            'message': f'Student was not registered for exams in {selected_year}.'
+        })
+    
+    # Get subject results
+    subject_results = registration.subjects.all().select_related('subject', 'result')
+    
+    # Calculate stats
+    total_points = 0
+    subject_count = 0
+    
+    for subject_reg in subject_results:
+        if hasattr(subject_reg, 'result') and subject_reg.result:
+            total_points += subject_reg.result.points
+            subject_count += 1
+    
+    # Calculate mean points and grade
+    mean_points = total_points / subject_count if subject_count > 0 else 0
+    letter_grade = calculate_letter_grade(mean_points)
+    grade_color = get_grade_color(letter_grade)
+    
+    # Format subject results for display
+    formatted_results = []
+    for subject_reg in subject_results:
+        if hasattr(subject_reg, 'result') and subject_reg.result:
+            formatted_results.append({
+                'subject': subject_reg.subject.name,
+                'marks': subject_reg.result.marks,
+                'points': subject_reg.result.points,
+                'grade': subject_reg.result.grade,
+                'grade_color': get_grade_color(subject_reg.result.grade)
+            })
+    
+    # Sort subjects by name
+    formatted_results = sorted(formatted_results, key=lambda x: x['subject'])
+    
+    # Get available exam years for this student
+    available_years = ExamYear.objects.filter(
+        examregistration__student=student
+    ).order_by('-year')
+    
+    # Get student rank in class
+    students_in_class = Student.objects.filter(
+        school=school,
+        current_class=student.current_class,
+        registrations__exam_year__year=selected_year
+    ).distinct()
+    
+    class_results = []
+    for s in students_in_class:
+        # Get total points and subject count
+        registrations = ExamRegistration.objects.filter(
+            student=s,
+            exam_year__year=selected_year
+        )
+        
+        s_total_points = 0
+        s_subject_count = 0
+        
+        for reg in registrations:
+            subject_registrations = reg.subjects.all()
+            for subject_reg in subject_registrations:
+                if hasattr(subject_reg, 'result') and subject_reg.result:
+                    s_total_points += subject_reg.result.points
+                    s_subject_count += 1
+        
+        if s_subject_count > 0:
+            s_mean_points = s_total_points / s_subject_count
+            class_results.append((s.id, s_mean_points))
+    
+    # Sort by mean points (descending)
+    class_results.sort(key=lambda x: x[1], reverse=True)
+    
+    # Find student's position
+    position = 1
+    for i, (s_id, _) in enumerate(class_results):
+        if s_id == student.id:
+            position = i + 1
+            break
+    
+    total_students = len(class_results)
+    
+    context = {
+        'student': student,
+        'selected_year': selected_year,
+        'has_results': True,
+        'subject_results': formatted_results,
+        'total_points': total_points,
+        'subject_count': subject_count,
+        'mean_points': mean_points,
+        'letter_grade': letter_grade,
+        'grade_color': grade_color,
+        'available_years': available_years,
+        'class_position': position,
+        'total_students': total_students,
+    }
+    
+    return render(request, 'school_admin/student_result_detail.html', context)
+
+def calculate_letter_grade(mean_points):
+    """Convert mean points to letter grade according to KCSE system"""
+    if mean_points >= 11.5: return 'A'
+    elif mean_points >= 10.5: return 'A-'
+    elif mean_points >= 9.5: return 'B+'
+    elif mean_points >= 8.5: return 'B'
+    elif mean_points >= 7.5: return 'B-'
+    elif mean_points >= 6.5: return 'C+'
+    elif mean_points >= 5.5: return 'C'
+    elif mean_points >= 4.5: return 'C-'
+    elif mean_points >= 3.5: return 'D+'
+    elif mean_points >= 2.5: return 'D'
+    elif mean_points >= 1.5: return 'D-'
+    else: return 'E'
+
+def get_grade_color(grade):
+    """Get appropriate color class for each grade"""
+    grade_colors = {
+        'A': 'success',
+        'A-': 'success',
+        'B+': 'info',
+        'B': 'info',
+        'B-': 'info',
+        'C+': 'primary',
+        'C': 'primary',
+        'C-': 'primary',
+        'D+': 'warning',
+        'D': 'warning',
+        'D-': 'warning',
+        'E': 'danger'
+    }
+    return grade_colors.get(grade, 'secondary')

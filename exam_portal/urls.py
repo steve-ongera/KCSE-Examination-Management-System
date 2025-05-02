@@ -21,6 +21,8 @@ urlpatterns = [
      #school 
      path('school_performance_analysis/', views.school_performance_analysis, name='school_performance_analysis'),
      path('school-performance/', views.school_exam_performance, name='school-exam-performance'),
+     path('student-result-search/', views.student_result_search, name='student_result_search'),
+    path('student-result-detail/<int:student_id>/', views.student_result_detail, name='student_result_detail'),
 
 
     #admin/ student crud opertaions 

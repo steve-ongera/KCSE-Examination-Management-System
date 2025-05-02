@@ -1,0 +1,72 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="pagetitle">
+    <h1><i class="bi bi-person-badge me-2"></i>Student Result Details</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'student_result_search' %}">Results Search</a></li>
+            <li class="breadcrumb-item active">Student Details</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section profile">
+    <div class="row">
+        <!-- Student Profile Column -->
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body profile-card pt-4 d-flex flex-column align-items-center">
+                    <div class="profile-img-container mb-3" style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; background-color: #f1f3f5; display: flex; justify-content: center; align-items: center;">
+                        {% if student.photo %}
+                            <img src="{{ student.photo.url }}" alt="Profile" class="img-fluid">
+                        {% else %}
+                            <i class="bi bi-person" style="font-size: 4rem; color: #adb5bd;"></i>
+                        {% endif %}
+                    </div>
+                    <h2 class="mb-1">{{ student.first_name }} {{ student.last_name }}</h2>
+                    <p class="text-muted mb-2">{{ student.current_class }}</p>
+                    
+                    {% if has_results %}
+                    <div class="border rounded-pill px-3 py-1 mb-3 text-center">
+                        <span class="badge bg-{{ grade_color }} rounded-pill px-3 py-2 fs-6">{{ letter_grade }}</span>
+                        <span class="ms-2 fs-6">{{ mean_points|floatformat:2 }} points</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex mt-2">
+                        <a href="#" class="btn btn-sm btn-outline-primary me-2">
+                            <i class="bi bi-printer me-1"></i> Print Report
+                        </a>
+                        <a href="{% url 'student_result_search' %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Back to Search
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body border-top">
+                    <h5 class="card-title">Student Information</h5>
+                    <div class="row">
+                        <div class="col-lg-5 col-md-4 label">Full Name</div>
+                        <div class="col-lg-7 col-md-8">{{ student.first_name }} {{ student.last_name }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-5 col-md-4 label">Index No.</div>
+                        <div class="col-lg-7 col-md-8">{{ student.index_number }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-5 col-md-4 label">Admission No.</div>
+                        <div class="col-lg-7 col-md-8">{{ student.admission_number }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-5 col-md-4 label">Class</div>
+                        <div class="col-lg-7 col-md-8">{{ student.current_class }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-5 col-md-4 label">Gender</div>
+                        <div class="col-lg-7 col-md-8">{{ student.gender }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-5 col-md-4 label">Date of Birth</div>
+                        <div class="col-lg-7 col-md-8">{{ student.date_of_birth|date:"d M Y" }}</div>

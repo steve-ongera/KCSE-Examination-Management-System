@@ -87,17 +87,34 @@
                         <div class="invalid-feedback">Please provide a valid email.</div>
                     </div>
                 
+                    <!-- Password -->
                     <div class="col-md-6">
-                        <label for="password1" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password1" name="password1" required>
-                        <div class="invalid-feedback">Please provide a password.</div>
+                      <label for="password1" class="form-label">Password</label>
+                      <div style="position: relative;">
+                        <input type="password" class="form-control" id="password1" name="password1" required
+                              style="padding-right: 40px;">
+                        <i class="bi bi-eye-slash toggle-password"
+                          data-target="password1"
+                          style="position: absolute; top: 50%; right: 15px; transform: translateY(-50%);
+                                  cursor: pointer; color: #6c757d;"></i>
+                      </div>
+                      <div class="invalid-feedback">Please provide a password.</div>
                     </div>
-                
+
+                    <!-- Confirm Password -->
                     <div class="col-md-6">
-                        <label for="password2" class="form-label">Confirm Password</label>
-                        <input type="password" class="form-control" id="password2" name="password2" required>
-                        <div class="invalid-feedback">Please confirm your password.</div>
+                      <label for="password2" class="form-label">Confirm Password</label>
+                      <div style="position: relative;">
+                        <input type="password" class="form-control" id="password2" name="password2" required
+                              style="padding-right: 40px;">
+                        <i class="bi bi-eye-slash toggle-password"
+                          data-target="password2"
+                          style="position: absolute; top: 50%; right: 15px; transform: translateY(-50%);
+                                  cursor: pointer; color: #6c757d;"></i>
+                      </div>
+                      <div class="invalid-feedback">Please confirm your password.</div>
                     </div>
+
                 
                     <div class="col-12">
                         <div class="form-check">
@@ -170,15 +187,34 @@
                   <input type="email" class="form-control" id="student_email" name="email">
                 </div>
 
+                <!-- Password -->
                 <div class="col-md-6">
                   <label for="student_password1" class="form-label">Password</label>
-                  <input type="password" class="form-control" id="student_password1" name="password1" required>
+                  <div style="position: relative;">
+                    <input type="password" class="form-control" id="student_password1" name="password1" required
+                          style="padding-right: 40px;">
+                    <i class="bi bi-eye-slash toggle-password"
+                      data-target="student_password1"
+                      style="position: absolute; top: 50%; right: 15px; transform: translateY(-50%);
+                              cursor: pointer; color: #6c757d;"></i>
+                  </div>
                 </div>
 
+                <!-- Confirm Password -->
                 <div class="col-md-6">
                   <label for="student_password2" class="form-label">Confirm Password</label>
-                  <input type="password" class="form-control" id="student_password2" name="password2" required>
+                  <div style="position: relative;">
+                    <input type="password" class="form-control" id="student_password2" name="password2" required
+                          style="padding-right: 40px;">
+                    <i class="bi bi-eye-slash toggle-password"
+                      data-target="student_password2"
+                      style="position: absolute; top: 50%; right: 15px; transform: translateY(-50%);
+                              cursor: pointer; color: #6c757d;"></i>
+                  </div>
                 </div>
+
+
+
 
                 <div class="col-12">
                   <div class="form-check">

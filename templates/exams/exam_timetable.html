@@ -1,0 +1,117 @@
+{% extends 'base/base.html' %}
+{% load exam_filter%}
+{% load static %}
+
+{% block content %}
+<div class="pagetitle">
+    <h1>Exam Timetable - {{ timetable.title }}</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+            <li class="breadcrumb-item active">Exam Timetable</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">{{ timetable.exam_year }} Examination Schedule</h5>
+                    {% if timetable.description %}
+                    <p class="card-text">{{ timetable.description }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered timetable-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 15%">Time</th>
+                                    {% for day in days %}
+                                    <th>{{ day }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for time_slot in time_slots %}
+                                <tr>
+                                    <td class="time-column">
+                                        {{ time_slot|time:"H:i" }}
+                                    </td>
+                                    {% for day in days %}
+                                    <td class="{% if timetable_data|get_item:day|get_item:time_slot %}exam-slot{% endif %}">
+                                        {% with session=timetable_data|get_item:day|get_item:time_slot %}
+                                        {% if session %}
+                                            {% ifchanged session %}
+                                            <div class="exam-session">
+                                                <strong>{{ session.subject.name }}</strong><br>
+                                                <small>{{ session.paper_code }}</small><br>
+                                                <small>{{ session.start_time|time:"H:i" }} - {{ session.end_time|time:"H:i" }}</small>
+                                                {% if session.instructions %}
+                                                <div class="exam-instructions">
+                                                    <small class="text-muted">{{ session.instructions }}</small>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            {% endifchanged %}
+                                        {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card-footer text-muted">
+                    <small>
+                        Published on {{ timetable.published_date|date:"Y-m-d" }}
+                        {% if timetable.published_by %}
+                        by {{ timetable.published_by.get_full_name }}
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .timetable-table {
+        table-layout: fixed;
+    }
+    
+    .timetable-table th {
+        text-align: center;
+    }
+    
+    .time-column {
+        font-weight: bold;
+        text-align: right;
+        padding-right: 1rem;
+    }
+    
+    .exam-slot {
+        background-color: #f8f9fa;
+        vertical-align: top;
+    }
+    
+    .exam-session {
+        padding: 0.5rem;
+        border-radius: 4px;
+        background-color: #e9ecef;
+        margin: -0.5rem;
+    }
+    
+    .exam-instructions {
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px dashed #dee2e6;
+    }
+</style>
+{% endblock %}

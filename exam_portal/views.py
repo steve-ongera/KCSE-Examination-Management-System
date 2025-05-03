@@ -3661,3 +3661,75 @@ def get_grade_color(grade):
         'E': 'danger'
     }
     return grade_colors.get(grade, 'secondary')
+
+
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import ExamTimetable, ExamSession
+from datetime import date, timedelta
+
+@login_required
+def exam_timetable_view(request, timetable_id=None):
+    # Get the most recent published timetable if none specified
+    if timetable_id is None:
+        timetable = ExamTimetable.objects.filter(is_published=True).order_by('-exam_year__year').first()
+        if not timetable:
+            return render(request, 'exams/no_timetable.html')
+    else:
+        timetable = get_object_or_404(ExamTimetable, pk=timetable_id, is_published=True)
+    
+    # Get all sessions for this timetable
+    sessions = ExamSession.objects.filter(timetable=timetable).order_by('date', 'start_time')
+    
+    # Organize by day and time
+    timetable_data = {
+        'Monday': {},
+        'Tuesday': {},
+        'Wednesday': {},
+        'Thursday': {},
+        'Friday': {}
+    }
+    
+    # Create time slots (assuming exams are between 8am and 4pm)
+    time_slots = []
+    current_time = timedelta(hours=8)  # 8:00 AM
+    end_time = timedelta(hours=16)     # 4:00 PM
+    
+    while current_time < end_time:
+        time_slots.append(current_time)
+        current_time += timedelta(minutes=30)  # Half-hour intervals
+    
+    # Initialize empty timetable structure
+    for day in timetable_data:
+        timetable_data[day] = {time: None for time in time_slots}
+    
+    # Populate with actual exam sessions
+    for session in sessions:
+        session_day = session.date.strftime('%A')
+        if session_day in timetable_data:
+            start_time = timedelta(
+                hours=session.start_time.hour,
+                minutes=session.start_time.minute
+            )
+            end_time = timedelta(
+                hours=session.end_time.hour,
+                minutes=session.end_time.minute
+            )
+            
+            # Mark all time slots covered by this exam
+            current_slot = start_time
+            while current_slot < end_time:
+                if current_slot in timetable_data[session_day]:
+                    # Only set if not already set (to handle overlapping exams)
+                    if timetable_data[session_day][current_slot] is None:
+                        timetable_data[session_day][current_slot] = session
+                current_slot += timedelta(minutes=30)
+    
+    context = {
+        'timetable': timetable,
+        'timetable_data': timetable_data,
+        'time_slots': time_slots,
+        'days': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+    }
+    
+    return render(request, 'exams/exam_timetable.html', context)

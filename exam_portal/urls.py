@@ -89,6 +89,7 @@ urlpatterns = [
 
 
     path('school-admin-profile/', views.school_admin_profile, name='school_admin_profile'),
+    path('exam_timetable_view/' , views.exam_timetable_view , name='exam_timetable_view'),
 
 
     path('knec_profile/', views.knec_profile, name='knec_profile'),

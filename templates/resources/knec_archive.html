@@ -1,0 +1,323 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+<div class="pagetitle">
+    <h1>KNEC Historical Archive</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+            <li class="breadcrumb-item active">Historical Archive</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="bi bi-archive me-2"></i>
+                        National Examination Records (1969-Present)
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Search and Filter Section -->
+                    <div class="archive-search mb-5">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" placeholder="Search archives...">
+                                    <button class="btn btn-primary" type="button">Search</button>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group">
+                                    <label class="input-group-text bg-light">Filter By</label>
+                                    <select class="form-select">
+                                        <option selected>All Years</option>
+                                        <option>Last 5 Years</option>
+                                        <option>2010-2019</option>
+                                        <option>2000-2009</option>
+                                        <option>1990-1999</option>
+                                        <option>1980-1989</option>
+                                        <option>1970-1979</option>
+                                    </select>
+                                    <select class="form-select">
+                                        <option selected>All Exams</option>
+                                        <option>KCSE</option>
+                                        <option>KCPE</option>
+                                        <option>KASNEB</option>
+                                        <option>DTE</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Main Archive Content -->
+                    <div class="archive-content">
+                        <!-- By Decade Section -->
+                        <div class="decade-section mb-5">
+                            <h4 class="archive-section-title mb-4">
+                                <i class="bi bi-calendar-range me-2"></i>
+                                Browse by Decade
+                            </h4>
+                            
+                            <div class="row">
+                                {% for decade in "2020s,2010s,2000s,1990s,1980s,1970s"|split:"," %}
+                                <div class="col-md-4 col-lg-2 mb-3">
+                                    <div class="decade-card card text-center h-100">
+                                        <div class="card-body">
+                                            <div class="decade-icon mb-3">
+                                                <i class="bi bi-folder-symlink fs-1 text-primary"></i>
+                                            </div>
+                                            <h5 class="card-title">{{ decade }}</h5>
+                                            <p class="card-text small text-muted">
+                                                {% if decade == "2020s" %}
+                                                2020-Present
+                                                {% else %}
+                                                {{ decade|slice:":4" }} - {{ decade|slice:":3" }}9
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <a href="#" class="btn btn-sm btn-outline-primary w-100">
+                                                Explore
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Additions -->
+                        <div class="recent-additions mb-5">
+                            <h4 class="archive-section-title mb-4">
+                                <i class="bi bi-clock-history me-2"></i>
+                                Recently Digitized Collections
+                            </h4>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Year</th>
+                                            <th>Examination</th>
+                                            <th>Collection Title</th>
+                                            <th>Documents</th>
+                                            <th>Added</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>2022</td>
+                                            <td>KCSE</td>
+                                            <td>National Examination Results Analysis</td>
+                                            <td>
+                                                <span class="badge bg-primary">Reports</span>
+                                                <span class="badge bg-success">Statistics</span>
+                                            </td>
+                                            <td>2 weeks ago</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>2015</td>
+                                            <td>KCPE</td>
+                                            <td>10-Year Performance Trends</td>
+                                            <td>
+                                                <span class="badge bg-info">Charts</span>
+                                                <span class="badge bg-secondary">Data</span>
+                                            </td>
+                                            <td>1 month ago</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>1998</td>
+                                            <td>KCSE</td>
+                                            <td>Original Examination Papers</td>
+                                            <td>
+                                                <span class="badge bg-warning text-dark">Papers</span>
+                                                <span class="badge bg-danger">Marking Schemes</span>
+                                            </td>
+                                            <td>3 months ago</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Special Collections -->
+                        <div class="special-collections">
+                            <h4 class="archive-section-title mb-4">
+                                <i class="bi bi-star-fill me-2 text-warning"></i>
+                                Special Collections
+                            </h4>
+                            
+                            <div class="row">
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card border-warning h-100">
+                                        <div class="card-header bg-warning bg-opacity-10 d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">Historical Examination Evolution</h5>
+                                            <span class="badge bg-warning text-dark">1970-2023</span>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="card-text">Complete documentation of examination system changes from KAPE to current CBC assessments.</p>
+                                            <ul class="list-unstyled small">
+                                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Policy documents</li>
+                                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Curriculum changes</li>
+                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> Grading system evolution</li>
+                                            </ul>
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <div class="d-flex justify-content-between">
+                                                <a href="#" class="btn btn-sm btn-outline-warning">
+                                                    <i class="bi bi-collection"></i> Browse
+                                                </a>
+                                                <a href="#" class="btn btn-sm btn-warning">
+                                                    <i class="bi bi-download"></i> Download
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card border-info h-100">
+                                        <div class="card-header bg-info bg-opacity-10 d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">Examiners' Reports Archive</h5>
+                                            <span class="badge bg-info text-dark">1985-2023</span>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="card-text">Annual examiners' reports detailing candidate performance and common errors.</p>
+                                            <ul class="list-unstyled small">
+                                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Subject-specific analysis</li>
+                                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Performance trends</li>
+                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> Improvement recommendations</li>
+                                            </ul>
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <div class="d-flex justify-content-between">
+                                                <a href="#" class="btn btn-sm btn-outline-info">
+                                                    <i class="bi bi-collection"></i> Browse
+                                                </a>
+                                                <a href="#" class="btn btn-sm btn-info text-white">
+                                                    <i class="bi bi-download"></i> Download
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card border-danger h-100">
+                                        <div class="card-header bg-danger bg-opacity-10 d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">Rare Examination Materials</h5>
+                                            <span class="badge bg-danger">1969-1990</span>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="card-text">Digitized copies of original examination materials from KNEC's early years.</p>
+                                            <ul class="list-unstyled small">
+                                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> KAPE papers</li>
+                                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Historical certificates</li>
+                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> Early assessment tools</li>
+                                            </ul>
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <div class="d-flex justify-content-between">
+                                                <a href="#" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-collection"></i> Browse
+                                                </a>
+                                                <a href="#" class="btn btn-sm btn-danger">
+                                                    <i class="bi bi-download"></i> Download
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-light">
+                    <div class="row">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                                <small>All archive materials are official KNEC records</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center justify-content-md-end">
+                                <i class="bi bi-shield-lock-fill text-success me-2"></i>
+                                <small>For research and educational purposes only</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .archive-section-title {
+        border-bottom: 2px solid #dee2e6;
+        padding-bottom: 0.5rem;
+    }
+    
+    .decade-card {
+        transition: all 0.3s ease;
+    }
+    
+    .decade-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    }
+    
+    .decade-icon {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(13, 110, 253, 0.1);
+        border-radius: 50%;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    @media (max-width: 768px) {
+        .decade-card {
+            margin-bottom: 1rem;
+        }
+        
+        .table-responsive {
+            font-size: 0.85rem;
+        }
+    }
+</style>
+{% endblock %}

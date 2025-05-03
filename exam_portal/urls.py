@@ -90,6 +90,9 @@ urlpatterns = [
 
     path('school-admin-profile/', views.school_admin_profile, name='school_admin_profile'),
     path('exam_timetable_view/' , views.exam_timetable_view , name='exam_timetable_view'),
+    path('subject_list_view/' , views.subject_list_view , name='subject_list_view'),
+    path('kenyan_curriculum_view/' , views.kenyan_curriculum_view , name="kenyan_curriculum_view"),
+    path('announcements/', views.knec_announcements, name='knec_announcements'),
 
 
     path('knec_profile/', views.knec_profile, name='knec_profile'),
@@ -105,8 +108,10 @@ urlpatterns = [
 
     # Dashboard
     path('resources_dashboard', views.resources_dashboard, name='resources_dashboard'),
+    path('archive/', views.knec_archive, name='knec_archive'),
     
     # Resource list and detail
+    path('public-resources/', views.knec_resources, name='knec_resources'),
     path('resources/', views.resource_list, name='resource_list'),
     path('resources/<int:pk>/', views.resource_detail, name='resource_detail'),
     path('exam_dashboard', views.exam_dashboard , name='exam-dashboard'),

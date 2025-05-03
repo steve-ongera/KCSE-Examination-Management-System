@@ -1,0 +1,131 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+<div class="pagetitle">
+    <h1>Kenyan National Curriculum</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+            <li class="breadcrumb-item active">Curriculum</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Compulsory and Basic Subjects</h5>
+                    <p class="card-text">Official curriculum as prescribed by the Kenya Institute of Curriculum Development (KICD)</p>
+                    
+                    {% for category, data in curriculum.items %}
+                    <div class="curriculum-category mb-5">
+                        <div class="category-header mb-3">
+                            <h4>{{ data.title }}</h4>
+                            <p class="text-muted">{{ data.description }}</p>
+                            <hr>
+                        </div>
+                        
+                        <div class="row">
+                            {% for subject in data.subjects %}
+                            <div class="col-xl-3 col-lg-4 col-md-6">
+                                <div class="subject-card card mb-4">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h5 class="card-title mb-1">{{ subject.name }}</h5>
+                                                <h6 class="card-subtitle mb-2 text-muted">Code: {{ subject.code }}</h6>
+                                            </div>
+                                            <span class="badge bg-{% if subject.category == 'Science' %}info{% elif subject.category == 'Language' %}primary{% else %}secondary{% endif %}">
+                                                {{ subject.category }}
+                                            </span>
+                                        </div>
+                                        <p class="card-text mt-2">{{ subject.description }}</p>
+                                        <div class="subject-meta d-flex justify-content-between">
+                                            <small class="text-muted">KCSE Subject</small>
+                                            <small class="text-muted">Group {{ forloop.parentloop.counter }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="card-footer">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Curriculum Notes:</h6>
+                            <ul class="small">
+                                <li>All students must take the 3 compulsory subjects</li>
+                                <li>Students select additional subjects based on their career path</li>
+                                <li>Minimum subject load is 7 subjects</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Grading System:</h6>
+                            <ul class="small">
+                                <li>A (80-100%) - Excellent</li>
+                                <li>A- (75-79%) - Very Good</li>
+                                <li>B+ (70-74%) - Good</li>
+                                <li>B (65-69%) - Above Average</li>
+                                <li>B- (60-64%) - Average</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .curriculum-category {
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+    }
+    
+    .category-header {
+        border-left: 4px solid #3b7ddd;
+        padding-left: 1rem;
+    }
+    
+    .subject-card {
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .subject-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .card-title {
+        color: #2c3e50;
+    }
+    
+    .card-subtitle {
+        font-size: 0.85rem;
+    }
+    
+    .subject-meta {
+        border-top: 1px dashed #dee2e6;
+        padding-top: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .curriculum-category {
+            padding: 1rem;
+        }
+        
+        .col-xl-3, .col-lg-4, .col-md-6 {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+<div class="pagetitle">
+    <h1>KNEC Official Announcements</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+            <li class="breadcrumb-item active">Announcements</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="bi bi-megaphone me-2"></i>
+                        Latest Updates from Kenya National Examinations Council
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Announcement 1 -->
+                    <div class="announcement-card card mb-4 border-primary">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="card-title mb-0">2023 KCSE Examination Results Release</h4>
+                                <small class="text-muted">Results • December 18, 2023</small>
+                            </div>
+                            <span class="badge bg-danger">High Priority</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Official release of Kenya Certificate of Secondary Education results.</p>
+                            
+                            <div class="announcement-content">
+                                <p>The Kenya National Examinations Council is pleased to announce the release of the 2023 KCSE examination results.</p>
+                                
+                                <p><strong>Key Dates:</strong></p>
+                                <ul>
+                                    <li>Results available online: December 20, 2023</li>
+                                    <li>School result slips collection: December 21-22, 2023</li>
+                                    <li>Appeals window: December 20 - January 10, 2024</li>
+                                </ul>
+                                
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    All candidates can access their results through the KNEC portal using their index numbers.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light">
+                            <small>Posted by: KNEC Public Relations Office</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Announcement 2 -->
+                    <div class="announcement-card card mb-4 border-warning">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="card-title mb-0">2024 KCPE Registration Deadline Extension</h4>
+                                <small class="text-muted">Registration • December 15, 2023</small>
+                            </div>
+                            <span class="badge bg-warning text-dark">Medium Priority</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Extended deadline for KCPE candidate registration.</p>
+                            
+                            <div class="announcement-content">
+                                <p>KNEC has extended the registration deadline for the 2024 KCPE examinations by two weeks.</p>
+                                <p class="fw-bold">New deadline: March 15, 2024</p>
+                                
+                                <p>All headteachers are advised to ensure:</p>
+                                <ol>
+                                    <li>Complete registration of all candidates</li>
+                                    <li>Verification of candidate details</li>
+                                    <li>Payment of all examination fees</li>
+                                </ol>
+                                
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    Late registration will attract additional charges.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light">
+                            <small>Posted by: KNEC Registration Department</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Archive Section -->
+                    <div class="card mt-5">
+                        <div class="card-header bg-light">
+                            <h4 class="card-title mb-0">
+                                <i class="bi bi-archive me-2"></i>
+                                Archived Announcements
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <a href="#" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">New Examination Security Measures</h6>
+                                        <small class="text-muted">December 10, 2023</small>
+                                    </div>
+                                    <small class="text-muted">Policy • Medium Priority</small>
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">Examiners Recruitment Notice</h6>
+                                        <small class="text-muted">December 5, 2023</small>
+                                    </div>
+                                    <small class="text-muted">Recruitment • Low Priority</small>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer text-center">
+                    <nav aria-label="Announcements navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Previous</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .announcement-card {
+        transition: transform 0.2s;
+    }
+    
+    .announcement-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    }
+    
+    .announcement-content {
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+        margin-top: 1rem;
+    }
+    
+    .card-header.bg-primary {
+        border-bottom: none;
+    }
+    
+    .badge {
+        font-size: 0.8rem;
+        font-weight: 500;
+        padding: 0.35em 0.65em;
+    }
+    
+    @media (max-width: 768px) {
+        .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .badge {
+            margin-top: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}

@@ -3733,3 +3733,85 @@ def exam_timetable_view(request, timetable_id=None):
     }
     
     return render(request, 'exams/exam_timetable.html', context)
+
+
+
+def subject_list_view(request):
+    subjects = Subject.objects.filter(is_active=True).order_by('name')
+    return render(request, 'exams/subject_list.html', {'subjects': subjects})
+
+
+
+
+from django.shortcuts import render
+
+def kenyan_curriculum_view(request):
+    curriculum = {
+        'compulsory': {
+            'title': 'Core Compulsory Subjects',
+            'description': 'Mandatory subjects for all students in Kenyan secondary schools',
+            'subjects': [
+                {'name': 'English', 'code': '101', 'category': 'Language', 
+                 'description': 'Official language of instruction and communication'},
+                {'name': 'Kiswahili', 'code': '102', 'category': 'Language', 
+                 'description': 'National language and East African lingua franca'},
+                {'name': 'Mathematics', 'code': '121', 'category': 'Science', 
+                 'description': 'Fundamental mathematical concepts and applications'},
+            ]
+        },
+        'sciences': {
+            'title': 'Basic Sciences',
+            'description': 'Fundamental science subjects for STEM education',
+            'subjects': [
+                {'name': 'Biology', 'code': '231', 'category': 'Science', 
+                 'description': 'Study of living organisms and life processes'},
+                {'name': 'Physics', 'code': '232', 'category': 'Science', 
+                 'description': 'Fundamental principles of matter and energy'},
+                {'name': 'Chemistry', 'code': '233', 'category': 'Science', 
+                 'description': 'Composition, structure, and properties of substances'},
+            ]
+        },
+        'humanities': {
+            'title': 'Humanities and Social Sciences',
+            'description': 'Subjects focusing on human society and relationships',
+            'subjects': [
+                {'name': 'History and Government', 'code': '311', 'category': 'Humanities', 
+                 'description': 'Kenyan and world history with governance systems'},
+                {'name': 'Geography', 'code': '312', 'category': 'Humanities', 
+                 'description': 'Physical and human geography with environmental studies'},
+                {'name': 'CRE/IRE/HRE', 'code': '313', 'category': 'Humanities', 
+                 'description': 'Religious education (Christian, Islamic, or Hindu)'},
+            ]
+        },
+        'technicals': {
+            'title': 'Technical and Applied Subjects',
+            'description': 'Practical and vocational-oriented subjects',
+            'subjects': [
+                {'name': 'Business Studies', 'code': '565', 'category': 'Applied', 
+                 'description': 'Fundamentals of business and entrepreneurship'},
+                {'name': 'Agriculture', 'code': '443', 'category': 'Applied', 
+                 'description': 'Agricultural science and food production'},
+                {'name': 'Computer Studies', 'code': '451', 'category': 'Applied', 
+                 'description': 'ICT fundamentals and digital literacy'},
+            ]
+        }
+    }
+    return render(request, 'exams/kenyan_curriculum.html', {'curriculum': curriculum})
+
+
+from django.shortcuts import render
+from datetime import datetime, timedelta
+
+def knec_announcements(request):
+    
+    return render(request, 'exams/knec_announcements.html')
+
+
+def knec_resources(request):
+    return render(request, 'resources/knec_resources.html')
+
+from django.shortcuts import render
+from datetime import datetime
+
+def knec_archive(request):
+    return render(request, 'resources/knec_archive.html')

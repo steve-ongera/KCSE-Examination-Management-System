@@ -1,6 +1,5 @@
 {% extends 'base/base.html' %}
-{% load exam_filter%}
-{% load static %}
+{% load exam_filter %}
 
 {% block content %}
 <div class="pagetitle">
@@ -29,19 +28,19 @@
                         <table class="table table-bordered timetable-table">
                             <thead class="table-dark">
                                 <tr>
-                                    <th style="width: 15%">Time</th>
-                                    {% for day in days %}
-                                    <th>{{ day }}</th>
+                                    <th style="width: 15%">Day</th>
+                                    {% for time_slot in time_slots %}
+                                    <th>{{ time_slot|timedelta_time }}</th>
                                     {% endfor %}
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for time_slot in time_slots %}
+                                {% for day in days %}
                                 <tr>
-                                    <td class="time-column">
-                                        {{ time_slot|time:"H:i" }}
+                                    <td class="day-column">
+                                        <strong>{{ day }}</strong>
                                     </td>
-                                    {% for day in days %}
+                                    {% for time_slot in time_slots %}
                                     <td class="{% if timetable_data|get_item:day|get_item:time_slot %}exam-slot{% endif %}">
                                         {% with session=timetable_data|get_item:day|get_item:time_slot %}
                                         {% if session %}
@@ -84,21 +83,32 @@
 <style>
     .timetable-table {
         table-layout: fixed;
+        width: auto;
     }
     
     .timetable-table th {
         text-align: center;
+        position: sticky;
+        top: 0;
+        background: #343a40;
+        color: white;
+        z-index: 10;
     }
     
-    .time-column {
+    .day-column {
         font-weight: bold;
-        text-align: right;
+        text-align: left;
         padding-right: 1rem;
+        position: sticky;
+        left: 0;
+        background: white;
+        z-index: 5;
     }
     
     .exam-slot {
         background-color: #f8f9fa;
         vertical-align: top;
+        min-width: 120px;
     }
     
     .exam-session {
@@ -106,12 +116,33 @@
         border-radius: 4px;
         background-color: #e9ecef;
         margin: -0.5rem;
+        height: 100%;
     }
     
     .exam-instructions {
         margin-top: 0.5rem;
         padding-top: 0.5rem;
         border-top: 1px dashed #dee2e6;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+        max-height: 80vh;
+        display: block;
+    }
+    
+    /* For better mobile viewing */
+    @media (max-width: 768px) {
+        .timetable-table th, 
+        .timetable-table td {
+            min-width: 100px;
+            font-size: 0.8rem;
+        }
+        
+        .exam-session {
+            padding: 0.25rem;
+            font-size: 0.7rem;
+        }
     }
 </style>
 {% endblock %}

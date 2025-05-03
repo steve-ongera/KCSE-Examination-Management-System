@@ -24,264 +24,271 @@
                 </div>
                 
                 <div class="card-body">
-                    <!-- Basic Information -->
-                    <div class="profile-section mb-5">
-                        <h4 class="section-title mb-4">
-                            <i class="bi bi-info-square me-2"></i>
-                            Basic Information
-                        </h4>
-                        
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">School Name</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.name }}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">KNEC Code</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.knec_code }}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Registration Number</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.registration_number }}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">School Type</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.get_school_type_display }}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Category</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.get_category_display }}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Special Code</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.special_code }}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Registration Date</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.registration_date }}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Established Date</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.established_date }}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Curriculum</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.curriculum }}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Number of Streams</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.number_of_streams }}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Status</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {% if school.is_active %}
-                                        <span class="badge bg-success">Active</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Inactive</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Last Inspection</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.last_inspection_date|default:"Not available" }}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        {% if school.motto %}
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                <label class="form-label">School Motto</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    <em>"{{ school.motto }}"</em>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        {% if school.mission %}
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                <label class="form-label">Mission Statement</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.mission }}
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        {% if school.vision %}
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                <label class="form-label">Vision Statement</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.vision }}
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
+                    <!-- Tab Navigation -->
+                    <ul class="nav nav-tabs mb-4" id="schoolProfileTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab" aria-controls="basic" aria-selected="true">
+                                <i class="bi bi-info-square me-1"></i> Basic Info
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="location-tab" data-bs-toggle="tab" data-bs-target="#location" type="button" role="tab" aria-controls="location" aria-selected="false">
+                                <i class="bi bi-geo-alt me-1"></i> Location
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">
+                                <i class="bi bi-telephone me-1"></i> Contact
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="principal-tab" data-bs-toggle="tab" data-bs-target="#principal" type="button" role="tab" aria-controls="principal" aria-selected="false">
+                                <i class="bi bi-person-badge me-1"></i> Principal
+                            </button>
+                        </li>
+                    </ul>
                     
-                    <!-- Location Information -->
-                    <div class="profile-section mb-5">
-                        <h4 class="section-title mb-4">
-                            <i class="bi bi-geo-alt me-2"></i>
-                            Location Information
-                        </h4>
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="schoolProfileTabsContent">
+                        <!-- Basic Information Tab -->
+                        <div class="tab-pane fade show active" id="basic" role="tabpanel" aria-labelledby="basic-tab">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">School Name</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.name }}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">KNEC Code</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.knec_code }}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Registration Number</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.registration_number }}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">School Type</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.get_school_type_display }}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Category</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.get_category_display }}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Special Code</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.special_code }}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Registration Date</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.registration_date }}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Established Date</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.established_date }}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Curriculum</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.curriculum }}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Number of Streams</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.number_of_streams }}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Status</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {% if school.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Last Inspection</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.last_inspection_date|default:"Not available" }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if school.motto %}
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">School Motto</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        <em>"{{ school.motto }}"</em>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if school.mission %}
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Mission Statement</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.mission }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if school.vision %}
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Vision Statement</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.vision }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
                         
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">County</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.county }}
+                        <!-- Location Information Tab -->
+                        <div class="tab-pane fade" id="location" role="tabpanel" aria-labelledby="location-tab">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">County</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.county }}
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Sub County</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.sub_county }}
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Sub County</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.sub_county }}
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Ward</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.ward|default:"Not specified" }}
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Ward</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.ward|default:"Not specified" }}
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Physical Address</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.physical_address }}
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Physical Address</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.physical_address }}
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Postal Address</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.postal_address }}
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Postal Address</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.postal_address }}
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">GPS Coordinates</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.gps_coordinates|default:"Not specified" }}
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">GPS Coordinates</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.gps_coordinates|default:"Not specified" }}
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Website</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {% if school.website %}
-                                        <a href="{{ school.website }}" target="_blank">{{ school.website }}</a>
-                                    {% else %}
-                                        Not specified
-                                    {% endif %}
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Website</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {% if school.website %}
+                                            <a href="{{ school.website }}" target="_blank">{{ school.website }}</a>
+                                        {% else %}
+                                            Not specified
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Contact Information -->
-                    <div class="profile-section mb-5">
-                        <h4 class="section-title mb-4">
-                            <i class="bi bi-telephone me-2"></i>
-                            Contact Information
-                        </h4>
                         
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">School Phone</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.phone_number }}
+                        <!-- Contact Information Tab -->
+                        <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">School Phone</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.phone_number }}
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Alternative Phone</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.alternative_phone|default:"Not specified" }}
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Alternative Phone</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.alternative_phone|default:"Not specified" }}
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Email Address</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.email|default:"Not specified" }}
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Email Address</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.email|default:"Not specified" }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Principal Information -->
-                    <div class="profile-section">
-                        <h4 class="section-title mb-4">
-                            <i class="bi bi-person-badge me-2"></i>
-                            Principal Information
-                        </h4>
                         
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Principal Name</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.principal_name }}
+                        <!-- Principal Information Tab -->
+                        <div class="tab-pane fade" id="principal" role="tabpanel" aria-labelledby="principal-tab">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Principal Name</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.principal_name }}
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Principal Phone</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.principal_phone }}
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Principal Phone</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.principal_phone }}
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Principal Email</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.principal_email|default:"Not specified" }}
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Principal Email</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.principal_email|default:"Not specified" }}
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">TSC Number</label>
-                                <div class="form-control-plaintext bg-light p-2 rounded">
-                                    {{ school.principal_tsc_number|default:"Not specified" }}
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">TSC Number</label>
+                                    <div class="form-control-plaintext bg-light p-2 rounded">
+                                        {{ school.principal_tsc_number|default:"Not specified" }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -305,18 +312,14 @@
 </section>
 
 <style>
-    .profile-section {
-        background-color: #f8f9fa;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1.5rem;
-        border-left: 4px solid #6c757d;
+    .nav-tabs .nav-link {
+        color: #495057;
+        font-weight: 500;
     }
     
-    .section-title {
-        color: #495057;
-        border-bottom: 1px solid #dee2e6;
-        padding-bottom: 0.5rem;
+    .nav-tabs .nav-link.active {
+        font-weight: 600;
+        border-bottom: 3px solid #0d6efd;
     }
     
     .form-control-plaintext {
@@ -326,12 +329,13 @@
     }
     
     .bg-light {
-        background-color: #e9ecef !important;
+        background-color: #f8f9fa !important;
     }
     
     @media (max-width: 768px) {
-        .profile-section {
-            padding: 1rem;
+        .nav-tabs .nav-link {
+            font-size: 0.85rem;
+            padding: 0.5rem;
         }
         
         .card-header h3 {
@@ -339,4 +343,31 @@
         }
     }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Activate tab from URL hash if present
+    const hash = window.location.hash;
+    if (hash) {
+        const tabTrigger = document.querySelector(`[data-bs-target="${hash}"]`);
+        if (tabTrigger) {
+            const tab = new bootstrap.Tab(tabTrigger);
+            tab.show();
+        }
+    }
+    
+    // Update URL hash when tabs are shown
+    const tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
+    tabEls.forEach(tabEl => {
+        tabEl.addEventListener('shown.bs.tab', function(event) {
+            const target = event.target.getAttribute('data-bs-target');
+            if (history.pushState) {
+                history.pushState(null, null, target);
+            } else {
+                window.location.hash = target;
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

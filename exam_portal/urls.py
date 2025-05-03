@@ -109,6 +109,8 @@ urlpatterns = [
     # Dashboard
     path('resources_dashboard', views.resources_dashboard, name='resources_dashboard'),
     path('archive/', views.knec_archive, name='knec_archive'),
+    path('contact/', views.contact_knec, name='contact_knec'),
+    path('school-profile/', views.school_profile, name='school_profile'),
     
     # Resource list and detail
     path('public-resources/', views.knec_resources, name='knec_resources'),

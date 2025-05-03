@@ -3815,3 +3815,28 @@ from datetime import datetime
 
 def knec_archive(request):
     return render(request, 'resources/knec_archive.html')
+
+
+def contact_knec(request):
+    return render(request, 'knec/contact_knec.html')
+
+
+@login_required
+def school_profile(request):
+    # Get the school associated with the admin user
+    # Verify user is a school admin and get their school
+    if not request.user.is_authenticated or request.user.user_type != 2:
+        return redirect('login')
+    
+    try:
+        admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
+        school = admin_profile.school
+    except SchoolAdminProfile.DoesNotExist:
+        return redirect('login')
+    
+
+    context = {
+        'school': school,
+        'last_updated': school.updated_at.strftime("%Y-%m-%d %H:%M")
+    }
+    return render(request, 'schools/school-profile.html', context)

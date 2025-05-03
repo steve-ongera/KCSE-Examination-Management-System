@@ -1,0 +1,306 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+<div class="pagetitle">
+    <h1>Contact KNEC</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+            <li class="breadcrumb-item active">Contact Us</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="bi bi-headset me-2"></i>
+                        Kenya National Examinations Council - Official Contacts
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Headquarters Information -->
+                        <div class="col-lg-6 mb-5">
+                            <div class="contact-card card h-100 border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h4 class="card-title mb-0">
+                                        <i class="bi bi-building me-2 text-primary"></i>
+                                        KNEC Headquarters
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="contact-info">
+                                        <div class="contact-item mb-4">
+                                            <div class="contact-icon bg-primary text-white rounded-circle">
+                                                <i class="bi bi-geo-alt"></i>
+                                            </div>
+                                            <div class="contact-details">
+                                                <h5>Physical Address</h5>
+                                                <p>New Mitihani House, South C<br>
+                                                Off Popo Road, Red Cross Road<br>
+                                                Nairobi, Kenya</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="contact-item mb-4">
+                                            <div class="contact-icon bg-success text-white rounded-circle">
+                                                <i class="bi bi-envelope"></i>
+                                            </div>
+                                            <div class="contact-details">
+                                                <h5>Postal Address</h5>
+                                                <p>P.O. Box 73598 - 00200<br>
+                                                Nairobi, Kenya</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="contact-item mb-4">
+                                            <div class="contact-icon bg-info text-white rounded-circle">
+                                                <i class="bi bi-telephone"></i>
+                                            </div>
+                                            <div class="contact-details">
+                                                <h5>Telephone</h5>
+                                                <p>
+                                                    General Inquiries: +254 20 3317412<br>
+                                                    Examination Matters: +254 20 3317413<br>
+                                                    Fax: +254 20 3317414
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="contact-item">
+                                            <div class="contact-icon bg-warning text-white rounded-circle">
+                                                <i class="bi bi-clock"></i>
+                                            </div>
+                                            <div class="contact-details">
+                                                <h5>Working Hours</h5>
+                                                <p>
+                                                    Monday - Friday: 8:00 AM - 5:00 PM<br>
+                                                    Saturday: 9:00 AM - 1:00 PM<br>
+                                                    Closed on Sundays and Public Holidays
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Contact Form -->
+                        <div class="col-lg-6">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h4 class="card-title mb-0">
+                                        <i class="bi bi-send me-2 text-primary"></i>
+                                        Send Us a Message
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <form id="contactForm">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6 mb-3 mb-md-0">
+                                                <label for="firstName" class="form-label">First Name</label>
+                                                <input type="text" class="form-control" id="firstName" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="lastName" class="form-label">Last Name</label>
+                                                <input type="text" class="form-control" id="lastName" required>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="email" class="form-label">Email Address</label>
+                                            <input type="email" class="form-control" id="email" required>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="phone" class="form-label">Phone Number</label>
+                                            <input type="tel" class="form-control" id="phone">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="subject" class="form-label">Subject</label>
+                                            <select class="form-select" id="subject" required>
+                                                <option value="" selected disabled>Select a subject</option>
+                                                <option>Examination Results</option>
+                                                <option>Registration Inquiry</option>
+                                                <option>Examiners Recruitment</option>
+                                                <option>Complaint</option>
+                                                <option>Other Inquiry</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="message" class="form-label">Your Message</label>
+                                            <textarea class="form-control" id="message" rows="5" required></textarea>
+                                        </div>
+                                        
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" class="form-check-input" id="consent" required>
+                                            <label class="form-check-label" for="consent">
+                                                I consent to KNEC collecting and storing my personal data for the purpose of responding to my inquiry.
+                                            </label>
+                                        </div>
+                                        
+                                        <div class="d-grid">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-send-fill me-1"></i> Send Message
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Regional Offices -->
+                    <div class="row mt-5">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h4 class="card-title mb-0">
+                                        <i class="bi bi-geo-fill me-2 text-primary"></i>
+                                        KNEC Regional Offices
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Region</th>
+                                                    <th>Office Location</th>
+                                                    <th>Contact Person</th>
+                                                    <th>Telephone</th>
+                                                    <th>Email</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Coast Region</td>
+                                                    <td>Mombasa KNEC Office, Nkrumah Road</td>
+                                                    <td>Regional Coordinator</td>
+                                                    <td>+254 41 2312003</td>
+                                                    <td>coast@knec.ac.ke</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Western Region</td>
+                                                    <td>Kisumu KNEC Office, Oginga Odinga Street</td>
+                                                    <td>Regional Coordinator</td>
+                                                    <td>+254 57 2020444</td>
+                                                    <td>western@knec.ac.ke</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Rift Valley</td>
+                                                    <td>Nakuru KNEC Office, Kenyatta Avenue</td>
+                                                    <td>Regional Coordinator</td>
+                                                    <td>+254 51 2210333</td>
+                                                    <td>riftvalley@knec.ac.ke</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Eastern Region</td>
+                                                    <td>Embu KNEC Office, Hospital Road</td>
+                                                    <td>Regional Coordinator</td>
+                                                    <td>+254 68 2200444</td>
+                                                    <td>eastern@knec.ac.ke</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Central Region</td>
+                                                    <td>Nyeri KNEC Office, Kimathi Way</td>
+                                                    <td>Regional Coordinator</td>
+                                                    <td>+254 61 2030000</td>
+                                                    <td>central@knec.ac.ke</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-light">
+                    <div class="row">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                                <small>For urgent examination matters, please call our hotline</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center justify-content-md-end">
+                                <i class="bi bi-shield-lock-fill text-success me-2"></i>
+                                <small>All communications are treated with strict confidentiality</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .contact-card {
+        border-left: 4px solid #0d6efd;
+    }
+    
+    .contact-item {
+        display: flex;
+        align-items: flex-start;
+    }
+    
+    .contact-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+    
+    .contact-details h5 {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+    }
+    
+    .contact-details p {
+        margin-bottom: 0;
+        color: #6c757d;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    @media (max-width: 768px) {
+        .contact-item {
+            flex-direction: column;
+        }
+        
+        .contact-icon {
+            margin-bottom: 10px;
+        }
+        
+        .table-responsive {
+            font-size: 0.85rem;
+        }
+    }
+</style>
+
+<script>
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        // Here you would typically add form submission logic
+        alert('Thank you for your message. We will respond to your inquiry shortly.');
+        this.reset();
+    });
+</script>
+{% endblock %}

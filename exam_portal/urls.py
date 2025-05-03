@@ -68,6 +68,8 @@ urlpatterns = [
 
     path('knec_official_support/', views.knec_official_support, name='knec_official_support'),
     path('knec_system_configuration/', views.knec_system_configuration, name='knec_system_configuration'),
+    path('school_admin_system_configuration/', views.school_admin_system_configuration, name='school_admin_system_configuration'),
+    #
 
 
     # Dashboard
@@ -84,6 +86,9 @@ urlpatterns = [
     # Invigilator URLs
     path('invigilators/', views.invigilator_list, name='invigilator-list'),
     path('invigilators/<int:pk>/', views.invigilator_detail, name='invigilator-detail'),
+
+
+    path('school-admin-profile/', views.school_admin_profile, name='school_admin_profile'),
 
 
     path('knec_profile/', views.knec_profile, name='knec_profile'),

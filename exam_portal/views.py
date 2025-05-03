@@ -2209,6 +2209,68 @@ def knec_official_support(request):
 def knec_system_configuration(request):
     return render (request , 'settings/knec_system_configuration.html')
 
+def school_admin_system_configuration(request):
+    # Verify user is a school admin and get their school
+    if not request.user.is_authenticated or request.user.user_type != 2:
+        return redirect('login')
+    
+    try:
+        admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
+        school = admin_profile.school
+    except SchoolAdminProfile.DoesNotExist:
+        return redirect('login')
+    
+    context = {
+        'school': school,
+    }
+
+    return render(request, 'settings/school_system_configuration.html', context)
+
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+from .models import SchoolAdminProfile
+
+@login_required
+def school_admin_profile(request):
+    # Verify user is a school admin (user_type=2)
+    if not request.user.is_authenticated or request.user.user_type != 2:
+        messages.error(request, "You don't have permission to access this page")
+        return redirect('login')
+    
+    # Handle password change if it's a POST request with password form
+    if request.method == 'POST' and 'current_password' in request.POST:
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important!
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('school_admin_profile')
+        else:
+            # If form is invalid, we'll show the errors in the template
+            pass
+    else:
+        form = PasswordChangeForm(request.user)
+    
+    try:
+        # Get the admin profile using the username as special_code
+        admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
+        school = admin_profile.school
+        
+        context = {
+            'admin_profile': admin_profile,
+            'school': school,
+            'user': request.user,
+            'password_form': form  # Pass the form to template
+        }
+        return render(request, 'profiles/school-admin-profile.html', context)
+        
+    except SchoolAdminProfile.DoesNotExist:
+        messages.error(request, "Admin profile not found")
+        return redirect('login')
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages

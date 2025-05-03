@@ -1,0 +1,234 @@
+{% extends 'base/base.html'%}
+{% load custom_filters %}
+{% load static %}
+
+{% block content %}
+<div class="message-container" id="system-messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        <i class="bi {% if message.tags == 'success' %}bi-check-circle{% else %}bi-exclamation-triangle{% endif %} me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="pagetitle">
+    <h1><i class="bi bi-gear me-2"></i>School System Configuration</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Dashboard</a></li>
+            <li class="breadcrumb-item active">System Configuration</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-knec-dark text-white">
+                    <h5 style="color:white;" class="card-title mb-0"><i class="bi bi-building me-2"></i>{{ school.name }} - System Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <!-- School Information Section -->
+                    <div class="mb-5">
+                        <h5 class="text-knec mb-3"><i class="bi bi-info-circle me-2"></i>School Information</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">School Name</label>
+                                <div class="form-control-plaintext">{{ school.name }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">KNEC Code</label>
+                                <div class="form-control-plaintext">{{ school.knec_code }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">School Type</label>
+                                <div class="form-control-plaintext">{{ school.get_school_type_display }}</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Category</label>
+                                <div class="form-control-plaintext">{{ school.get_category_display }}</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Curriculum</label>
+                                <div class="form-control-plaintext">{{ school.curriculum }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="mb-5">
+                        <h5 class="text-knec mb-3"><i class="bi bi-telephone me-2"></i>Contact Information</h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Phone Number</label>
+                                <div class="form-control-plaintext">{{ school.phone_number }}</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Alternative Phone</label>
+                                <div class="form-control-plaintext">{{ school.alternative_phone|default:"-" }}</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Email</label>
+                                <div class="form-control-plaintext">{{ school.email|default:"-" }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">County</label>
+                                <div class="form-control-plaintext">{{ school.county }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Sub County</label>
+                                <div class="form-control-plaintext">{{ school.sub_county }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Physical Address</label>
+                                <div class="form-control-plaintext">{{ school.physical_address }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Postal Address</label>
+                                <div class="form-control-plaintext">{{ school.postal_address }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Principal Information -->
+                    <div class="mb-5">
+                        <h5 class="text-knec mb-3"><i class="bi bi-person-badge me-2"></i>Principal Information</h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Principal Name</label>
+                                <div class="form-control-plaintext">{{ school.principal_name }}</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Principal Phone</label>
+                                <div class="form-control-plaintext">{{ school.principal_phone }}</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Principal Email</label>
+                                <div class="form-control-plaintext">{{ school.principal_email|default:"-" }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">TSC Number</label>
+                                <div class="form-control-plaintext">{{ school.principal_tsc_number|default:"-" }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Number of Streams</label>
+                                <div class="form-control-plaintext">{{ school.number_of_streams }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- School Status -->
+                    <div class="mb-5">
+                        <h5 class="text-knec mb-3"><i class="bi bi-clipboard-check me-2"></i>School Status</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-knec-light">
+                                        <h6 class="mb-0"><i class="bi bi-toggle-on me-2"></i>Active Status</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">School Status</label>
+                                            <div class="form-control-plaintext">
+                                                <span class="badge {% if school.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                                    {% if school.is_active %}Active{% else %}Inactive{% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Last Inspection Date</label>
+                                            <div class="form-control-plaintext">{{ school.last_inspection_date|date:"Y-m-d"|default:"-" }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-knec-light">
+                                        <h6 class="mb-0"><i class="bi bi-shield-lock me-2"></i>Security</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Special Code</label>
+                                            <div class="form-control-plaintext">{{ school.special_code }}</div>
+                                        </div>
+                                        <div class="alert alert-info">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            This code is used for system authentication and can only be changed by KNEC officials.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KNEC Contacts -->
+                    <div>
+                        <h5 class="text-knec mb-3"><i class="bi bi-headset me-2"></i>KNEC Support</h5>
+                        <div class="alert alert-knec">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-telephone-inbound-fill me-3 fs-4"></i>
+                                <div>
+                                    <h6 class="alert-heading">Need to update your school information?</h6>
+                                    <p class="mb-0">Please contact your KNEC county office or email <a href="mailto:support@knec.ac.ke">support@knec.ac.ke</a> for assistance with updating school details.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-knec-light">
+                    <small class="text-muted">
+                        <i class="bi bi-clock-history me-1"></i>
+                        Last updated on {{ school.updated_at|date:"Y-m-d H:i" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .bg-knec-dark {
+        background-color: #2c3e50;
+    }
+    .bg-knec {
+        background-color: #34495e;
+    }
+    .bg-knec-light {
+        background-color: rgba(52, 73, 94, 0.05);
+    }
+    .text-knec {
+        color: #34495e;
+    }
+    .alert-knec {
+        background-color: #e8f4fc;
+        border-color: #b8daf8;
+        color: #0c5460;
+    }
+    .form-control-plaintext {
+        padding: 0.375rem 0;
+        margin-bottom: 0;
+        background-color: transparent;
+        border: solid transparent;
+        border-width: 1px 0;
+    }
+    .card-header h6 {
+        font-weight: 600;
+    }
+</style>
+{% endblock %}

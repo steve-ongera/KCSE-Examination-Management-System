@@ -136,6 +136,9 @@ class StudentForm(forms.ModelForm):
         self.fields['is_active'].widget.attrs.update({'class': 'form-check-input'})
 
 
+    
+
+
 from django import forms
 from .models import School
 

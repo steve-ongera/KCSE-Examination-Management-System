@@ -794,29 +794,36 @@ def school_student_update(request, index_number):
     # Authentication and permission check
     if not request.user.is_authenticated or request.user.user_type != 2:
         return redirect('login')
-    
+        
     try:
         admin_profile = SchoolAdminProfile.objects.get(special_code=request.user.username)
         school = admin_profile.school
     except SchoolAdminProfile.DoesNotExist:
         return redirect('login')
-    
+        
+    # Use get_object_or_404 to handle missing students gracefully
     student = get_object_or_404(Student, index_number=index_number)
     
     # Verify the student belongs to the admin's school
     if student.school != school:
         messages.error(request, "You can only update students from your school.")
         return redirect('student_list')
-    
+        
     if request.method == 'POST':
         form = StudentForm(request.POST, request.FILES, instance=student)
         if form.is_valid():
-            form.save()
+            updated_student = form.save()
             messages.success(request, 'Student updated successfully!')
-            return redirect('student_list')
+            # Use the index_number from the updated student object for redirection
+            return redirect('school_student_detail', index_number=updated_student.index_number)
+        else:
+            # If the form is invalid, display error messages
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = StudentForm(instance=student)
-    
+        
     context = {
         'form': form,
         'student': student,

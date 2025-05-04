@@ -3,6 +3,15 @@
 
 {% block content %}
 
+<div class="message-container" id="system-messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+
 <div class="pagetitle">
     <h1><i class="bi bi-person-plus me-2"></i>{{ title }}</h1>
     <nav>
@@ -146,12 +155,17 @@
                                 <h6 class="border-bottom pb-2 mb-3">Contact Information</h6>
                             </div>
                             
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 {{ form.email.label_tag }}
                                 {{ form.email }}
                             </div>
+
+                            <div class="col-md-4">
+                                {{ form.county_of_origin.label_tag }}
+                                {{ form.county_of_origin }}
+                            </div>
                             
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 {{ form.phone_number.label_tag }}
                                 {{ form.phone_number }}
                                 {% if form.phone_number.errors %}
@@ -161,14 +175,19 @@
                                 {% endif %}
                             </div>
                             
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 {{ form.residential_address.label_tag }}
                                 {{ form.residential_address }}
                             </div>
                             
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 {{ form.postal_address.label_tag }}
                                 {{ form.postal_address }}
+                            </div>
+
+                            <div class="col-md-4">
+                                {{ form.sub_county.label_tag }}
+                                {{ form.sub_county }}
                             </div>
                             
                             <!-- Previous Education -->
@@ -242,5 +261,31 @@
         border-color: #dc3545;
     }
 </style>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle house field visibility based on is_boarder checkbox
+        const isBoarderCheckbox = document.getElementById('id_is_boarder');
+        const houseFieldContainer = document.querySelector('.col-md-4:has(#id_house)');
+        
+        if (isBoarderCheckbox && houseFieldContainer) {
+            // Function to toggle house field visibility
+            function toggleHouseField() {
+                if (isBoarderCheckbox.checked) {
+                    houseFieldContainer.style.display = 'block';
+                } else {
+                    houseFieldContainer.style.display = 'none';
+                }
+            }
+            
+            // Set initial state
+            toggleHouseField();
+            
+            // Add event listener for changes
+            isBoarderCheckbox.addEventListener('change', toggleHouseField);
+        }
+    });
+    </script>
 
 {% endblock %}

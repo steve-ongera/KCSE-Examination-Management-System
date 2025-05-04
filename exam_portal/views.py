@@ -733,7 +733,7 @@ def school_student_list(request):
     return render(request, 'students/school_admin/student_list.html', context)
 
 
-def school_student_detail(request, pk):
+def school_student_detail(request, index_number):
     # Authentication and permission check
     if not request.user.is_authenticated or request.user.user_type != 2:
         return redirect('login')
@@ -744,13 +744,13 @@ def school_student_detail(request, pk):
     except SchoolAdminProfile.DoesNotExist:
         return redirect('login')
 
-    # Ensure the student belongs to this admin's school
-    student = get_object_or_404(Student, pk=pk, school=school)
+    # Ensure the student belongs to this admin's school and is looked up by index_number
+    student = get_object_or_404(Student, index_number=index_number, school=school)
 
     context = {
         'student': student,
     }
-    return render(request, 'students/admin/student_detail.html', context)
+    return render(request, 'students/school_admin/student_detail.html', context)
 
 
 
@@ -789,7 +789,8 @@ def school_student_create(request):
     }
     return render(request, 'students/school_admin/student_form.html', context)
 
-def school_student_update(request, pk):
+@login_required
+def school_student_update(request, index_number):
     # Authentication and permission check
     if not request.user.is_authenticated or request.user.user_type != 2:
         return redirect('login')
@@ -800,7 +801,7 @@ def school_student_update(request, pk):
     except SchoolAdminProfile.DoesNotExist:
         return redirect('login')
     
-    student = get_object_or_404(Student, pk=pk)
+    student = get_object_or_404(Student, index_number=index_number)
     
     # Verify the student belongs to the admin's school
     if student.school != school:
@@ -824,7 +825,7 @@ def school_student_update(request, pk):
     return render(request, 'students/school_admin/student_form.html', context)
 
 
-def school_student_delete(request, pk):
+def school_student_delete(request, index_number):
     # Authentication and permission check
     if not request.user.is_authenticated or request.user.user_type != 2:
         return redirect('login')
@@ -835,7 +836,7 @@ def school_student_delete(request, pk):
     except SchoolAdminProfile.DoesNotExist:
         return redirect('login')
     
-    student = get_object_or_404(Student, pk=pk)
+    student = get_object_or_404(Student, index_number=index_number)
     
     # Verify the student belongs to the admin's school
     if student.school != school:
@@ -853,6 +854,9 @@ def school_student_delete(request, pk):
         'student': student
     }
     return render(request, 'students/school_admin/student_confirm_delete.html', context)
+
+
+
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib import messages

@@ -72,7 +72,7 @@
                                 <tr>
                                     <td>{{ forloop.counter }}</td>
                                     <td>
-                                        <a href="{% url 'school_student_detail' student.pk %}" class="text-primary">
+                                        <a href="{% url 'school_student_detail' student.index_number %}" class="text-primary">
                                             <strong>{{ student.first_name }} {{ student.last_name }}</strong>
                                         </a>
                                     </td>
@@ -82,13 +82,13 @@
                                     <td>{{ student.admission_date|date:"d/m/Y" }}</td>
                                     <td class="text-center">
                                         <div class="d-flex gap-2 justify-content-center">
-                                            <a href="{% url 'school_student_detail' student.pk %}" class="btn btn-sm btn-outline-primary" title="View">
+                                            <a href="{% url 'school_student_detail' student.index_number %}" class="btn btn-sm btn-outline-primary" title="View">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="{% url 'school_student_update' student.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <a href="{% url 'school_student_update' student.index_number %}" class="btn btn-sm btn-outline-secondary" title="Edit">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <a href="{% url 'school_student_delete' student.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <a href="{% url 'school_student_delete' student.index_number %}" class="btn btn-sm btn-outline-danger" title="Delete">
                                                 <i class="bi bi-trash"></i>
                                             </a>
                                         </div>

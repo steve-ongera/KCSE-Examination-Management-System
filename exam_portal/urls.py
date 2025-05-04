@@ -35,10 +35,10 @@ urlpatterns = [
 
     #school admin crud operations 
     path('school_students/', views.school_student_list, name='school_student_list'),
-    path('school_student/<int:pk>/', views.school_student_detail, name='school_student_detail'),
+    path('school_student/<path:index_number>/', views.school_student_detail, name='school_student_detail'),
     path('school_students/create/', views.school_student_create, name='school_student_create'),
-    path('school_students/update/<int:pk>/', views.school_student_update, name='school_student_update'),
-    path('school_students/delete/<int:pk>/', views.school_student_delete, name='school_student_delete'),
+    path('school_students/update/<path:index_number>/', views.school_student_update, name='school_student_update'),
+    path('school_students/delete/<path:index_number>/', views.school_student_delete, name='school_student_delete'),
 
 
     #examinations

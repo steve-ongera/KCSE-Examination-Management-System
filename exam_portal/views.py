@@ -4085,7 +4085,7 @@ def student_performance_api(request, student_id):
         performance_data.append({
             'exam_year': {
                 'id': registration.exam_year.id,
-                'name': registration.exam_year.name,
+                'name': registration.exam_year.year,
                 'year': registration.exam_year.year,
                 'is_current': registration.exam_year.is_current
             },

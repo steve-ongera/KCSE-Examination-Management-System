@@ -18,7 +18,7 @@
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i> Home</a></li>
             <li class="breadcrumb-item">Examinations</li>
-            <li class="breadcrumb-item active">{{ selected_year.name }} Performance</li>
+            <li class="breadcrumb-item active">{{ selected_year.year }} Performance</li>
         </ol>
     </nav>
 </div><!-- End Page Title -->
@@ -39,7 +39,7 @@
                                     <select class="form-select" name="year" id="yearSelect" onchange="document.getElementById('yearForm').submit();">
                                         {% for year in exam_years %}
                                             <option value="{{ year.id }}" {% if year.id == selected_year.id %}selected{% endif %}>
-                                                {{ year.name }}{% if year.is_current %} (Current){% endif %}
+                                                {{ year.year }}{% if year.is_current %} (Current){% endif %}
                                             </option>
                                         {% endfor %}
                                     </select>
@@ -117,7 +117,7 @@
                                                    data-student-id="{{ student.data.student.id }}"
                                                    data-student-name="{{ student.full_name }}"
                                                    data-index-number="{{ student.index_number }}"
-                                                   data-exam-year="{{ selected_year.name }}"
+                                                   data-exam-year="{{ selected_year.year }}"
                                                    data-registration-id="{{ student.data.id }}">
                                                 <i class="bi bi-eye"></i>
                                             </button>
@@ -528,14 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     ${modalContent.innerHTML}
                 </div>
-                <script>
-                    window.onload = function() {
-                        window.print();
-                        setTimeout(function() {
-                            window.close();
-                        }, 500);
-                    };
-                </script>
+                
             </body>
             </html>
         `);

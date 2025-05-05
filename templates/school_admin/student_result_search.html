@@ -19,25 +19,22 @@
             <!-- Search Form Card -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-filter-circle me-2"></i>Search Student Results
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-filter-circle me-2"></i>Search Student Results
+                        </h5>
+                        <button id="refresh-search" class="btn btn-sm btn-outline-secondary" title="Reset Search">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <form method="get" action="{% url 'student_result_search' %}" class="row g-3">
+                    <form method="get" action="{% url 'student_result_search' %}" class="row g-3" id="search-form">
                         <div class="col-md-5">
                             <label for="search-input" class="form-label">Student Name/Index/Admission No.</label>
                             <input type="text" name="q" class="form-control" id="search-input" placeholder="Search by name, index or admission number..." value="{{ search_query }}">
                         </div>
-                        <div class="col-md-3">
-                            <label for="class-filter" class="form-label">Class</label>
-                            <select name="class" id="class-filter" class="form-select">
-                                <option value="">All Classes</option>
-                                {% for class_name in class_options %}
-                                <option value="{{ class_name }}" {% if class_filter == class_name %}selected{% endif %}>{{ class_name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                       
                         <div class="col-md-3">
                             <label for="year-filter" class="form-label">Exam Year</label>
                             <select name="year" id="year-filter" class="form-select">
@@ -46,11 +43,12 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-1 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100">
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button  type="submit" class="btn btn-primary py-1 px-4 w-100">
                                 <i class="bi bi-search me-1"></i> Search
                             </button>
                         </div>
+                        
                     </form>
                 </div>
             </div>
@@ -63,7 +61,7 @@
                     </h5>
                     <div class="d-flex">
                         {% if students.paginator.count > 0 %}
-                        <button class="btn btn-sm btn-outline-primary" id="export-btn">
+                        <button class="btn btn-sm btn-outline-primary me-2" id="export-btn">
                             <i class="bi bi-download me-1"></i> Export
                         </button>
                         {% endif %}
@@ -108,7 +106,7 @@
                                                 </span>
                                             </td>
                                             <td class="text-center">
-                                                <a href="{% url 'student_result_detail' student.id %}?year={{ selected_year }}" class="btn btn-sm btn-outline-primary">
+                                                <a href="#" class="btn btn-sm btn-outline-primary">
                                                     <i class="bi bi-eye"></i> Details
                                                 </a>
                                             </td>
@@ -166,16 +164,19 @@
                             </nav>
                         {% else %}
                             <div class="text-center py-5">
-                                <img src="{% static 'img/no-results.svg' %}" alt="No Results" class="img-fluid mb-3" style="max-width: 200px;">
+                                <img src="{% static 'assets/img/no-results.png' %}" alt="No Results" class="img-fluid mb-3" style="max-width: 200px;">
                                 <h4 class="text-muted">No Results Found</h4>
                                 <p class="text-muted">
                                     No students match your search criteria. Please try different search terms or filters.
                                 </p>
+                                <button id="reset-search" class="btn btn-primary mt-3">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Search
+                                </button>
                             </div>
                         {% endif %}
                     {% else %}
                         <div class="text-center py-5">
-                            <img src="{% static 'img/search.svg' %}" alt="Search" class="img-fluid mb-3" style="max-width: 200px;">
+                            <img src="{% static 'assets/img/search.svg' %}" alt="Search" class="img-fluid mb-3" style="max-width: 200px;">
                             <h4 class="text-muted">Search for Student Results</h4>
                             <p class="text-muted">
                                 Enter a student name, index number, or admission number to search for their exam results.
@@ -201,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
         exportBtn.addEventListener('click', function() {
             // Create export URL with current filters
             const searchQuery = document.getElementById('search-input').value;
-            const classFilter = document.getElementById('class-filter').value;
+            const classFilter = document.getElementById('class-filter')?.value;
             const yearFilter = document.getElementById('year-filter').value;
             
             let exportUrl = `/export/student-results/?year=${yearFilter}`;
@@ -217,6 +218,33 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = exportUrl;
         });
     }
+
+    // Refresh/reset search functionality
+    const refreshBtn = document.getElementById('refresh-search');
+    const resetBtn = document.getElementById('reset-search');
+    const searchForm = document.getElementById('search-form');
+    
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            // Reset form fields
+            document.getElementById('search-input').value = '';
+            document.getElementById('year-filter').selectedIndex = 0;
+            
+            // Submit the form to refresh results
+            searchForm.submit();
+        });
+    }
+    
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            // Reset form fields
+            document.getElementById('search-input').value = '';
+            document.getElementById('year-filter').selectedIndex = 0;
+            
+            // Submit the form to refresh results
+            searchForm.submit();
+        });
+    }
 });
 </script>
 
@@ -224,6 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .card {
         border-radius: 8px;
         border: 1px solid #e0e0e0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     .card-header {
         background-color: #f8f9fa;
@@ -234,10 +263,12 @@ document.addEventListener('DOMContentLoaded', function() {
         text-transform: uppercase;
         font-size: 0.8rem;
         letter-spacing: 0.5px;
+        background-color: #f8f9fa;
     }
     .badge {
         font-weight: 500;
         min-width: 40px;
+        padding: 0.35em 0.65em;
     }
     /* Grade badge styling - using Bootstrap colors */
     .bg-success { background-color: #28a745 !important; }  /* A, A- */
@@ -245,6 +276,14 @@ document.addEventListener('DOMContentLoaded', function() {
     .bg-primary { background-color: #007bff !important; }  /* C+, C, C- */
     .bg-warning { background-color: #ffc107 !important; color: #212529 !important; } /* D+, D, D- */
     .bg-danger { background-color: #dc3545 !important; }   /* E */
+    
+    /* Hover effects */
+    .btn-outline-secondary:hover {
+        background-color: #f8f9fa;
+    }
+    #refresh-search:hover {
+        background-color: #f1f1f1;
+    }
 </style>
 
 {% endblock %}

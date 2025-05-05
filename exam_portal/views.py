@@ -3565,9 +3565,8 @@ def student_result_search(request):
     # Get search parameters
     search_performed = False
     search_query = request.GET.get('q', '')
-    class_filter = request.GET.get('class', '')
     
-    if search_query or class_filter:
+    if search_query:
         search_performed = True
         # Base queryset for students in this school with exam results
         students = Student.objects.filter(
@@ -3575,18 +3574,13 @@ def student_result_search(request):
             registrations__exam_year__year=selected_year
         ).distinct()
         
-        # Apply search query if provided
-        if search_query:
-            students = students.filter(
-                Q(first_name__icontains=search_query) | 
-                Q(last_name__icontains=search_query) | 
-                Q(index_number__icontains=search_query) |
-                Q(admision_number__icontains=search_query)
-            )
-        
-        # Apply class filter if provided
-        if class_filter:
-            students = students.filter(current_class=class_filter)
+        # Apply search query
+        students = students.filter(
+            Q(first_name__icontains=search_query) | 
+            Q(last_name__icontains=search_query) | 
+            Q(index_number__icontains=search_query) |
+            Q(admision_number__icontains=search_query)
+        )
             
         # Annotate with performance data
         students = students.annotate(
@@ -3607,11 +3601,6 @@ def student_result_search(request):
         # Sort students by name by default
         students = sorted(students, key=lambda x: (x.first_name, x.last_name))
     
-    # Get unique classes for filter dropdown
-    class_options = Student.objects.filter(
-        school=school
-    ).values_list('current_class', flat=True).distinct().order_by('current_class')
-    
     # Pagination
     paginator = Paginator(students, 15)  # 15 students per page
     page_number = request.GET.get('page')
@@ -3623,8 +3612,6 @@ def student_result_search(request):
         'selected_year': selected_year,
         'students': page_obj,
         'search_query': search_query,
-        'class_filter': class_filter,
-        'class_options': class_options,
         'search_performed': search_performed,
     }
 

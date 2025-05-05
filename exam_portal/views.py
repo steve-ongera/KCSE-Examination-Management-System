@@ -306,12 +306,23 @@ def school_admin_dashboard(request):
     active_classes = Student.objects.filter(
         school=school
     ).values('current_class').distinct().count()
+
+    # Get ALL historical registration data by year for this school only
+    yearly_exam_data = ExamRegistration.objects.filter(
+        student__school=school  # Only include students from this school
+    ).values('exam_year__year').annotate(
+        count=Count('id')
+    ).order_by('exam_year__year')
+    
+    # Prepare chart data - all years without filtering
+    chart_labels = [str(item['exam_year__year']) for item in yearly_exam_data]
+    chart_data = [item['count'] for item in yearly_exam_data]
     
     # Recent activities (you would implement this based on your activity log model)
     recent_activities = [
         {
             'title': 'New student registered',
-            'description': 'John Doe was added to Form 2',
+            'description': 'James Mwangi was added to Form 4',
             'timestamp': '2023-06-15 10:30:00'
         },
         {
@@ -327,7 +338,9 @@ def school_admin_dashboard(request):
         'exam_registrations': exam_registrations,
         'active_classes': active_classes,
         'recent_activities': recent_activities,
-        'school': school
+        'school': school,
+        'chart_labels': chart_labels,  # Years for x-axis
+        'chart_data': chart_data,     # Registration counts for y-axis
     }
     
     return render(request, 'dashboards/school_admin_dashboard.html', context)

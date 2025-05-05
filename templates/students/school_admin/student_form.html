@@ -265,25 +265,106 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Toggle house field visibility based on is_boarder checkbox
-        const isBoarderCheckbox = document.getElementById('id_is_boarder');
-        const houseFieldContainer = document.querySelector('.col-md-4:has(#id_house)');
+        // Check if this is an update form (not a create form)
+        // We can determine this by checking if the form already has values in key fields
+        const isUpdateForm = document.getElementById('id_index_number') && 
+                             document.getElementById('id_index_number').value.trim() !== '';
         
-        if (isBoarderCheckbox && houseFieldContainer) {
-            // Function to toggle house field visibility
-            function toggleHouseField() {
-                if (isBoarderCheckbox.checked) {
-                    houseFieldContainer.style.display = 'block';
-                } else {
-                    houseFieldContainer.style.display = 'none';
+        if (isUpdateForm) {
+            // List of sensitive fields that should not be modified once created
+            const sensitiveFields = [
+                // Student identification fields
+                'id_index_number',      // KNEC index number
+                'id_first_name',        // Student's first name
+                'id_middle_name',       // Student's middle name
+                'id_last_name',         // Student's last name
+                'id_birth_date',        // Birth date is a critical identifier
+                'id_gender',            // Gender should remain consistent
+                'id_nationality',       // Nationality is part of official records
+                
+                // School identification fields
+                'id_school',            // School name/ID
+                'id_admision_number',   // School's internal admission number
+                'id_admission_date',    // Original admission date
+                
+                // KCPE examination data
+                'id_kcpe_index',        // KCPE index number
+                'id_kcpe_year',         // Year student took KCPE
+                'id_kcpe_marks',        // KCPE marks/grade
+                'id_previous_school'    // Primary school attended
+            ];
+            
+            // Disable each sensitive field and add visual indication
+            sensitiveFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    // Disable the field
+                    field.setAttribute('readonly', true);
+                    field.setAttribute('disabled', true);
+                    
+                    // Add visual styling to indicate field cannot be modified
+                    field.classList.add('bg-light');
+                    
+                    // Add a lock icon and tooltip to the field's label
+                    const labelElement = document.querySelector(`label[for="${fieldId}"]`);
+                    if (labelElement) {
+                        labelElement.innerHTML += ' <i class="bi bi-lock-fill text-secondary" data-bs-toggle="tooltip" title="This field cannot be modified as per KNEC regulations"></i>';
+                    }
+                    
+                    // Create a hidden input to ensure the value is still submitted
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = field.name;
+                    hiddenInput.value = field.value;
+                    field.parentNode.appendChild(hiddenInput);
                 }
+            });
+            
+            // Initialize Bootstrap tooltips
+            if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
             }
             
-            // Set initial state
-            toggleHouseField();
+            // Add notice at the top of the form explaining locked fields
+            const formElement = document.querySelector('form');
+            const noticeElement = document.createElement('div');
+            noticeElement.className = 'alert alert-info mb-4';
+            noticeElement.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                    <div>
+                        <strong>KNEC Regulations Notice:</strong> 
+                        <p class="mb-0">Certain student information fields are locked to maintain data integrity and compliance with KNEC regulations. These fields cannot be modified once initially recorded.</p>
+                    </div>
+                </div>
+            `;
             
-            // Add event listener for changes
-            isBoarderCheckbox.addEventListener('change', toggleHouseField);
+            if (formElement) {
+                formElement.insertBefore(noticeElement, formElement.firstChild);
+            }
+            
+            // Add form submit handler to double-check no sensitive data is changed
+            formElement.addEventListener('submit', function(e) {
+                // Get original values from hidden inputs
+                const originalValues = {};
+                sensitiveFields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) {
+                        originalValues[fieldId] = field.value;
+                    }
+                });
+                
+                // Restore any values that might have been changed programmatically
+                sensitiveFields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field && field.value !== originalValues[fieldId]) {
+                        field.value = originalValues[fieldId];
+                    }
+                });
+            });
         }
     });
     </script>

@@ -23,7 +23,7 @@
                 </div>
                 
                 <div class="card-body">
-                    <form method="post">
+                    <form method="post" id="deleteForm">
                         {% csrf_token %}
                         
                         <div class="alert alert-danger">
@@ -38,12 +38,18 @@
                         </div>
                         
                         <div class="mt-4">
-                            <button type="submit" class="btn btn-danger">
+                            <button type="submit" class="btn btn-danger" id="deleteButton">
                                 <i class="bi bi-trash me-2"></i>Yes, Delete Permanently
                             </button>
                             <a href="{% url 'school_student_detail' student.index_number %}" class="btn btn-outline-secondary">
                                 <i class="bi bi-x-circle me-2"></i>Cancel
                             </a>
+                        </div>
+                        
+                        <!-- Non-staff warning message (hidden by default) -->
+                        <div class="alert alert-warning mt-3 d-none" id="staffOnlyWarning">
+                            <i class="bi bi-shield-lock me-2"></i>
+                            <strong>Permission Denied:</strong> Only staff members can delete student records.
                         </div>
                     </form>
                 </div>
@@ -51,5 +57,49 @@
         </div>
     </div>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if user is staff (this value will be set from Django context)
+    const isStaffUser = {{ request.user.is_staff|yesno:"true,false" }};
+    const deleteButton = document.getElementById('deleteButton');
+    const staffOnlyWarning = document.getElementById('staffOnlyWarning');
+    const deleteForm = document.getElementById('deleteForm');
+    
+    // If user is not staff, disable the delete button and show warning
+    if (!isStaffUser) {
+        // Apply visual indicators that the button is disabled
+        deleteButton.disabled = true;
+        deleteButton.classList.remove('btn-danger');
+        deleteButton.classList.add('btn-secondary');
+        deleteButton.style.cursor = 'not-allowed';
+        deleteButton.setAttribute('title', 'You do not have permission to delete student records');
+        
+        // Show the warning message
+        staffOnlyWarning.classList.remove('d-none');
+        
+        // Prevent the form from submitting even if the button is clicked programmatically
+        deleteForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            console.log('Delete action prevented: User does not have staff privileges');
+            return false;
+        });
+        
+        // Add additional protection by redirecting any POST attempts
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+    }
+
+    // Additional security - check on button click as well
+    deleteButton.addEventListener('click', function(event) {
+        if (!isStaffUser) {
+            event.preventDefault();
+            staffOnlyWarning.classList.remove('d-none');
+            return false;
+        }
+    });
+});
+</script>
 
 {% endblock %}

@@ -620,6 +620,7 @@ def student_detail(request, pk):
     }
     return render(request, 'students/admin/student_detail.html', context)
 
+@login_required
 def student_update(request, pk):
     student = get_object_or_404(Student, pk=pk)
     
@@ -639,6 +640,7 @@ def student_update(request, pk):
     }
     return render(request, 'students/admin/student_form.html', context)
 
+@login_required
 def student_delete(request, pk):
     student = get_object_or_404(Student, pk=pk)
     

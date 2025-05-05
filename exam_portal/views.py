@@ -712,23 +712,35 @@ def examination_record_school_student_list(request):
     except SchoolAdminProfile.DoesNotExist:
         return redirect('login')
     
-    # Get current exam year with grading system
-    current_year = ExamYear.objects.filter(is_current=True).first()
-    if not current_year:
+    # Get all exam years with grading systems, ordered by year (newest first)
+    exam_years = ExamYear.objects.all().order_by('-year')
+    if not exam_years.exists():
         return render(request, 'students/school_admin/examination_record_student_list.html', {
-            'error': 'No current exam year configured',
+            'error': 'No exam years configured',
             'school': school
         })
 
-    # Get the grading system for this year
-    grading_system = current_year.grading_system
+    # Get selected year from request, default to the current year if available
+    selected_year_id = request.GET.get('year')
+    current_year = exam_years.filter(is_current=True).first()
+    
+    # If no year is selected or the selected year doesn't exist, use the current year or the first available year
+    if selected_year_id:
+        selected_year = exam_years.filter(id=selected_year_id).first()
+        if not selected_year:
+            selected_year = current_year or exam_years.first()
+    else:
+        selected_year = current_year or exam_years.first()
+    
+    # Get the grading system for the selected year
+    grading_system = selected_year.grading_system
     
     # Get search query from GET request
     search_query = request.GET.get('search', '')
     
-    # Base query for students of this school with their exam registrations
+    # Base query for students of this school with their exam registrations for the selected year
     queryset = ExamRegistration.objects.filter(
-        exam_year=current_year,
+        exam_year=selected_year,
         student__school=school,
         student__is_active=True
     ).select_related(
@@ -820,11 +832,13 @@ def examination_record_school_student_list(request):
         prev_marks = student['total_marks']
     
     # Pagination (after sorting and ranking)
-    paginator = Paginator(ranked_students, 10)  # Show 10 students per page, as in the original
+    paginator = Paginator(ranked_students, 10)  # Show 10 students per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     context = {
+        'exam_years': exam_years,
+        'selected_year': selected_year,
         'current_year': current_year,
         'page_obj': page_obj,
         'ranked_students': page_obj.object_list,

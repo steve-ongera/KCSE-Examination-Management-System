@@ -4118,3 +4118,89 @@ def student_performance_api(request, student_id):
     }
     
     return JsonResponse(response_data)
+
+
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Q
+from .models import Student, ExamResult, SubjectRegistration, ExamYear
+
+def student_result_lookup(request):
+    error = None
+    results = None
+    student_info = None
+    exam_year = None
+    
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        middle_name = request.POST.get('middle_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        index_number = request.POST.get('index_number', '').strip()
+        exam_year_id = request.POST.get('exam_year', '').strip()
+        
+        # Validate required fields
+        if not all([first_name, last_name, index_number]):
+            error = "First name, last name, and index number are required fields."
+        else:
+            # Build query based on provided names
+            query = Q(index_number=index_number)
+            
+            name_query = Q(first_name__iexact=first_name) & Q(last_name__iexact=last_name)
+            
+            if middle_name:
+                name_query &= Q(middle_name__iexact=middle_name)
+            else:
+                name_query &= (Q(middle_name__isnull=True) | Q(middle_name__exact=''))
+            
+            query &= name_query
+            
+            try:
+                student = Student.objects.get(query)
+                student_info = student
+                
+                # Get the exam year if specified
+                if exam_year_id:
+                    exam_year = get_object_or_404(ExamYear, pk=exam_year_id)
+                
+                # Get all exam registrations for the student
+                registrations = student.registrations.all()
+                
+                if exam_year:
+                    # Filter for specific exam year if provided
+                    registrations = registrations.filter(exam_year=exam_year)
+                
+                if not registrations.exists():
+                    error = "No exam registrations found for this student."
+                else:
+                    # Get all subject results for these registrations
+                    results = []
+                    for registration in registrations:
+                        subject_registrations = registration.subjects.select_related('subject', 'result')
+                        for sub_reg in subject_registrations:
+                            if hasattr(sub_reg, 'result'):
+                                results.append({
+                                    'subject': sub_reg.subject.name,
+                                    'code': sub_reg.subject.code,
+                                    'marks': sub_reg.result.marks,
+                                    'grade': sub_reg.result.grade,
+                                    'points': sub_reg.result.points,
+                                    'year': registration.exam_year.year
+                                })
+                    
+                    if not results:
+                        error = "No exam results found for this student."
+                        
+            except Student.DoesNotExist:
+                error = "No matching student found. Please check your details and try again."
+            except Exception as e:
+                error = f"An error occurred: {str(e)}"
+    
+    # Get available exam years for the dropdown
+    exam_years = ExamYear.objects.filter(is_current=True).order_by('-year')
+    
+    return render(request, 'results/student_result_lookup.html', {
+        'error': error,
+        'results': results,
+        'student': student_info,
+        'exam_year': exam_year,
+        'exam_years': exam_years,
+    })

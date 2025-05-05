@@ -4119,9 +4119,8 @@ def student_performance_api(request, student_id):
     
     return JsonResponse(response_data)
 
-
 from django.shortcuts import render, get_object_or_404
-from django.db.models import Q
+from django.db.models import Q, Sum, Avg
 from .models import Student, ExamResult, SubjectRegistration, ExamYear
 
 def student_result_lookup(request):
@@ -4129,6 +4128,10 @@ def student_result_lookup(request):
     results = None
     student_info = None
     exam_year = None
+    total_marks = 0
+    total_points = 0
+    mean_grade = None
+    num_subjects = 0
     
     if request.method == 'POST':
         first_name = request.POST.get('first_name', '').strip()
@@ -4137,65 +4140,113 @@ def student_result_lookup(request):
         index_number = request.POST.get('index_number', '').strip()
         exam_year_id = request.POST.get('exam_year', '').strip()
         
-        # Validate required fields
-        if not all([first_name, last_name, index_number]):
-            error = "First name, last name, and index number are required fields."
+        # Modify validation to allow search without index number
+        if not (first_name and last_name):
+            error = "Please provide at least first name and last name."
         else:
-            # Build query based on provided names
-            query = Q(index_number=index_number)
-            
+            # Build query based on provided names without requiring index_number
             name_query = Q(first_name__iexact=first_name) & Q(last_name__iexact=last_name)
             
             if middle_name:
                 name_query &= Q(middle_name__iexact=middle_name)
-            else:
-                name_query &= (Q(middle_name__isnull=True) | Q(middle_name__exact=''))
             
-            query &= name_query
+            # Add index number to query only if provided
+            if index_number:
+                name_query &= Q(index_number=index_number)
             
             try:
-                student = Student.objects.get(query)
-                student_info = student
+                # Find matching students - could be more than one
+                students = Student.objects.filter(name_query)
                 
-                # Get the exam year if specified
-                if exam_year_id:
-                    exam_year = get_object_or_404(ExamYear, pk=exam_year_id)
-                
-                # Get all exam registrations for the student
-                registrations = student.registrations.all()
-                
-                if exam_year:
-                    # Filter for specific exam year if provided
-                    registrations = registrations.filter(exam_year=exam_year)
-                
-                if not registrations.exists():
-                    error = "No exam registrations found for this student."
+                if not students.exists():
+                    error = "No matching student found. Please check your details and try again."
+                elif students.count() > 1 and not index_number:
+                    # If multiple matches and no index number provided
+                    error = "Multiple students found with these names. Please provide an index number."
                 else:
-                    # Get all subject results for these registrations
-                    results = []
-                    for registration in registrations:
-                        subject_registrations = registration.subjects.select_related('subject', 'result')
-                        for sub_reg in subject_registrations:
-                            if hasattr(sub_reg, 'result'):
-                                results.append({
+                    # Get the single student
+                    student = students.first()
+                    student_info = student
+                    
+                    # Get the exam year if specified
+                    if exam_year_id:
+                        exam_year = get_object_or_404(ExamYear, pk=exam_year_id)
+                    else:
+                        # Default to most recent exam year
+                        exam_year = ExamYear.objects.filter(is_current=True).order_by('-year').first()
+                    
+                    # Get all exam registrations for the student
+                    registrations = student.registrations.all()
+                    
+                    if exam_year:
+                        # Filter for specific exam year if provided
+                        registrations = registrations.filter(exam_year=exam_year)
+                    
+                    if not registrations.exists():
+                        error = "No exam registrations found for this student."
+                    else:
+                        # Get all subject results for these registrations
+                        results = []
+                        for registration in registrations:
+                            subject_registrations = registration.subjects.select_related('subject', 'result')
+                            
+                            for sub_reg in subject_registrations:
+                                result_data = {
                                     'subject': sub_reg.subject.name,
                                     'code': sub_reg.subject.code,
-                                    'marks': sub_reg.result.marks,
-                                    'grade': sub_reg.result.grade,
-                                    'points': sub_reg.result.points,
+                                    'marks': None,
+                                    'grade': None,
+                                    'points': None,
                                     'year': registration.exam_year.year
-                                })
-                    
-                    if not results:
-                        error = "No exam results found for this student."
+                                }
+                                
+                                if hasattr(sub_reg, 'result'):
+                                    result_data.update({
+                                        'marks': sub_reg.result.marks,
+                                        'grade': sub_reg.result.grade,
+                                        'points': sub_reg.result.points
+                                    })
+                                    
+                                    # Add to totals if marks and points exist
+                                    if sub_reg.result.marks is not None:
+                                        total_marks += sub_reg.result.marks
+                                        num_subjects += 1
+                                    
+                                    if sub_reg.result.points is not None:
+                                        total_points += sub_reg.result.points
+                                
+                                results.append(result_data)
                         
-            except Student.DoesNotExist:
-                error = "No matching student found. Please check your details and try again."
+                        # Calculate mean grade using the exam year's grading system
+                        if num_subjects > 0:
+                            avg_points = total_points / num_subjects if num_subjects > 0 else 0
+                            
+                            # Get grading system from exam year
+                            if exam_year:
+                                grading_system = exam_year.grading_system
+                                
+                                # Determine mean grade based on average points
+                                if isinstance(grading_system, dict):
+                                    # Try to find the closest grade based on points
+                                    for grade, info in grading_system.items():
+                                        if info.get('points', 0) == round(avg_points):
+                                            mean_grade = grade
+                                            break
+                                elif isinstance(grading_system, list):
+                                    # List format with grade info dictionaries
+                                    for grade_info in grading_system:
+                                        if grade_info.get('points', 0) == round(avg_points):
+                                            mean_grade = grade_info.get('grade', '')
+                                            break
+                        
+                        if not results:
+                            error = "No exam results found for this student."
+                        
             except Exception as e:
                 error = f"An error occurred: {str(e)}"
     
     # Get available exam years for the dropdown
-    exam_years = ExamYear.objects.filter(is_current=True).order_by('-year')
+    exam_years = ExamYear.objects.all().order_by('-year')
     
     return render(request, 'results/student_result_lookup.html', {
         'error': error,
@@ -4203,4 +4254,9 @@ def student_result_lookup(request):
         'student': student_info,
         'exam_year': exam_year,
         'exam_years': exam_years,
+        'total_marks': total_marks,
+        'total_points': total_points,
+        'mean_grade': mean_grade,
+        'num_subjects': num_subjects,
+        'avg_mark': round(total_marks / num_subjects, 2) if num_subjects > 0 else 0
     })

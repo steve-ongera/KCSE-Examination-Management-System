@@ -8,7 +8,8 @@ urlpatterns = [
     path('logout/', views.custom_logout, name='logout'),
     path('forgot-password/', views.forgot_password, name='forgot_password'),
     path('reset-password/<uidb64>/<token>/', views.reset_password, name='reset_password'),
-    # ... previous URLs ...
+
+
     path('student_dashboard/', views.student_dashboard, name='student_dashboard'),
     path('school-admin/', views.school_admin_dashboard, name='school_admin_dashboard'),
     path('knec/', views.knec_dashboard, name='knec_dashboard'),
@@ -25,7 +26,7 @@ urlpatterns = [
     path('student-result-detail/<int:student_id>/', views.student_result_detail, name='student_result_detail'),
 
 
-    #admin/ student crud opertaions 
+    #admin student crud opertaions 
     path('student/', views.student_list, name='student_list'),
     path('student/add/', views.student_create, name='student_create'),
     path('student/<int:pk>/', views.student_detail, name='student_detail'),
@@ -34,6 +35,7 @@ urlpatterns = [
     path('student/search/', views.student_search, name='student_search'),
 
     #school admin crud operations 
+    path('examination_record_school_student_list/' , views.examination_record_school_student_list , name="examination_record_school_student_list"),
     path('school_students/', views.school_student_list, name='school_student_list'),
     path('school_student/<path:index_number>/', views.school_student_detail, name='school_student_detail'),
     path('school_students/create/', views.school_student_create, name='school_student_create'),

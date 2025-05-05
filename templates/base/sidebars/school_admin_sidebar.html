@@ -27,9 +27,9 @@
             </a>
           </li>
           <li>
-            <a href="{% url 'register-student-exam'%}" style="color: #495057;">
+            <a href="{% url 'school_student_create'%}" style="color: #495057;">
               <i class="bi bi-person-plus" style="color: #6c757d;"></i>
-              <span>Register Students</span>
+              <span>Add Students</span>
             </a>
           </li>
           <li>
@@ -56,7 +56,7 @@
         </a>
         <ul id="exams-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav" style="background-color: #e9ecef;">
           <li>
-            <a href="#" style="color: #495057;">
+            <a href="{% url 'register-student-exam'%}" style="color: #495057;">
               <i class="bi bi-pencil-square" style="color: #6c757d;"></i>
               <span>Exam Registration</span>
             </a>
@@ -74,9 +74,9 @@
             </a>
           </li>
           <li>
-            <a href="#" style="color: #495057;">
+            <a href="{% url 'examination_record_school_student_list'%}" style="color: #495057;">
               <i class="bi bi-file-earmark-check" style="color: #6c757d;"></i>
-              <span>KNEC Reports</span>
+              <span>Examination Records</span>
             </a>
           </li>
         </ul>

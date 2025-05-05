@@ -25,7 +25,7 @@ urlpatterns = [
      path('student-result-search/', views.student_result_search, name='student_result_search'),
     path('student-result-detail/<int:student_id>/', views.student_result_detail, name='student_result_detail'),
 
-    path('student_result_lookup/', views.student_result_lookup , name='student_result_lookup'),
+    path('kcse-results/', views.student_result_lookup , name='student_result_lookup'),
 
 
     #admin student crud opertaions 

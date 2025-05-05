@@ -1,188 +1,459 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="index, follow">
 
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h2 class="mb-0 text-center">KCSE Results Lookup</h2>
-                </div>
+    <!-- Primary Meta Tags -->
+    <title>KNEC KCSE Results Portal - Check Your Kenya National Examination Council Results Online</title>
+    <meta name="description" content="Official KNEC student portal for checking KCSE examination results. View your Kenya National Examination Council grades, marks, and certificates online.">
+    <meta name="keywords" content="KNEC results, KCSE results, Kenya national exams, check KCSE results online, KNEC student portal, KCSE result slip, Kenya certificate of secondary education, KNEC examination results, KCSE grades online, my knec results, knec portal, knec.ac.ke, knec results 2023, knec result checker, knec certificate verification, knec official results, knec kcse portal, knec examination portal, knec online services, knec result download, knec result print">
+
+    <!-- Open Graph / Facebook Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="KNEC KCSE Results Portal - Check Your Examination Results Online">
+    <meta property="og:description" content="Official Kenya National Examination Council portal for checking KCSE results. View your grades, marks and certificates.">
+    <meta property="og:image" content="{% static 'assets/img/logo2.png' %}">
+    <meta property="og:url" content="https://www.knec-portal.ac.ke/kcse-results">
+
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="KNEC KCSE Results Portal">
+    <meta name="twitter:description" content="Check your Kenya National Examination Council KCSE results online. Official student portal for examination results.">
+    <meta name="twitter:image" content="{% static 'assets/img/logo2.png' %}">
+
+    <!-- Favicons -->
+    <link href="{% static 'assets/img/logo2.png' %}" rel="icon" type="image/png">
+    <link href="{% static 'assets/img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://www.knec-portal.ac.ke/kcse-results">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'assets/css/student_dashboard.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="{% static 'assets/css/student_dashboard.css' %}" as="style">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" as="style">
+
+    <!-- JS Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+
+    <style>
+        /* Inline critical styles for faster rendering */
+        body {
+            background-color: #ffffff;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            padding: 2rem 0;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .logo {
+            max-height: 80px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <img src="{% static 'assets/img/logo2.png' %}" alt="KNEC Logo" class="logo">
+            <h1>KNEC Student Results Portal</h1>
+            <p>Kenya National Examinations Council</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-12 col-8" style="margin: 0 auto;">
+                <!-- Search Form -->
+                <div class="content-section no-print">
+                    <div class="section-header">
+                        <h2 class="mb-0">KCSE Results Information System</h2>
+                    </div>
+                    
+                    <div class="form-area">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="first_name" class="form-label">First Name*</label>
+                                    <input type="text" id="first_name" name="first_name" class="form-control" required value="{{ request.POST.first_name }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="middle_name" class="form-label">Middle Name</label>
+                                    <input type="text" id="middle_name" name="middle_name" class="form-control" value="{{ request.POST.middle_name }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="last_name" class="form-label">Last Name*</label>
+                                    <input type="text" id="last_name" name="last_name" class="form-control" required value="{{ request.POST.last_name }}">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="index_number" class="form-label">Index Number</label>
+                                    <input type="text" id="index_number" name="index_number" class="form-control" value="{{ request.POST.index_number }}">
+                                    <div class="form-text">Optional if your name is unique</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="exam_year" class="form-label">Exam Year</label>
+                                    <select name="exam_year" id="exam_year" class="form-select">
+                                        <option value="">Select Year (Optional)</option>
+                                        {% for year in exam_years %}
+                                            <option value="{{ year.id }}" {% if request.POST.exam_year == year.id|stringformat:"s" %}selected{% endif %}>{{ year.year }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group" style="align-self: flex-end;">
+                                    <button type="submit" class="btn btn-submit me-2">
+                                        <i class="bi bi-search"></i> Search Results
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='{% url 'student_result_lookup' %}'">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                                    </button>
+                                    
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 
-                <div class="card-body">
-                    <form method="post" class="mb-4">
-                        {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="first_name" class="form-label">First Name*</label>
-                                <input type="text" id="first_name" name="first_name" class="form-control" required>
+                {% if error %}
+                    <div class="alert alert-danger">
+                        {{ error }}
+                        <button type="button" class="btn-close" aria-label="Close"></button>
+                    </div>
+                {% endif %}
+                
+                {% if student %}
+                    <!-- Student Information -->
+                    <div class="content-section">
+                        <div class="section-header">
+                            <h3 class="mb-0">Student Information</h3>
+                        </div>
+                        <div style="padding: 1rem;">
+                            <div class="row">
+                                <div class="col-12 col-md-9">
+                                    <h4>{{ student.first_name }} {% if student.middle_name %}{{ student.middle_name }}{% endif %} {{ student.last_name }}</h4>
+                                    <p class="mb-1"><strong>Index Number:</strong> {{ student.index_number }}</p>
+                                    <p class="mb-1"><strong>School:</strong> {{ student.school.name }}</p>
+                                    <p class="mb-0"><strong>Exam Year:</strong> {{ exam_year.year }}</p>
+                                </div>
+                                <div class="col-12 col-md-3 text-center">
+                                    {% if student.passport_photo %}
+                                        <img src="{{ student.passport_photo.url }}" alt="Student Photo" class="img-thumbnail" style="max-width: 100px;">
+                                    {% else %}
+                                        <div style="padding: 0.5rem; display: inline-block; border: 1px solid #e0e0e0; border-radius: 4px;">
+                                            <span class="icon icon-person"></span>
+                                        </div>
+                                    {% endif %}
+                                </div>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="middle_name" class="form-label">Middle Name</label>
-                                <input type="text" id="middle_name" name="middle_name" class="form-control">
+                        </div>
+                    </div>
+                    
+                    {% if results %}
+                        <!-- Subject Results -->
+                        <div class="content-section">
+                            <div class="section-header">
+                                <h3 class="mb-0">Subject Results</h3>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="last_name" class="form-label">Last Name*</label>
-                                <input type="text" id="last_name" name="last_name" class="form-control" required>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead class="table-header">
+                                        <tr>
+                                            <th>Subject Code</th>
+                                            <th>Subject Name</th>
+                                            <th class="text-center">Marks</th>
+                                            <th class="text-center">Grade</th>
+                                            <th class="text-center">Points</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for result in results %}
+                                            <tr>
+                                                <td>{{ result.code }}</td>
+                                                <td>{{ result.subject }}</td>
+                                                <td class="text-center">{{ result.marks|default_if_none:"-" }}</td>
+                                                <td class="text-center fw-bold">{{ result.grade|default_if_none:"-" }}</td>
+                                                <td class="text-center">{{ result.points|default_if_none:"-" }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="index_number" class="form-label">Index Number</label>
-                                <input type="text" id="index_number" name="index_number" class="form-control">
-                                <small class="text-muted">Optional if your name is unique</small>
-                            </div>
+                        <!-- Performance Summary -->
                             
-                            <div class="col-md-6 mb-3">
-                                <label for="exam_year" class="form-label">Exam Year</label>
-                                <select name="exam_year" id="exam_year" class="form-select">
-                                    <option value="">Select Year (Optional)</option>
-                                    {% for year in exam_years %}
-                                        <option value="{{ year.id }}">{{ year.year }}</option>
-                                    {% endfor %}
-                                </select>
+                        <div class="content-section">
+                            <div class="section-header">
+                                <h3 class="mb-0">Performance Summary</h3>
+                            </div>
+                            <div style="padding: 0.5rem;">
+                                <div class="compact-stats-row">
+                                    <div class="compact-stat">
+                                        <span class="stat-label">Total Marks</span>
+                                        <span class="stat-value">{{ total_marks }}</span>
+                                        <span class="stat-note">({{ num_subjects }} subjects)</span>
+                                    </div>
+                                    <div class="compact-stat">
+                                        <span class="stat-label">Avg Mark</span>
+                                        <span class="stat-value">{{ avg_mark }}</span>
+                                    </div>
+                                    <div class="compact-stat">
+                                        <span class="stat-label">Total Points</span>
+                                        <span class="stat-value">{{ total_points }}</span>
+                                    </div>
+                                    <div class="compact-stat">
+                                        <span class="stat-label">Mean Grade</span>
+                                        <span class="stat-value">{{ mean_grade }}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Search Results</button>
+                        <!-- Print Button -->
+                        <div class="text-center mb-4 no-print">
+                            <button class="btn btn-submit me-2" onclick="window.print()">
+                                <i class="bi bi-printer"></i> Print Results
+                            </button>
+                            <button class="btn btn-primary" id="downloadPdf">
+                                <i class="bi bi-file-earmark-pdf"></i> Download as PDF
+                            </button>
                         </div>
-                    </form>
-                    
-                    {% if error %}
-                        <div class="alert alert-danger">{{ error }}</div>
-                    {% endif %}
-                    
-                    {% if student %}
-                        <div class="mt-4">
-                            <div class="card mb-4">
-                                <div class="card-header bg-secondary text-white">
-                                    <h3 class="mb-0">Student Information</h3>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-8">
-                                            <h4>{{ student.first_name }} {% if student.middle_name %}{{ student.middle_name }}{% endif %} {{ student.last_name }}</h4>
-                                            <p><strong>Index Number:</strong> {{ student.index_number }}</p>
-                                            <p><strong>School:</strong> {{ student.school.name }}</p>
-                                            <p><strong>Exam Year:</strong> {{ exam_year.year }}</p>
-                                        </div>
-                                        <div class="col-md-4 text-md-end">
-                                            {% if student.passport_photo %}
-                                                <img src="{{ student.passport_photo.url }}" alt="Student Photo" class="img-thumbnail" style="max-width: 120px;">
-                                            {% else %}
-                                                <div class="bg-light text-center p-4 rounded">
-                                                    <i class="fas fa-user fa-3x text-secondary"></i>
-                                                    <p class="mb-0 small">No Photo</p>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
+                    {% else %}
+                        {% if not error %}
+                            <div class="alert alert-warning">
+                                No results found for this student.
                             </div>
-                            
-                            {% if results %}
-                                <div class="card mb-4">
-                                    <div class="card-header bg-success text-white">
-                                        <h3 class="mb-0">Subject Results</h3>
-                                    </div>
-                                    <div class="card-body p-0">
-                                        <div class="table-responsive">
-                                            <table class="table table-striped table-hover mb-0">
-                                                <thead class="table-dark">
-                                                    <tr>
-                                                        <th>Subject Code</th>
-                                                        <th>Subject Name</th>
-                                                        <th class="text-center">Marks</th>
-                                                        <th class="text-center">Grade</th>
-                                                        <th class="text-center">Points</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {% for result in results %}
-                                                        <tr>
-                                                            <td>{{ result.code }}</td>
-                                                            <td>{{ result.subject }}</td>
-                                                            <td class="text-center">{{ result.marks|default_if_none:"-" }}</td>
-                                                            <td class="text-center font-weight-bold">{{ result.grade|default_if_none:"-" }}</td>
-                                                            <td class="text-center">{{ result.points|default_if_none:"-" }}</td>
-                                                        </tr>
-                                                    {% endfor %}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="card">
-                                    <div class="card-header bg-info text-white">
-                                        <h3 class="mb-0">Overall Performance</h3>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="card bg-light mb-3">
-                                                    <div class="card-body text-center">
-                                                        <h5 class="card-title">Total Marks</h5>
-                                                        <h2 class="card-text">{{ total_marks }}</h2>
-                                                        <p class="card-text text-muted">Out of {{ num_subjects }} subjects</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="card bg-light mb-3">
-                                                    <div class="card-body text-center">
-                                                        <h5 class="card-title">Average Mark</h5>
-                                                        <h2 class="card-text">{{ avg_mark }}</h2>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="card bg-light mb-3">
-                                                    <div class="card-body text-center">
-                                                        <h5 class="card-title">Total Points</h5>
-                                                        <h2 class="card-text">{{ total_points }}</h2>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="card bg-light">
-                                                    <div class="card-body text-center">
-                                                        <h5 class="card-title">Mean Grade</h5>
-                                                        <h2 class="card-text">{{ mean_grade }}</h2>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="text-center mt-4">
-                                            <button class="btn btn-primary" onclick="window.print()">
-                                                <i class="fas fa-print me-2"></i>Print Results
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% else %}
-                                {% if not error %}
-                                    <div class="alert alert-warning">
-                                        No results found for this student.
-                                    </div>
-                                {% endif %}
-                            {% endif %}
-                        </div>
+                        {% endif %}
                     {% endif %}
-                </div>
+                {% endif %}
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // You can add any JavaScript here
-    document.addEventListener('DOMContentLoaded', function() {
-        // For example, to highlight the row of the mean grade
-        // Add any custom JavaScript functionality here
-    });
-</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Preserve form data on page reload
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function() {
+                    localStorage.setItem('knecFormData', JSON.stringify({
+                        first_name: document.getElementById('first_name').value,
+                        middle_name: document.getElementById('middle_name').value,
+                        last_name: document.getElementById('last_name').value,
+                        index_number: document.getElementById('index_number').value,
+                        exam_year: document.getElementById('exam_year').value
+                    }));
+                });
+                
+                // Restore form data if available
+                const savedFormData = localStorage.getItem('knecFormData');
+                if (savedFormData) {
+                    const formData = JSON.parse(savedFormData);
+                    document.getElementById('first_name').value = formData.first_name || '';
+                    document.getElementById('middle_name').value = formData.middle_name || '';
+                    document.getElementById('last_name').value = formData.last_name || '';
+                    document.getElementById('index_number').value = formData.index_number || '';
+                    document.getElementById('exam_year').value = formData.exam_year || '';
+                }
+            }
+            
+            // Close alert when close button is clicked
+            const closeButtons = document.querySelectorAll('.btn-close');
+            closeButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const alert = this.closest('.alert');
+                    if (alert) {
+                        alert.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Scroll to results if they exist
+            {% if student %}
+                const studentSection = document.querySelector('.content-section');
+                if (studentSection) {
+                    window.scrollTo({
+                        top: studentSection.offsetTop - 20,
+                        behavior: 'smooth'
+                    });
+                }
+            {% endif %}
+        });
+
+
+        
+    </script>
+
+
+    
+ 
+</body>
+<!-- Footer Section -->
+<footer class="knec-footer">
+    <div class="footer-container">
+        <div class="footer-row">
+            <div class="footer-col">
+                <img src="{% static 'assets/img/logo2.png' %}" alt="KNEC Logo" class="footer-logo">
+                <p class="footer-text">Kenya National Examinations Council</p>
+                <p class="footer-text">© <span id="current-year"></span> KNEC. All Rights Reserved.</p>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">Contact KNEC</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Maintained By</h4>
+                <div class="dev-credit">
+                    <p class="company-name">Kencom softwares Ltd</p>
+                    <p class="footer-text">Email: <a href="mailto:contact@yourcompany.com">contact@kencomsoftwares.com</a></p>
+                    <p class="footer-text">Phone: +254 757 790 687</p>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p class="footer-text">The official results portal of the Kenya National Examinations Council</p>
+        </div>
+    </div>
+</footer>
+
+<style>
+    /* Footer Styles */
+    .knec-footer {
+        background-color: #f5f5f5; /* Light gray matching KNEC theme */
+        color: #333;
+        padding: 2rem 0 0;
+        border-top: 3px solid #d1d3d6; /* KNEC accent color */
+        margin-top: 3rem;
+        position: relative;
+        bottom: 0;
+        width: 100%;
+    }
+
+    .footer-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    .footer-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 2rem;
+    }
+
+    .footer-col {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .footer-logo {
+        max-height: 50px;
+        margin-bottom: 1rem;
+    }
+
+    .footer-heading {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        color: #2c3e50; /* Dark blue-gray */
+        font-weight: 600;
+    }
+
+    .footer-links {
+        list-style: none;
+        padding: 0;
+    }
+
+    .footer-links li {
+        margin-bottom: 0.5rem;
+    }
+
+    .footer-links a {
+        color: #333;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+
+    .footer-links a:hover {
+        color: #1a5276; /* KNEC blue */
+    }
+
+    .footer-text {
+        margin: 0.5rem 0;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .company-name {
+        font-weight: 600;
+        color: #1a5276; /* KNEC blue */
+        margin: 0.5rem 0;
+    }
+
+    .footer-bottom {
+        text-align: center;
+        padding: 1rem 0;
+        margin-top: 2rem;
+        border-top: 1px solid #ddd;
+    }
+
+    /* Ensure footer stays at bottom */
+    html, body {
+        height: 100%;
+    }
+
+    body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .container {
+        flex: 1 0 auto;
+    }
+
+    .knec-footer {
+        flex-shrink: 0;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .footer-row {
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .footer-col {
+            text-align: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+    }
+
+    
+</style>
+
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</html>

@@ -48,6 +48,9 @@ urlpatterns = [
     # New URL pattern for student performance view
     path('search-student-performance/', views.StudentPerformanceView.as_view(), name='search_student_performance'),
     path('student/<int:student_id>/performance/', views.student_performance_view, name='student_performance'),
+    #api
+    path('student-performance/<int:student_id>/', views.student_performance_api, name='student_performance_api'),
+
     path('performance/current/', views.current_year_performance, name='current_year_performance'),
     path('school-ranking/', views.school_ranking , name="school_ranking"),
     path('academic_performance_report/', views.academic_performance_report , name="academic_performance_report"),

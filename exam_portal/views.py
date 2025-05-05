@@ -4006,3 +4006,113 @@ def school_profile(request):
         'last_updated': school.updated_at.strftime("%Y-%m-%d %H:%M")
     }
     return render(request, 'schools/school-profile.html', context)
+
+#school admin can access student performance 
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from .models import Student, ExamRegistration
+
+@login_required
+def student_performance_api(request, student_id):
+    """
+    API endpoint to fetch student performance data for use with AJAX.
+    Returns JSON data that matches the structure expected by the modal.
+    """
+    # Get the student or return 404
+    student = get_object_or_404(Student, pk=student_id)
+    
+    # Verify the requesting user has permission to view this student's performance
+    if not request.user.is_superuser:
+        if hasattr(request.user, 'student_profile'):
+            if request.user.student_profile.student.id != student.id:
+                return JsonResponse({'error': 'Permission denied'}, status=403)
+        elif hasattr(request.user, 'school_admin_profile'):
+            if request.user.school_admin_profile.school.id != student.school.id:
+                return JsonResponse({'error': 'Permission denied'}, status=403)
+    
+    # Get all exam registrations for this student
+    exam_registrations = ExamRegistration.objects.filter(student=student).select_related(
+        'exam_year'
+    ).prefetch_related(
+        'subjects__subject',
+        'subjects__result'
+    ).order_by('-exam_year__year')
+    
+    # Prepare the performance data structure
+    performance_data = []
+    for registration in exam_registrations:
+        subjects_data = []
+        total_points = 0
+        total_marks = 0
+        total_subjects = 0
+        
+        for subject_reg in registration.subjects.all():
+            result = None
+            if hasattr(subject_reg, 'result'):
+                result = subject_reg.result
+                if result and result.points is not None and result.marks is not None:
+                    total_points += result.points
+                    total_marks += result.marks
+                    total_subjects += 1
+            
+            subjects_data.append({
+                'subject': {
+                    'id': subject_reg.subject.id,
+                    'name': subject_reg.subject.name,
+                    'code': getattr(subject_reg.subject, 'code', '')
+                },
+                'is_compulsory': subject_reg.is_compulsory,
+                'marks': result.marks if result else None,
+                'grade': result.grade if result else None,
+                'points': result.points if result else None,
+            })
+        
+        # Calculate mean grade and mean marks if there are results
+        mean_grade = None
+        mean_points = None
+        mean_marks = None
+        if total_subjects > 0:
+            mean_points = total_points / total_subjects
+            mean_marks = total_marks / total_subjects
+            # Simple grade calculation (customize based on your grading system)
+            if mean_points >= 11: mean_grade = 'A'
+            elif mean_points >= 8: mean_grade = 'B'
+            elif mean_points >= 5: mean_grade = 'C'
+            elif mean_points >= 3: mean_grade = 'D'
+            else: mean_grade = 'E'
+            
+        performance_data.append({
+            'exam_year': {
+                'id': registration.exam_year.id,
+                'name': registration.exam_year.name,
+                'year': registration.exam_year.year,
+                'is_current': registration.exam_year.is_current
+            },
+            'subjects': subjects_data,
+            'total_points': total_points,
+            'total_marks': total_marks,
+            'mean_points': mean_points,
+            'mean_marks': mean_marks,
+            'mean_grade': mean_grade,
+            'is_active': registration.is_active,
+        })
+    
+    # Prepare the response data
+    response_data = {
+        'student': {
+            'id': student.id,
+            'first_name': student.first_name,
+            'last_name': student.last_name,
+            'full_name': f"{student.first_name} {student.last_name}",
+            'index_number': student.index_number,
+            'admission_number': student.admision_number
+        },
+        'performance_data': performance_data,
+        'school': {
+            'id': student.school.id,
+            'name': student.school.name
+        }
+    }
+    
+    return JsonResponse(response_data)

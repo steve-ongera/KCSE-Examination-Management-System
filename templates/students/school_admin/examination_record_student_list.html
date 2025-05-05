@@ -33,6 +33,7 @@
                         <div class="d-flex align-items-center">
                             <!-- Year Selector Dropdown -->
                             <form method="get" id="yearForm" class="me-3">
+                                {% csrf_token %}
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
                                     <select class="form-select" name="year" id="yearSelect" onchange="document.getElementById('yearForm').submit();">
@@ -341,6 +342,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle clicking the view button
     const viewButtons = document.querySelectorAll('.view-results');
     
+    // Get CSRF token for AJAX requests
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+    
     viewButtons.forEach(button => {
         button.addEventListener('click', function() {
             // Get student data from data attributes
@@ -359,81 +363,116 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('modal-loading').classList.remove('d-none');
             document.getElementById('student-result-content').classList.add('d-none');
             
-            // Fetch student results via AJAX
-            fetchStudentResults(registrationId);
+            // Fetch student results via AJAX using the student_performance_view
+            fetchStudentResults(studentId);
         });
     });
     
     // Function to fetch student results via AJAX
-    function fetchStudentResults(registrationId) {
-        // In a real application, this would be an actual AJAX call
-        // For demo purposes, we'll simulate it with setTimeout
+    function fetchStudentResults(studentId) {
+        // Make AJAX request to the Django view
+        fetch(`/student-performance/${studentId}/`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Process and display the data
+            displayStudentResults(data);
+        })
+        .catch(error => {
+            console.error('Error fetching student results:', error);
+            document.getElementById('modal-loading').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Failed to load student results. Please try again.
+                </div>
+            `;
+        });
+    }
+    
+    // Function to display student results from the API response
+    function displayStudentResults(data) {
+        // Find the performance data for the selected exam year (first one, which is the most recent)
+        const performanceData = data.performance_data[0];
         
-        setTimeout(() => {
-            // Find the student in our data
-            const student = findStudentByRegistrationId(registrationId);
+        if (performanceData) {
+            // Update summary data in modal
+            document.getElementById('modal-total-marks').textContent = 
+                performanceData.total_marks.toFixed(2);
+            document.getElementById('modal-mean-grade').textContent = 
+                performanceData.mean_grade || 'N/A';
+            document.getElementById('modal-total-points').textContent = 
+                performanceData.total_points;
+            document.getElementById('modal-mean-points').textContent = 
+                performanceData.mean_points ? performanceData.mean_points.toFixed(2) : 'N/A';
             
-            if (student) {
-                // Update summary data in modal
-                document.getElementById('modal-total-marks').textContent = 
-                    parseFloat(student.getAttribute('data-total-marks')).toFixed(2);
-                document.getElementById('modal-mean-grade').textContent = 
-                    student.getAttribute('data-mean-grade');
-                document.getElementById('modal-total-points').textContent = 
-                    student.getAttribute('data-total-points');
-                document.getElementById('modal-mean-points').textContent = 
-                    parseFloat(student.getAttribute('data-mean-points')).toFixed(2);
-                
-                // Populate subject results
-                populateSubjectResults(registrationId);
-            }
+            // Populate subject results
+            populateSubjectResults(performanceData.subjects);
+        } else {
+            // Display message if no performance data is available
+            document.getElementById('subject-results-tbody').innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center">No subject results available</td>
+                </tr>
+            `;
             
-            // Hide loading spinner, show content
-            document.getElementById('modal-loading').classList.add('d-none');
-            document.getElementById('student-result-content').classList.remove('d-none');
-        }, 1000); // Simulate network delay of 1 second
-    }
-    
-    // Function to find student by registration ID
-    function findStudentByRegistrationId(registrationId) {
-        const viewButtons = document.querySelectorAll('.view-results');
-        for (let button of viewButtons) {
-            if (button.getAttribute('data-registration-id') === registrationId) {
-                return button;
-            }
+            // Set summary values to N/A
+            document.getElementById('modal-total-marks').textContent = 'N/A';
+            document.getElementById('modal-mean-grade').textContent = 'N/A';
+            document.getElementById('modal-total-points').textContent = 'N/A';
+            document.getElementById('modal-mean-points').textContent = 'N/A';
         }
-        return null;
+        
+        // Hide loading spinner, show content
+        document.getElementById('modal-loading').classList.add('d-none');
+        document.getElementById('student-result-content').classList.remove('d-none');
     }
     
-    // Function to populate subject results (demo data)
-    function populateSubjectResults(registrationId) {
+    // Function to populate subject results with actual data
+    function populateSubjectResults(subjects) {
         const tbody = document.getElementById('subject-results-tbody');
         tbody.innerHTML = '';
         
-        // In a real app, this would be fetched from the server
-        // For demo purposes, we'll create sample data
-        
-        // Mock subject data based on registration ID
-        const subjects = [
-            { name: 'Mathematics', marks: 85, grade: 'A', points: 12, remarks: 'Excellent' },
-            { name: 'English', marks: 76, grade: 'B+', points: 10, remarks: 'Very Good' },
-            { name: 'Sciences', marks: 68, grade: 'B', points: 9, remarks: 'Good' },
-            { name: 'Social Studies', marks: 72, grade: 'B+', points: 10, remarks: 'Very Good' },
-            { name: 'Kiswahili', marks: 81, grade: 'A-', points: 11, remarks: 'Very Good' }
-        ];
+        if (!subjects || subjects.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center">No subject results available</td>
+                </tr>
+            `;
+            return;
+        }
         
         subjects.forEach((subject, index) => {
             const row = document.createElement('tr');
             
+            // Determine remarks based on grade
+            let remarks = 'N/A';
+            if (subject.grade) {
+                if (subject.grade.startsWith('A')) remarks = 'Excellent';
+                else if (subject.grade.startsWith('B')) remarks = 'Very Good';
+                else if (subject.grade.startsWith('C')) remarks = 'Good';
+                else if (subject.grade.startsWith('D')) remarks = 'Fair';
+                else remarks = 'Needs Improvement';
+            }
+            
             row.innerHTML = `
                 <td>${index + 1}</td>
-                <td>${subject.name}</td>
-                <td class="text-center">${subject.marks}</td>
+                <td>${subject.subject.name || 'Unknown Subject'}</td>
+                <td class="text-center">${subject.marks !== null ? subject.marks : 'N/A'}</td>
                 <td class="text-center">
-                    <span class="badge bg-${getBadgeColor(subject.grade)}">${subject.grade}</span>
+                    ${subject.grade ? `<span class="badge bg-${getBadgeColor(subject.grade)}">${subject.grade}</span>` : 'N/A'}
                 </td>
-                <td class="text-center">${subject.points}</td>
-                <td>${subject.remarks}</td>
+                <td class="text-center">${subject.points !== null ? subject.points : 'N/A'}</td>
+                <td>${remarks}</td>
             `;
             
             tbody.appendChild(row);
@@ -453,6 +492,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('print-results-btn').addEventListener('click', function() {
         const modalContent = document.getElementById('student-result-content');
         const studentName = document.getElementById('modal-student-name').textContent;
+        const schoolName = "{{ school.name }}"; // Get school name from Django template context
         
         // Create print window
         const printWindow = window.open('', '_blank', 'height=600,width=800');
@@ -483,7 +523,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <body>
                 <div class="container my-4">
                     <div class="text-center mb-4">
-                        <h3>${school.name}</h3>
+                        <h3>${schoolName}</h3>
                         <h5>Examination Results</h5>
                     </div>
                     ${modalContent.innerHTML}
